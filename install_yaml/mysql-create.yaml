@@ -1,0 +1,85 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mysql-data
+  namespace: hypercloud4-system
+spec:
+  storageClassName: csi-cephfs-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+  namespace: hypercloud4-system
+  labels:
+    hypercloud4: metering
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      hypercloud4: metering
+  template:
+    metadata:
+      labels:
+        hypercloud4: metering
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.6
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          subPath: mysql
+          name: mysql-data
+        - mountPath: /docker-entrypoint-initdb.d
+          name: mysql-initdb-config
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          value: metering
+        - name: TZ
+          value: Asia/Seoul
+        resources:
+          limits:
+            cpu: "1"
+            memory: "5Gi"
+          requests:
+            cpu: "1"
+            memory: "5Gi"
+      serviceAccountName: hypercloud4-admin
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql-data
+      - name: mysql-initdb-config
+        configMap:
+          name: mysql-initdb-config
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  namespace: hypercloud4-system
+spec:
+  ports:
+  - name: "mysql"
+    port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    hypercloud4: metering
+  type: NodePort

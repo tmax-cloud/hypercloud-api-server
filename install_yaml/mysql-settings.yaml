@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secrets
+  namespace: hypercloud4-system
+type: Opaque
+data:
+  ROOT_PASSWORD: dG1heA==
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+  namespace: hypercloud4-system
+data:
+  retention.hour: "90"
+  retention.day: "365"
+  retention.month: "3650"
+  initdb.sql: |
+    create table metering.metering (id varchar(32) not null,namespace varchar(255) not null,cpu double,memory bigint,storage bigint,gpu double,public_ip int,private_ip int,metering_time timestamp not null default current_timestamp,status varchar(255),primary key (id));
+    alter table metering.metering add constraint unique_metering unique (namespace, metering_time);
+    create table metering.metering_hour (id varchar(32) not null,namespace varchar(255) not null,cpu double,memory bigint,storage bigint,gpu double,public_ip int,private_ip int,metering_time timestamp not null default current_timestamp,status varchar(255),primary key (id));
+    alter table metering.metering_hour add constraint unique_metering_hour unique (namespace, metering_time);
+    create table metering.metering_day (id varchar(32) not null,namespace varchar(255) not null,cpu double,memory bigint,storage bigint,gpu double,public_ip int,private_ip int,metering_time timestamp not null default current_timestamp,status varchar(255),primary key (id));
+    alter table metering.metering_day add constraint unique_metering_day unique (namespace, metering_time);
+    create table metering.metering_month (id varchar(32) not null,namespace varchar(255) not null,cpu double,memory bigint,storage bigint,gpu double,public_ip int,private_ip int,metering_time timestamp not null default current_timestamp,status varchar(255),primary key (id));
+    alter table metering.metering_month add constraint unique_metering_month unique (namespace, metering_time);
+    create table metering.metering_year (id varchar(32) not null,namespace varchar(255) not null,cpu double,memory bigint,storage bigint,gpu double,public_ip int,private_ip int,metering_time timestamp not null default current_timestamp,status varchar(255),primary key (id));
+    alter table metering.metering_year add constraint unique_metering_year unique (namespace, metering_time);
+    create table metering.audit (id varchar(40) not null, username varchar(255), useragent varchar(255), namespace varchar(255), apigroup varchar(255), apiversion varchar(32), resource varchar(64), name varchar(255), stage varchar(32), stagetimestamp timestamp not null, verb varchar(32), code int, status varchar(255), reason varchar(255), message varchar(255));
+    

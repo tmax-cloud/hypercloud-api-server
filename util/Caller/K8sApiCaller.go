@@ -1,0 +1,178 @@
+package Caller
+
+import (
+	"context"
+	"flag"
+	authApi "k8s.io/api/authorization/v1"
+	coreApi "k8s.io/api/core/v1"
+	rbacApi "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+	"k8s.io/klog"
+	"path/filepath"
+	"sync"
+)
+
+var Clientset *kubernetes.Clientset
+
+func init() {
+	var kubeconfig *string
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "/root/.kube")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "/root/.kube")
+	}
+	flag.Parse()
+
+	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
+	config.Burst = 100
+	config.QPS = 100
+	Clientset, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
+
+    // If api-server on POD, activate below code and delete above
+	// creates the in-cluster config
+	//config, err := rest.InClusterConfig()
+	//if err != nil {
+	//	panic(err.Error())
+	//}
+	//// creates the clientset
+	//Clientset, err = kubernetes.NewForConfig(config)
+	//if err != nil {
+	//	panic(err.Error())
+	//}
+
+}
+
+func CreateClusterRoleBinding( ClusterRoleBinding *rbacApi.ClusterRoleBinding)  {
+	result, err := Clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), ClusterRoleBinding, metav1.CreateOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
+	klog.Info(" Create ClusterRoleBinding " + result.GetObjectMeta().GetName() + " Success ")
+}
+
+func DeleteClusterRoleBinding( name string )  {
+	deletePolicy := metav1.DeletePropagationForeground
+	if err := Clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), name, metav1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	}); err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
+	klog.Info(" Delete ClusterRoleBinding " + name + " Success ")
+}
+
+func GetAccessibleNS( userId string, labelSelector string) coreApi.NamespaceList{
+	var nsList = &coreApi.NamespaceList{}
+	// 1. Get UserGroup List if Exists
+	klog.Infoln( "userId : ", userId)
+	userDetail := getUserDetailWithoutToken(userId)
+	var userGroups []string
+	if userDetail["groups"] != nil {
+		for _, userGroup := range userDetail["groups"].([]interface{}){
+			userGroups = append(userGroups, userGroup.(string))
+		}
+	}
+	for _ ,userGroup := range userGroups{
+		klog.Infoln("userGroupName : ", userGroup)
+	}
+
+	// 2. Check If User has NS List Role
+	nsListRuleReview := authApi.SubjectAccessReview{
+		Spec: authApi.SubjectAccessReviewSpec {
+			ResourceAttributes : &authApi.ResourceAttributes{
+				Resource: "namespaces",
+				Verb: "list",
+				Group: "",
+			},
+			User : userId,
+			Groups : userGroups,
+		},
+	}
+	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsListRuleReview ,metav1.CreateOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
+	if sarResult.Status.Allowed {
+		klog.Infoln(" User [ ",  userId , " ] has Namespace List Role, Can Access All Namespace" )
+		nsList, err = Clientset.CoreV1().Namespaces().List(
+			context.TODO(),
+			metav1.ListOptions{
+				LabelSelector: labelSelector,
+			},
+		)
+		if err != nil {
+			klog.Errorln(err)
+			panic(err)
+		}
+	} else {
+		klog.Infoln(" User [ ",  userId , " ] has No Namespace List Role, Check If user has Namespace Get Role to Certain Namespace" )
+		potentialNsList, err := Clientset.CoreV1().Namespaces().List(
+			context.TODO(),
+			metav1.ListOptions{
+				LabelSelector: labelSelector,
+			},
+		)
+		if err != nil {
+			klog.Errorln(err)
+			panic(err)
+		}
+		var wg sync.WaitGroup
+		wg.Add(len(potentialNsList.Items))
+		for _, potentialNs := range potentialNsList.Items {
+			go func( potentialNs coreApi.Namespace, userId string, userGroups []string, nsList *coreApi.NamespaceList) {
+				defer wg.Done()
+				nsGetRuleReview := authApi.SubjectAccessReview{
+					Spec: authApi.SubjectAccessReviewSpec {
+						ResourceAttributes : &authApi.ResourceAttributes{
+							Resource: "namespaces",
+							Verb: "list",
+							Group: "",
+							Namespace: potentialNs.GetName(),
+						},
+						User : userId,
+						Groups : userGroups,
+					},
+				}
+				sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsGetRuleReview ,metav1.CreateOptions{})
+				if err != nil {
+					klog.Errorln(err)
+					panic(err)
+				}
+				if sarResult.Status.Allowed {
+					klog.Infoln(" User [ ",  userId , " ] has Namespace Get Role in Namspace [ ", potentialNs.GetName(), " ]"  )
+					nsList.Items = append(nsList.Items, potentialNs)
+				}
+			}(potentialNs, userId, userGroups, nsList)
+		}
+		wg.Wait()
+
+		if len(nsList.Items) > 0 {
+			nsList.APIVersion = potentialNsList.APIVersion
+			nsList.Continue = potentialNsList.Continue
+			nsList.ResourceVersion = potentialNsList.ResourceVersion
+			nsList.TypeMeta = potentialNsList.TypeMeta
+		} else {
+			klog.Infoln(" User [ ",  userId , " ] has No Namespace Get Role in Any Namspace"  )
+		}
+	}
+	if len(nsList.Items) > 0 {
+		klog.Infoln("=== [ " , userId, " ] Accessible Namespace ===" )
+		for _, ns := range nsList.Items{
+			klog.Infoln("  ", ns.Name )
+		}
+	}
+	return *nsList
+}
