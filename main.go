@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/robfig/cron"
 	metering "hypercloud-api-server/metering"
 	"hypercloud-api-server/namespace"
 	user "hypercloud-api-server/user"
-	"k8s.io/klog"
 	"net/http"
+
+	"github.com/robfig/cron"
+	"k8s.io/klog"
 )
 
 func main() {
@@ -29,7 +30,6 @@ func main() {
 	}
 	klog.Info("Started Hypercloud-Operator-API server")
 
-
 }
 
 func serveNamespace(res http.ResponseWriter, req *http.Request) {
@@ -39,12 +39,11 @@ func serveNamespace(res http.ResponseWriter, req *http.Request) {
 	case http.MethodPut:
 		namespace.Put(res, req)
 	case http.MethodOptions:
-		user.Options(res, req)
+		namespace.Options(res, req)
 	default:
 		//error
 	}
 }
-
 
 func serveUser(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
