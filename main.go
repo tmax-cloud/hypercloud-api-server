@@ -4,6 +4,7 @@ import (
 	metering "hypercloud-api-server/metering"
 	"hypercloud-api-server/namespace"
 	user "hypercloud-api-server/user"
+	version "hypercloud-api-server/version"
 	"net/http"
 
 	"github.com/robfig/cron"
@@ -22,6 +23,7 @@ func main() {
 	mux.HandleFunc("/metering", serveMetering)
 	mux.HandleFunc("/namespace", serveNamespace)
 	//mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
+	mux.HandleFunc("/version", serveVersion)
 
 	// HTTP Server Start
 	klog.Info("Starting Hypercloud-Operator-API server...")
@@ -64,6 +66,15 @@ func serveMetering(res http.ResponseWriter, req *http.Request) {
 		metering.Get(res, req)
 	case http.MethodOptions:
 		metering.Options(res, req)
+	default:
+		//error
+	}
+}
+
+func serveVersion(res http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodGet:
+		version.Get(res, req)
 	default:
 		//error
 	}

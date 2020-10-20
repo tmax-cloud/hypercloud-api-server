@@ -1,21 +1,29 @@
 package Caller
 
 import (
+	"bytes"
 	"context"
 	"flag"
+	"io"
+	"path/filepath"
+	"sync"
+
 	authApi "k8s.io/api/authorization/v1"
 	coreApi "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	rbacApi "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/util/homedir"
 	"k8s.io/klog"
-	"path/filepath"
-	"sync"
+	"k8s.io/kubectl/pkg/scheme"
 )
 
 var Clientset *kubernetes.Clientset
+var config *restclient.Config
 
 func init() {
 	var kubeconfig *string
@@ -26,7 +34,8 @@ func init() {
 	}
 	flag.Parse()
 
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	var err error
+	config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	if err != nil {
 		klog.Errorln(err)
 		panic(err)
@@ -39,9 +48,10 @@ func init() {
 		panic(err)
 	}
 
-    // If api-server on POD, activate below code and delete above
+	// If api-server on POD, activate below code and delete above
 	// creates the in-cluster config
-	//config, err := rest.InClusterConfig()
+	//var err error
+	//config, err = rest.InClusterConfig()
 	//if err != nil {
 	//	panic(err.Error())
 	//}
@@ -53,7 +63,7 @@ func init() {
 
 }
 
-func CreateClusterRoleBinding( ClusterRoleBinding *rbacApi.ClusterRoleBinding)  {
+func CreateClusterRoleBinding(ClusterRoleBinding *rbacApi.ClusterRoleBinding) {
 	result, err := Clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), ClusterRoleBinding, metav1.CreateOptions{})
 	if err != nil {
 		klog.Errorln(err)
@@ -62,7 +72,7 @@ func CreateClusterRoleBinding( ClusterRoleBinding *rbacApi.ClusterRoleBinding)  
 	klog.Info(" Create ClusterRoleBinding " + result.GetObjectMeta().GetName() + " Success ")
 }
 
-func DeleteClusterRoleBinding( name string )  {
+func DeleteClusterRoleBinding(name string) {
 	deletePolicy := metav1.DeletePropagationForeground
 	if err := Clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), name, metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
@@ -73,40 +83,40 @@ func DeleteClusterRoleBinding( name string )  {
 	klog.Info(" Delete ClusterRoleBinding " + name + " Success ")
 }
 
-func GetAccessibleNS( userId string, labelSelector string) coreApi.NamespaceList{
+func GetAccessibleNS(userId string, labelSelector string) coreApi.NamespaceList {
 	var nsList = &coreApi.NamespaceList{}
 	// 1. Get UserGroup List if Exists
-	klog.Infoln( "userId : ", userId)
+	klog.Infoln("userId : ", userId)
 	userDetail := getUserDetailWithoutToken(userId)
 	var userGroups []string
 	if userDetail["groups"] != nil {
-		for _, userGroup := range userDetail["groups"].([]interface{}){
+		for _, userGroup := range userDetail["groups"].([]interface{}) {
 			userGroups = append(userGroups, userGroup.(string))
 		}
 	}
-	for _ ,userGroup := range userGroups{
+	for _, userGroup := range userGroups {
 		klog.Infoln("userGroupName : ", userGroup)
 	}
 
 	// 2. Check If User has NS List Role
 	nsListRuleReview := authApi.SubjectAccessReview{
-		Spec: authApi.SubjectAccessReviewSpec {
-			ResourceAttributes : &authApi.ResourceAttributes{
+		Spec: authApi.SubjectAccessReviewSpec{
+			ResourceAttributes: &authApi.ResourceAttributes{
 				Resource: "namespaces",
-				Verb: "list",
-				Group: "",
+				Verb:     "list",
+				Group:    "",
 			},
-			User : userId,
-			Groups : userGroups,
+			User:   userId,
+			Groups: userGroups,
 		},
 	}
-	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsListRuleReview ,metav1.CreateOptions{})
+	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsListRuleReview, metav1.CreateOptions{})
 	if err != nil {
 		klog.Errorln(err)
 		panic(err)
 	}
 	if sarResult.Status.Allowed {
-		klog.Infoln(" User [ ",  userId , " ] has Namespace List Role, Can Access All Namespace" )
+		klog.Infoln(" User [ ", userId, " ] has Namespace List Role, Can Access All Namespace")
 		nsList, err = Clientset.CoreV1().Namespaces().List(
 			context.TODO(),
 			metav1.ListOptions{
@@ -118,7 +128,7 @@ func GetAccessibleNS( userId string, labelSelector string) coreApi.NamespaceList
 			panic(err)
 		}
 	} else {
-		klog.Infoln(" User [ ",  userId , " ] has No Namespace List Role, Check If user has Namespace Get Role to Certain Namespace" )
+		klog.Infoln(" User [ ", userId, " ] has No Namespace List Role, Check If user has Namespace Get Role to Certain Namespace")
 		potentialNsList, err := Clientset.CoreV1().Namespaces().List(
 			context.TODO(),
 			metav1.ListOptions{
@@ -132,27 +142,27 @@ func GetAccessibleNS( userId string, labelSelector string) coreApi.NamespaceList
 		var wg sync.WaitGroup
 		wg.Add(len(potentialNsList.Items))
 		for _, potentialNs := range potentialNsList.Items {
-			go func( potentialNs coreApi.Namespace, userId string, userGroups []string, nsList *coreApi.NamespaceList) {
+			go func(potentialNs coreApi.Namespace, userId string, userGroups []string, nsList *coreApi.NamespaceList) {
 				defer wg.Done()
 				nsGetRuleReview := authApi.SubjectAccessReview{
-					Spec: authApi.SubjectAccessReviewSpec {
-						ResourceAttributes : &authApi.ResourceAttributes{
-							Resource: "namespaces",
-							Verb: "list",
-							Group: "",
+					Spec: authApi.SubjectAccessReviewSpec{
+						ResourceAttributes: &authApi.ResourceAttributes{
+							Resource:  "namespaces",
+							Verb:      "list",
+							Group:     "",
 							Namespace: potentialNs.GetName(),
 						},
-						User : userId,
-						Groups : userGroups,
+						User:   userId,
+						Groups: userGroups,
 					},
 				}
-				sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsGetRuleReview ,metav1.CreateOptions{})
+				sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsGetRuleReview, metav1.CreateOptions{})
 				if err != nil {
 					klog.Errorln(err)
 					panic(err)
 				}
 				if sarResult.Status.Allowed {
-					klog.Infoln(" User [ ",  userId , " ] has Namespace Get Role in Namspace [ ", potentialNs.GetName(), " ]"  )
+					klog.Infoln(" User [ ", userId, " ] has Namespace Get Role in Namspace [ ", potentialNs.GetName(), " ]")
 					nsList.Items = append(nsList.Items, potentialNs)
 				}
 			}(potentialNs, userId, userGroups, nsList)
@@ -165,14 +175,80 @@ func GetAccessibleNS( userId string, labelSelector string) coreApi.NamespaceList
 			nsList.ResourceVersion = potentialNsList.ResourceVersion
 			nsList.TypeMeta = potentialNsList.TypeMeta
 		} else {
-			klog.Infoln(" User [ ",  userId , " ] has No Namespace Get Role in Any Namspace"  )
+			klog.Infoln(" User [ ", userId, " ] has No Namespace Get Role in Any Namspace")
 		}
 	}
 	if len(nsList.Items) > 0 {
-		klog.Infoln("=== [ " , userId, " ] Accessible Namespace ===" )
-		for _, ns := range nsList.Items{
-			klog.Infoln("  ", ns.Name )
+		klog.Infoln("=== [ ", userId, " ] Accessible Namespace ===")
+		for _, ns := range nsList.Items {
+			klog.Infoln("  ", ns.Name)
 		}
 	}
 	return *nsList
+}
+
+// GetK8sVersion gets kubernetes version.
+func GetK8sVersion() (string, error) {
+	result, err := Clientset.Discovery().ServerVersion()
+	if err != nil {
+		klog.Errorln(err)
+	}
+	return result.String(), err
+}
+
+// ExecCommand sends a 'exec' command to specific pod.
+func ExecCommand(podName string, namespaceName string, command []string) (string, error) {
+
+	var stdin io.Reader
+
+	req := Clientset.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
+		Namespace(namespaceName).SubResource("exec")
+
+	option := &v1.PodExecOptions{
+		Command: command,
+		Stdin:   true,
+		Stdout:  true,
+		Stderr:  true,
+		TTY:     false,
+	}
+	if stdin == nil {
+		option.Stdin = false
+	}
+
+	req.VersionedParams(
+		option,
+		scheme.ParameterCodec,
+	)
+	//klog.Infoln(req.URL().String())
+	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	if err != nil {
+		return "error occured", err
+	}
+
+	var stdout, stderr bytes.Buffer
+	err = exec.Stream(remotecommand.StreamOptions{
+		Stdin:  stdin,
+		Stdout: &stdout,
+		Stderr: &stderr,
+		Tty:    false,
+	})
+
+	if err != nil {
+		return "error occured", err
+	}
+
+	return stdout.String(), nil
+}
+
+// GetPodListByLabel returns a PodList struct using label.
+func GetPodListByLabel(label string) (v1.PodList, error) {
+
+	podList, err := Clientset.CoreV1().Pods("").List(
+		context.TODO(),
+		metav1.ListOptions{
+			LabelSelector: label,
+		},
+	)
+
+	return *podList, err
 }
