@@ -187,15 +187,6 @@ func GetAccessibleNS(userId string, labelSelector string) coreApi.NamespaceList 
 	return *nsList
 }
 
-// GetK8sVersion gets kubernetes version.
-func GetK8sVersion() (string, error) {
-	result, err := Clientset.Discovery().ServerVersion()
-	if err != nil {
-		klog.Errorln(err)
-	}
-	return result.String(), err
-}
-
 // ExecCommand sends a 'exec' command to specific pod.
 func ExecCommand(podName string, namespaceName string, command []string) (string, error) {
 
@@ -249,6 +240,11 @@ func GetPodListByLabel(label string) (v1.PodList, error) {
 			LabelSelector: label,
 		},
 	)
+
+	if err != nil {
+		klog.Errorln("Error occured by ", label)
+		klog.Errorln("Error content : ", err)
+	}
 
 	return *podList, err
 }

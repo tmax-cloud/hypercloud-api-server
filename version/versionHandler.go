@@ -36,24 +36,32 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	var mod Module
 
 	// hypercloud operator version
+	podList, _ := k8sApiCaller.GetPodListByLabel("hypercloud4=operator")
+	mod.HyperCloudOperator.Version = ParsingVersion(podList.Items[0].Spec.Containers[0].Image)
+	mod.HyperCloudOperator.Status = string(podList.Items[0].Status.Phase)
 
 	// hypercloud console version
+	podList, _ = k8sApiCaller.GetPodListByLabel("app=console")
+	mod.HyperCloudConsole.Version = ParsingVersion(podList.Items[0].Spec.Containers[0].Image)
+	mod.HyperCloudConsole.Status = string(podList.Items[0].Status.Phase)
 
 	// hypercloud webhook version
+	podList, _ = k8sApiCaller.GetPodListByLabel("hypercloud4=webhook")
+	mod.HyperCloudWebHook.Version = ParsingVersion(podList.Items[0].Spec.Containers[0].Image)
+	mod.HyperCloudWebHook.Status = string(podList.Items[0].Status.Phase)
 
 	// hypercloud watcher version
+	podList, _ = k8sApiCaller.GetPodListByLabel("hypercloud4=secret-watcher")
+	mod.HyperCloudWatcher.Version = ParsingVersion(podList.Items[0].Spec.Containers[0].Image)
+	mod.HyperCloudWatcher.Status = string(podList.Items[0].Status.Phase)
 
 	// k8s verison
-	k8sVersion, err := k8sApiCaller.GetK8sVersion()
-	if err != nil {
-		klog.Errorln("k8s version status error")
-	} else {
-		mod.Kubernetes.Status = "true"
-	}
-	mod.Kubernetes.Version = k8sVersion
+	podList, _ = k8sApiCaller.GetPodListByLabel("component=kube-apiserver")
+	mod.Kubernetes.Version = ParsingVersion(podList.Items[0].Spec.Containers[0].Image)
+	mod.Kubernetes.Status = string(podList.Items[0].Status.Phase)
 
 	// Calico version
-	podList, _ := k8sApiCaller.GetPodListByLabel("k8s-app=calico-kube-controllers")
+	podList, _ = k8sApiCaller.GetPodListByLabel("k8s-app=calico-kube-controllers")
 	mod.Calico.Version = ParsingVersion(podList.Items[0].Spec.Containers[0].Image)
 	mod.Calico.Status = string(podList.Items[0].Status.Phase)
 
@@ -88,6 +96,9 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	mod.CatalogController.Status = string(podList.Items[0].Status.Phase)
 
 	// TemplateServiceBroker version
+	podList, _ = k8sApiCaller.GetPodListByLabel("hypercloud4=template-service-broker")
+	mod.TemplateServiceBroker.Version = ParsingVersion(podList.Items[0].Spec.Containers[0].Image)
+	mod.TemplateServiceBroker.Status = string(podList.Items[0].Status.Phase)
 
 	// encode to JSON format and response
 	util.SetResponse(res, "", mod, http.StatusOK)
