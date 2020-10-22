@@ -6,6 +6,7 @@ import (
 	"flag"
 	"io"
 	"path/filepath"
+	"reflect"
 	"sync"
 
 	authApi "k8s.io/api/authorization/v1"
@@ -232,8 +233,10 @@ func ExecCommand(podName string, namespaceName string, command []string) (string
 }
 
 // GetPodListByLabel returns a PodList struct using label.
-func GetPodListByLabel(label string) (v1.PodList, error) {
-
+// If the function finds pod list, it returns it with 'true'.
+// If not, it returns empty list with 'false'.
+func GetPodListByLabel(label string) (v1.PodList, bool) {
+	// get PodList by Label
 	podList, err := Clientset.CoreV1().Pods("").List(
 		context.TODO(),
 		metav1.ListOptions{
@@ -246,5 +249,12 @@ func GetPodListByLabel(label string) (v1.PodList, error) {
 		klog.Errorln("Error content : ", err)
 	}
 
-	return *podList, err
+	// check if podList is empty
+	nilTest := []v1.Pod{}
+	if reflect.DeepEqual(podList.Items, nilTest) {
+		klog.Errorln(label, " cannot be found")
+		return *podList, false
+	}
+
+	return *podList, true
 }
