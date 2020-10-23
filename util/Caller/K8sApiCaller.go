@@ -189,6 +189,7 @@ func GetAccessibleNS(userId string, labelSelector string) coreApi.NamespaceList 
 }
 
 // ExecCommand sends a 'exec' command to specific pod.
+// It returns results by string and error.
 func ExecCommand(podName string, namespaceName string, command []string) (string, error) {
 
 	var stdin io.Reader
@@ -211,7 +212,7 @@ func ExecCommand(podName string, namespaceName string, command []string) (string
 		option,
 		scheme.ParameterCodec,
 	)
-	//klog.Infoln(req.URL().String())
+
 	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
 	if err != nil {
 		return "error occured", err
@@ -232,8 +233,8 @@ func ExecCommand(podName string, namespaceName string, command []string) (string
 	return stdout.String(), nil
 }
 
-// GetPodListByLabel returns a PodList struct using label.
-// If the function finds pod list, it returns it with 'true'.
+// GetPodListByLabel returns a pod List using label.
+// If there is a pod list, it returns a list with 'true'.
 // If not, it returns empty list with 'false'.
 func GetPodListByLabel(label string) (v1.PodList, bool) {
 	// get PodList by Label
