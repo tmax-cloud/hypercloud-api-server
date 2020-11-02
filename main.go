@@ -5,6 +5,7 @@ import (
 	metering "hypercloud-api-server/metering"
 	"hypercloud-api-server/namespace"
 	user "hypercloud-api-server/user"
+	alert "hypercloud-api-server/alert"
 	"k8s.io/klog"
 	"net/http"
 )
@@ -20,6 +21,7 @@ func main() {
 	mux.HandleFunc("/user", serveUser)
 	mux.HandleFunc("/metering", serveMetering)
 	mux.HandleFunc("/namespace", serveNamespace)
+	mux.HandleFunc("/alert", serveAlert)
 	//mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 
 	// HTTP Server Start
@@ -65,6 +67,16 @@ func serveMetering(res http.ResponseWriter, req *http.Request) {
 		metering.Get(res, req)
 	case http.MethodOptions:
 		metering.Options(res, req)
+	default:
+		//error
+	}
+}
+
+
+func serveAlert(res http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodPost:
+		alert.Post(res, req)
 	default:
 		//error
 	}
