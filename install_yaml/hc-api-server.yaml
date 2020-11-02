@@ -19,13 +19,16 @@ spec:
     spec:
       containers:
         - name: hypercloud4-api-server
-          image: 192.168.6.110:5000/hypercloud-api-server:12
+          image: 192.168.6.110:5000/hc-api-server:latest
           imagePullPolicy: Always
           env:
             - name: TZ
               value: Asia/Seoul
           ports:
             - containerPort: 28678
+          volumeMounts:
+            - name: config-module
+              mountPath: /config
           resources:
             limits:
               cpu: "1"
@@ -34,6 +37,10 @@ spec:
               cpu: "1"
               memory: "1Gi"
       serviceAccountName: hypercloud4-admin
+      volumes:
+        - name : config-module
+          configMap:
+            name: hc-version
 
 ---
 

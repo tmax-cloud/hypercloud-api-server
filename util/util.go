@@ -2,10 +2,11 @@ package util
 
 import (
 	"encoding/json"
-	"k8s.io/api/admission/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"net/http"
 	"time"
+
+	"k8s.io/api/admission/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 //Jsonpatch를 담을 수 있는 구조체
@@ -38,14 +39,11 @@ func SetResponse(res http.ResponseWriter, outString string, outJson interface{},
 	//set Cors
 	res.Header().Set("Access-Control-Allow-Origin", "*")
 	res.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
-	res.Header().Set("Access-Control-Max-Age", "3628800");
+	res.Header().Set("Access-Control-Max-Age", "3628800")
 	res.Header().Set("Access-Control-Expose-Headers", "Content-Type, X-Requested-With, Accept, Authorization, Referer, User-Agent")
 
-	//set StatusCode
-	res.WriteHeader(status)
-
 	//set Out
-	if outJson!=nil {
+	if outJson != nil {
 		res.Header().Set("Content-Type", "application/json")
 		js, err := json.Marshal(outJson)
 		if err != nil {
@@ -55,6 +53,8 @@ func SetResponse(res http.ResponseWriter, outString string, outJson interface{},
 	} else {
 		res.Write([]byte(outString))
 	}
+	//set StatusCode
+	res.WriteHeader(status)
 	return res
 }
 
@@ -67,33 +67,33 @@ func Contains(slice []string, item string) bool {
 	return ok
 }
 
-func MonthToInt ( month time.Month ) int {
+func MonthToInt(month time.Month) int {
 	switch month {
-	case time.January :
+	case time.January:
 		return 1
-	case time.February :
+	case time.February:
 		return 2
-	case time.March :
+	case time.March:
 		return 3
-	case time.April :
+	case time.April:
 		return 4
-	case time.May :
+	case time.May:
 		return 5
-	case time.June :
+	case time.June:
 		return 6
-	case time.July :
+	case time.July:
 		return 7
-	case time.August :
+	case time.August:
 		return 8
-	case time.September :
+	case time.September:
 		return 9
-	case time.October :
+	case time.October:
 		return 10
-	case time.November :
+	case time.November:
 		return 11
-	case time.December :
+	case time.December:
 		return 12
-	default :
+	default:
 		return 0
 	}
 }

@@ -3,9 +3,7 @@ package Caller
 import (
 	"bytes"
 	"context"
-	"flag"
 	"io"
-	"path/filepath"
 	"reflect"
 	"sync"
 
@@ -15,10 +13,9 @@ import (
 	rbacApi "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
-	"k8s.io/client-go/util/homedir"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/scheme"
 )
@@ -27,40 +24,41 @@ var Clientset *kubernetes.Clientset
 var config *restclient.Config
 
 func init() {
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "/root/.kube")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "/root/.kube")
-	}
-	flag.Parse()
 
-	var err error
-	config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		klog.Errorln(err)
-		panic(err)
-	}
-	config.Burst = 100
-	config.QPS = 100
-	Clientset, err = kubernetes.NewForConfig(config)
-	if err != nil {
-		klog.Errorln(err)
-		panic(err)
-	}
+	// var kubeconfig *string
+	// if home := homedir.HomeDir(); home != "" {
+	// 	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "/root/.kube")
+	// } else {
+	// 	kubeconfig = flag.String("kubeconfig", "", "/root/.kube")
+	// }
+	// flag.Parse()
+
+	// var err error
+	// config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	// if err != nil {
+	// 	klog.Errorln(err)
+	// 	panic(err)
+	// }
+	// config.Burst = 100
+	// config.QPS = 100
+	// Clientset, err = kubernetes.NewForConfig(config)
+	// if err != nil {
+	// 	klog.Errorln(err)
+	// 	panic(err)
+	// }
 
 	// If api-server on POD, activate below code and delete above
 	// creates the in-cluster config
-	//var err error
-	//config, err = rest.InClusterConfig()
-	//if err != nil {
-	//	panic(err.Error())
-	//}
-	//// creates the clientset
-	//Clientset, err = kubernetes.NewForConfig(config)
-	//if err != nil {
-	//	panic(err.Error())
-	//}
+	var err error
+	config, err = rest.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	// creates the clientset
+	Clientset, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
 
 }
 
@@ -189,20 +187,26 @@ func GetAccessibleNS(userId string, labelSelector string) coreApi.NamespaceList 
 }
 
 // ExecCommand sends a 'exec' command to specific pod.
-// It returns results by string and error.
-func ExecCommand(podName string, namespaceName string, command []string) (string, error) {
+// It returns outputs of command.
+// If the container parameter == "", it chooses first container.
+func ExecCommand(pod v1.Pod, command []string, container string) (string, string, error) {
 
 	var stdin io.Reader
 
-	req := Clientset.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
-		Namespace(namespaceName).SubResource("exec")
+	req := Clientset.CoreV1().RESTClient().Post().Resource("pods").Name(pod.Name).
+		Namespace(pod.Namespace).SubResource("exec")
+
+	if container == "" {
+		container = pod.Spec.Containers[0].Name
+	}
 
 	option := &v1.PodExecOptions{
-		Command: command,
-		Stdin:   true,
-		Stdout:  true,
-		Stderr:  true,
-		TTY:     false,
+		Container: container,
+		Command:   command,
+		Stdin:     true,
+		Stdout:    true,
+		Stderr:    true,
+		TTY:       false,
 	}
 	if stdin == nil {
 		option.Stdin = false
@@ -215,7 +219,7 @@ func ExecCommand(podName string, namespaceName string, command []string) (string
 
 	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
 	if err != nil {
-		return "error occured", err
+		return "", "", err
 	}
 
 	var stdout, stderr bytes.Buffer
@@ -227,18 +231,18 @@ func ExecCommand(podName string, namespaceName string, command []string) (string
 	})
 
 	if err != nil {
-		return "error occured", err
+		return "", "", err
 	}
 
-	return stdout.String(), nil
+	return stdout.String(), stderr.String(), nil
 }
 
-// GetPodListByLabel returns a pod List using label.
-// If there is a pod list, it returns a list with 'true'.
-// If not, it returns empty list with 'false'.
-func GetPodListByLabel(label string) (v1.PodList, bool) {
+// GetPodListByLabel returns a pod List using label and namespace.
+// If you want to find pods through all namespace, pass "" for namespace parameter.
+// If there is a pod list, it returns a list with 'true', if not, returns with 'false'
+func GetPodListByLabel(label string, namespace string) (v1.PodList, bool) {
 	// get PodList by Label
-	podList, err := Clientset.CoreV1().Pods("").List(
+	podList, err := Clientset.CoreV1().Pods(namespace).List(
 		context.TODO(),
 		metav1.ListOptions{
 			LabelSelector: label,
