@@ -1,17 +1,17 @@
 package main
 
 import (
+	alert "hypercloud-api-server/alert"
 	metering "hypercloud-api-server/metering"
 	"hypercloud-api-server/namespace"
 	user "hypercloud-api-server/user"
-	alert "hypercloud-api-server/alert"
-	"k8s.io/klog"
 	version "hypercloud-api-server/version"
+
+	"k8s.io/klog"
 
 	"net/http"
 
 	"github.com/robfig/cron"
-	
 )
 
 func main() {
@@ -31,7 +31,7 @@ func main() {
 
 	// HTTP Server Start
 	klog.Info("Starting Hypercloud-Operator-API server...")
-	if err := http.ListenAndServe(":80", mux); err != nil {
+	if err := http.ListenAndServe(":8077", mux); err != nil {
 		klog.Errorf("Failed to listen and serve Hypercloud-Operator-API server: %s", err)
 	}
 	klog.Info("Started Hypercloud-Operator-API server")
@@ -75,18 +75,19 @@ func serveMetering(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-<<<<<<< HEAD
-
 func serveAlert(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodPost:
 		alert.Post(res, req)
-=======
+	default:
+		//error
+	}
+}
 func serveVersion(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		version.Get(res, req)
->>>>>>> c6811eded6037f4ba91724777bd5b28c1ab60618
+
 	default:
 		//error
 	}
