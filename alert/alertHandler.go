@@ -51,7 +51,10 @@ func Post(res http.ResponseWriter, req *http.Request) {
 	//now := time.Now()
 	//pop.Items[0].StageTimestamp = now.String
 
-	resp, err := http.PostForm("http://example.com/form", &pop)
+	//resp, err := http.PostForm("http://example.com/form", &pop)
+	if err != nil {
+		print(err)
+	}
 
 }
 
