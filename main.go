@@ -1,14 +1,17 @@
 package main
 
 import (
+	alert "hypercloud-api-server/alert"
 	metering "hypercloud-api-server/metering"
 	"hypercloud-api-server/namespace"
 	user "hypercloud-api-server/user"
 	version "hypercloud-api-server/version"
+
+	"k8s.io/klog"
+
 	"net/http"
 
 	"github.com/robfig/cron"
-	"k8s.io/klog"
 )
 
 func main() {
@@ -22,6 +25,7 @@ func main() {
 	mux.HandleFunc("/user", serveUser)
 	mux.HandleFunc("/metering", serveMetering)
 	mux.HandleFunc("/namespace", serveNamespace)
+	mux.HandleFunc("/alert", serveAlert)
 	//mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
 
@@ -71,10 +75,19 @@ func serveMetering(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func serveAlert(res http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodPost:
+		alert.Post(res, req)
+	default:
+		//error
+	}
+}
 func serveVersion(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		version.Get(res, req)
+
 	default:
 		//error
 	}

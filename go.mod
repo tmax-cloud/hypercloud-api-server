@@ -9,9 +9,10 @@ require (
 	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/robfig/cron v1.2.0
 	gopkg.in/yaml.v2 v2.2.8
-	k8s.io/api v0.19.2
-	k8s.io/apimachinery v0.19.2
-	k8s.io/client-go v0.19.2
+	k8s.io/api v0.19.4
+	k8s.io/apimachinery v0.19.4
+	k8s.io/apiserver v0.19.4
+	k8s.io/client-go v0.19.4
 	k8s.io/klog v1.0.0
 	k8s.io/kubectl v0.19.2
 	sigs.k8s.io/structured-merge-diff v1.0.2

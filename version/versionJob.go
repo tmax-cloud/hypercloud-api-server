@@ -25,19 +25,18 @@ type ModuleInfo struct {
 			Container string   `yaml:"container"`
 		} `yaml:"exec"`
 		HTTPGet struct {
-			Path        string `yaml:"path"`
-			Port        string `yaml:"port"`
-			Scheme      string `yaml:"scheme"`
-			ServiceName string `yaml:"serviceName"`
+			Path   string `yaml:"path"`
+			Port   string `yaml:"port"`
+			Scheme string `yaml:"scheme"`
 		} `yaml:"httpGet"`
 		TCPSocket struct {
 			Port string `yaml:"port"`
 		} `yaml:"tcpSocket"`
 	} `yaml:"readinessProbe"`
 	VersionProbe struct {
-		Exec struct {
-			Command   []string `yaml:"command"`
-			Container string   `yaml:"container"`
+		Container string `yaml:"container"`
+		Exec      struct {
+			Command []string `yaml:"command"`
 		} `yaml:"exec"`
 	} `yaml:"versionProbe"`
 }
@@ -54,7 +53,7 @@ type Module struct {
 	Version string `json:"version"`
 }
 
-// PodStatus struct is for storing status of each pod.
+// PodStatus struct is for temporarily storing status of each pod.
 type PodStatus struct {
 	Data map[string]int
 }
@@ -84,10 +83,10 @@ func ParsingVersion(str string) string {
 		return "latest"
 	}
 
-	r, err := regexp.Compile("[a-z]*[A-Z]*[0-9]*\\.[0-9]*\\.[0-9]*")
+	r, err := regexp.Compile(":[a-z]*[A-Z]*[0-9]+\\.[0-9]+\\.[0-9]+")
 	if err != nil {
 		klog.Errorln(err)
 	}
 
-	return r.FindString(str)
+	return strings.TrimLeft(r.FindString(str), ":")
 }

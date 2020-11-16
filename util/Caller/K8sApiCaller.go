@@ -55,6 +55,8 @@ func init() {
 		panic(err.Error())
 	}
 	// creates the clientset
+	config.Burst = 100
+	config.QPS = 100
 	Clientset, err = kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
@@ -221,7 +223,6 @@ func ExecCommand(pod v1.Pod, command []string, container string) (string, string
 	if err != nil {
 		return "", "", err
 	}
-
 	var stdout, stderr bytes.Buffer
 	err = exec.Stream(remotecommand.StreamOptions{
 		Stdin:  stdin,
