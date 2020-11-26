@@ -124,7 +124,7 @@ func GetAccessibleNS(userId string, labelSelector string) coreApi.NamespaceList 
 		panic(err)
 	}
 	if sarResult.Status.Allowed {
-		klog.Infoln(" User [ ", userId, " ] has Namespace List Role, Can Access All Namespace")
+		klog.Infoln(" User [ " + userId + " ] has Namespace List Role, Can Access All Namespace")
 		nsList, err = Clientset.CoreV1().Namespaces().List(
 			context.TODO(),
 			metav1.ListOptions{
@@ -136,7 +136,7 @@ func GetAccessibleNS(userId string, labelSelector string) coreApi.NamespaceList 
 			panic(err)
 		}
 	} else {
-		klog.Infoln(" User [ ", userId, " ] has No Namespace List Role, Check If user has Namespace Get Role to Certain Namespace")
+		klog.Infoln(" User [ " + userId + " ] has No Namespace List Role, Check If user has Namespace Get Role to Certain Namespace")
 		potentialNsList, err := Clientset.CoreV1().Namespaces().List(
 			context.TODO(),
 			metav1.ListOptions{
@@ -170,7 +170,7 @@ func GetAccessibleNS(userId string, labelSelector string) coreApi.NamespaceList 
 					panic(err)
 				}
 				if sarResult.Status.Allowed {
-					klog.Infoln(" User [ ", userId, " ] has Namespace Get Role in Namspace [ ", potentialNs.GetName(), " ]")
+					klog.Infoln(" User [ " + userId + " ] has Namespace Get Role in Namspace [ " + potentialNs.GetName() + " ]")
 					nsList.Items = append(nsList.Items, potentialNs)
 				}
 			}(potentialNs, userId, userGroups, nsList)
@@ -183,13 +183,13 @@ func GetAccessibleNS(userId string, labelSelector string) coreApi.NamespaceList 
 			nsList.ResourceVersion = potentialNsList.ResourceVersion
 			nsList.TypeMeta = potentialNsList.TypeMeta
 		} else {
-			klog.Infoln(" User [ ", userId, " ] has No Namespace Get Role in Any Namspace")
+			klog.Infoln(" User [ " + userId + " ] has No Namespace Get Role in Any Namspace")
 		}
 	}
 	if len(nsList.Items) > 0 {
-		klog.Infoln("=== [ ", userId, " ] Accessible Namespace ===")
+		klog.Infoln("=== [ " + userId + " ] Accessible Namespace ===")
 		for _, ns := range nsList.Items {
-			klog.Infoln("  ", ns.Name)
+			klog.Infoln("  " + ns.Name)
 		}
 	}
 	return *nsList
@@ -226,7 +226,7 @@ func GetAccessibleNSC(userId string, labelSelector string) claim.NamespaceClaimL
 	}
 
 	if sarResult.Status.Allowed {
-		klog.Infoln(" User [ ", userId, " ] has NamespaceClaim List Role, Can Access All NamespaceClaim")
+		klog.Infoln(" User [ " + userId + " ] has NamespaceClaim List Role, Can Access All NamespaceClaim")
 
 		if err := json.Unmarshal(data, &nscList); err != nil {
 			klog.Errorln(err)
@@ -234,7 +234,7 @@ func GetAccessibleNSC(userId string, labelSelector string) claim.NamespaceClaimL
 		}
 
 	} else {
-		klog.Infoln(" User [ ", userId, " ] has No NamespaceClaim List Role, Check If user has NamespaceClaim Get Role & has Owner Annotation on certain NamespaceClaim")
+		klog.Infoln(" User [ " + userId + " ] has No NamespaceClaim List Role, Check If user has NamespaceClaim Get Role & has Owner Annotation on certain NamespaceClaim")
 		// 2. Check If User has NSC Get Role
 		nscGetRuleReview := authApi.SubjectAccessReview{
 			Spec: authApi.SubjectAccessReviewSpec{
@@ -253,7 +253,7 @@ func GetAccessibleNSC(userId string, labelSelector string) claim.NamespaceClaimL
 			panic(err)
 		}
 		if sarResult.Status.Allowed {
-			klog.Infoln(" User [ ", userId, " ] has NamespaceClaim Get Role")
+			klog.Infoln(" User [ " + userId + " ] has NamespaceClaim Get Role")
 			var potentialNscList = &claim.NamespaceClaimList{}
 			if err := json.Unmarshal(data, &potentialNscList); err != nil {
 				klog.Errorln(err)
@@ -266,7 +266,7 @@ func GetAccessibleNSC(userId string, labelSelector string) claim.NamespaceClaimL
 				go func(potentialNsc claim.NamespaceClaim, userId string, nscList *claim.NamespaceClaimList) {
 					defer wg.Done()
 					if potentialNsc.Annotations["owner"] == userId {
-						klog.Infoln(" User [ ", userId, " ] has owner annotation in NamspaceClaim [ ", potentialNsc.Name, " ]")
+						klog.Infoln(" User [ " + userId + " ] has owner annotation in NamspaceClaim [ " + potentialNsc.Name + " ]")
 						nscList.Items = append(nscList.Items, potentialNsc)
 					}
 				}(potentialNsc, userId, nscList)
@@ -279,16 +279,16 @@ func GetAccessibleNSC(userId string, labelSelector string) claim.NamespaceClaimL
 				nscList.ResourceVersion = potentialNscList.ResourceVersion
 				nscList.TypeMeta = potentialNscList.TypeMeta
 			} else {
-				klog.Infoln(" User [ ", userId, " ] has No owner annotaion in Any NamspaceClaim")
+				klog.Infoln(" User [ " + userId + " ] has No owner annotaion in Any NamspaceClaim")
 			}
 		} else {
-			klog.Infoln(" User [ ", userId, " ] has no NamespaceClaim Get Role, User Cannot Access any NamespaceClaim")
+			klog.Infoln(" User [ " + userId + " ] has no NamespaceClaim Get Role, User Cannot Access any NamespaceClaim")
 		}
 
 	}
 
 	if len(nscList.Items) > 0 {
-		klog.Infoln("=== [ ", userId, " ] Accessible NamespaceClaim ===")
+		klog.Infoln("=== [ " + userId + " ] Accessible NamespaceClaim ===")
 		for _, nsc := range nscList.Items {
 			klog.Infoln("  ", nsc.Name)
 		}
@@ -359,8 +359,8 @@ func GetPodListByLabel(label string, namespace string) (v1.PodList, bool) {
 	)
 
 	if err != nil {
-		klog.Errorln("Error occured by ", label)
-		klog.Errorln("Error content : ", err)
+		klog.Errorln("Error occured by " + label)
+		klog.Errorln("Error content : " + err.Error())
 	}
 
 	// check if podList is empty

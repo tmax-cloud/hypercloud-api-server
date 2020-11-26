@@ -35,9 +35,9 @@ func Get(res http.ResponseWriter, req *http.Request) {
 			}
 		}
 	} else {
+		klog.Infoln(" User [ " + userId + " ] has No Permission to Any NamespaceClaim")
 		status = http.StatusForbidden
 	}
-	klog.Infoln("status before : " + strconv.Itoa(status))
 	util.SetResponse(res, "", nscList, status)
 }
 
