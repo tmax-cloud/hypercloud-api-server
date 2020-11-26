@@ -8,7 +8,7 @@ require (
 	github.com/gophercloud/gophercloud v0.1.0 // indirect
 	github.com/jessevdk/go-flags v1.4.0 // indirect
 	github.com/robfig/cron v1.2.0
-	github.com/tmax-cloud/hypercloud-go-operator v0.0.0-20201125075454-f1d38c791cc3
+	github.com/tmax-cloud/hypercloud-go-operator v0.0.0-20201125074013-0e686fd12999
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.19.4
 	k8s.io/apimachinery v0.19.4

@@ -418,6 +418,8 @@ github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJy
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
+github.com/tmax-cloud/hypercloud-go-operator v0.0.0-20201125074013-0e686fd12999 h1:BgBAwB6bJqyduugDuxti/8FYP5rOhc0KBIQ7dgrnA9s=
+github.com/tmax-cloud/hypercloud-go-operator v0.0.0-20201125074013-0e686fd12999/go.mod h1:kUEOl32HlKpt7+hD9EIg4Ufni+tAEdRJgJ8MIfAj53Y=
 github.com/tmax-cloud/hypercloud-go-operator v0.0.0-20201125075454-f1d38c791cc3 h1:KQm9lpl2KSmJDC6zP8T/6YNKKu7v9rJeW9aFXyrz2u4=
 github.com/tmax-cloud/hypercloud-go-operator v0.0.0-20201125075454-f1d38c791cc3/go.mod h1:UB3O9n+DLwno//FHxKLPA0pspdgLBUFU6HiiSVs833s=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=

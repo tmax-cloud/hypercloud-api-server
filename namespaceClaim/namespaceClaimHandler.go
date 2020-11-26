@@ -37,6 +37,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	} else {
 		status = http.StatusForbidden
 	}
+	klog.Infoln("status before : " + strconv.Itoa(status))
 	util.SetResponse(res, "", nscList, status)
 }
 

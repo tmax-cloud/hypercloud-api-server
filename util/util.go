@@ -49,12 +49,16 @@ func SetResponse(res http.ResponseWriter, outString string, outJson interface{},
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
 		}
+		//set StatusCode
+		res.WriteHeader(status)
 		res.Write(js)
+
 	} else {
+		//set StatusCode
+		res.WriteHeader(status)
 		res.Write([]byte(outString))
 	}
-	//set StatusCode
-	res.WriteHeader(status)
+
 	return res
 }
 

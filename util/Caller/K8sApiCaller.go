@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"flag"
 	"hypercloud-api-server/util"
 	"io"
+	"path/filepath"
 	"reflect"
 	"sync"
 
@@ -17,9 +19,10 @@ import (
 	rbacApi "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
+	"k8s.io/client-go/util/homedir"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/scheme"
 )
@@ -29,42 +32,42 @@ var config *restclient.Config
 
 func init() {
 
-	// var kubeconfig *string
-	// if home := homedir.HomeDir(); home != "" {
-	// 	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "/root/.kube")
-	// } else {
-	// 	kubeconfig = flag.String("kubeconfig", "", "/root/.kube")
-	// }
-	// flag.Parse()
-
-	// var err error
-	// config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	// if err != nil {
-	// 	klog.Errorln(err)
-	// 	panic(err)
-	// }
-	// config.Burst = 100
-	// config.QPS = 100
-	// Clientset, err = kubernetes.NewForConfig(config)
-	// if err != nil {
-	// 	klog.Errorln(err)
-	// 	panic(err)
-	// }
-
-	// If api-server on POD, activate below code and delete above
-	// creates the in-cluster config
-	var err error
-	config, err = rest.InClusterConfig()
-	if err != nil {
-		panic(err.Error())
+	var kubeconfig *string
+	if home := homedir.HomeDir(); home != "" {
+		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "/root/.kube")
+	} else {
+		kubeconfig = flag.String("kubeconfig", "", "/root/.kube")
 	}
-	// creates the clientset
+	flag.Parse()
+
+	var err error
+	config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
 	config.Burst = 100
 	config.QPS = 100
 	Clientset, err = kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err.Error())
+		klog.Errorln(err)
+		panic(err)
 	}
+
+	// If api-server on POD, activate below code and delete above
+	// creates the in-cluster config
+	// var err error
+	// config, err = rest.InClusterConfig()
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
+	// // creates the clientset
+	// config.Burst = 100
+	// config.QPS = 100
+	// Clientset, err = kubernetes.NewForConfig(config)
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
 
 }
 
