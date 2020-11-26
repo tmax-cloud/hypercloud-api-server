@@ -4,6 +4,7 @@ import (
 	alert "hypercloud-api-server/alert"
 	metering "hypercloud-api-server/metering"
 	"hypercloud-api-server/namespace"
+	"hypercloud-api-server/namespaceClaim"
 	user "hypercloud-api-server/user"
 	version "hypercloud-api-server/version"
 
@@ -26,7 +27,7 @@ func main() {
 	mux.HandleFunc("/metering", serveMetering)
 	mux.HandleFunc("/namespace", serveNamespace)
 	mux.HandleFunc("/alert", serveAlert)
-	//mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
+	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
 
 	// HTTP Server Start
@@ -46,6 +47,19 @@ func serveNamespace(res http.ResponseWriter, req *http.Request) {
 		namespace.Put(res, req)
 	case http.MethodOptions:
 		namespace.Options(res, req)
+	default:
+		//error
+	}
+}
+
+func serveNamespaceClaim(res http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodGet:
+		namespaceClaim.Get(res, req)
+	case http.MethodPut:
+		namespaceClaim.Put(res, req)
+	case http.MethodOptions:
+		namespaceClaim.Options(res, req)
 	default:
 		//error
 	}

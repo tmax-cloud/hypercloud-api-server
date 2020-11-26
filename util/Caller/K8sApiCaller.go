@@ -3,9 +3,13 @@ package Caller
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"hypercloud-api-server/util"
 	"io"
 	"reflect"
 	"sync"
+
+	claim "github.com/tmax-cloud/hypercloud-go-operator/api/v1alpha1"
 
 	authApi "k8s.io/api/authorization/v1"
 	coreApi "k8s.io/api/core/v1"
@@ -149,7 +153,7 @@ func GetAccessibleNS(userId string, labelSelector string) coreApi.NamespaceList 
 					Spec: authApi.SubjectAccessReviewSpec{
 						ResourceAttributes: &authApi.ResourceAttributes{
 							Resource:  "namespaces",
-							Verb:      "list",
+							Verb:      "get", //FIXME : list??
 							Group:     "",
 							Namespace: potentialNs.GetName(),
 						},
@@ -186,6 +190,107 @@ func GetAccessibleNS(userId string, labelSelector string) coreApi.NamespaceList 
 		}
 	}
 	return *nsList
+}
+
+func GetAccessibleNSC(userId string, labelSelector string) claim.NamespaceClaimList {
+	// var nsList = &coreApi.NamespaceList{}
+	var nscList = &claim.NamespaceClaimList{}
+
+	// 1. Check If User has NSC List Role
+	nsListRuleReview := authApi.SubjectAccessReview{
+		Spec: authApi.SubjectAccessReviewSpec{
+			ResourceAttributes: &authApi.ResourceAttributes{
+				Resource: "namespaceclaims",
+				Verb:     "list",
+				Group:    util.HYPERCLOUD4_CLAIM_API_GROUP,
+			},
+			User: userId,
+		},
+	}
+
+	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsListRuleReview, metav1.CreateOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
+	klog.Infoln("sarResult : " + sarResult.String())
+
+	// /apis/claim.tmax.io/v1alpha1/namespaceclaims?labelselector
+	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/namespaceclaims").Param(util.QUERY_PARAMETER_LABEL_SELECTOR, labelSelector).DoRaw(context.TODO())
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
+
+	if sarResult.Status.Allowed {
+		klog.Infoln(" User [ ", userId, " ] has NamespaceClaim List Role, Can Access All NamespaceClaim")
+
+		if err := json.Unmarshal(data, &nscList); err != nil {
+			klog.Errorln(err)
+			panic(err)
+		}
+
+	} else {
+		klog.Infoln(" User [ ", userId, " ] has No NamespaceClaim List Role, Check If user has NamespaceClaim Get Role & has Owner Annotation on certain NamespaceClaim")
+		// 2. Check If User has NSC Get Role
+		nscGetRuleReview := authApi.SubjectAccessReview{
+			Spec: authApi.SubjectAccessReviewSpec{
+				ResourceAttributes: &authApi.ResourceAttributes{
+					Resource: "namespaceclaims",
+					Verb:     "get",
+					Group:    util.HYPERCLOUD4_CLAIM_API_GROUP,
+				},
+				User: userId,
+			},
+		}
+
+		sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nscGetRuleReview, metav1.CreateOptions{})
+		if err != nil {
+			klog.Errorln(err)
+			panic(err)
+		}
+		if sarResult.Status.Allowed {
+			klog.Infoln(" User [ ", userId, " ] has NamespaceClaim Get Role")
+			var potentialNscList = &claim.NamespaceClaimList{}
+			if err := json.Unmarshal(data, &potentialNscList); err != nil {
+				klog.Errorln(err)
+				panic(err)
+			}
+
+			var wg sync.WaitGroup
+			wg.Add(len(potentialNscList.Items))
+			for _, potentialNsc := range potentialNscList.Items {
+				go func(potentialNsc claim.NamespaceClaim, userId string, nscList *claim.NamespaceClaimList) {
+					defer wg.Done()
+					if potentialNsc.Annotations["owner"] == userId {
+						klog.Infoln(" User [ ", userId, " ] has owner annotation in NamspaceClaim [ ", potentialNsc.Name, " ]")
+						nscList.Items = append(nscList.Items, potentialNsc)
+					}
+				}(potentialNsc, userId, nscList)
+			}
+			wg.Wait()
+
+			if len(nscList.Items) > 0 {
+				nscList.APIVersion = potentialNscList.APIVersion
+				nscList.Continue = potentialNscList.Continue
+				nscList.ResourceVersion = potentialNscList.ResourceVersion
+				nscList.TypeMeta = potentialNscList.TypeMeta
+			} else {
+				klog.Infoln(" User [ ", userId, " ] has No owner annotaion in Any NamspaceClaim")
+			}
+		} else {
+			klog.Infoln(" User [ ", userId, " ] has no NamespaceClaim Get Role, User Cannot Access any NamespaceClaim")
+		}
+
+	}
+
+	if len(nscList.Items) > 0 {
+		klog.Infoln("=== [ ", userId, " ] Accessible NamespaceClaim ===")
+		for _, nsc := range nscList.Items {
+			klog.Infoln("  ", nsc.Name)
+		}
+	}
+	return *nscList
 }
 
 // ExecCommand sends a 'exec' command to specific pod.
