@@ -28,7 +28,7 @@ spec:
             - containerPort: 28678
           volumeMounts:
             - name: config-module
-              mountPath: /config
+              mountPath: /version
           resources:
             limits:
               cpu: "1"
