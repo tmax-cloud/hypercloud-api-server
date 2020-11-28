@@ -17,18 +17,21 @@ spec:
       labels:
         hypercloud4: api-server
     spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        effect: "NoSchedule"
+      nodeSelector:
+        kubernetes.io/hostname: master-1
       containers:
         - name: hypercloud4-api-server
-          image: 192.168.6.110:5000/hc-api-server:latest
+          image: 192.168.6.110:5000/hc-api-server:v0.0.3
           imagePullPolicy: Always
           env:
             - name: TZ
               value: Asia/Seoul
           ports:
             - containerPort: 28678
-          volumeMounts:
-            - name: config-module
-              mountPath: /config
           resources:
             limits:
               cpu: "1"
@@ -36,11 +39,7 @@ spec:
             requests:
               cpu: "1"
               memory: "1Gi"
-      serviceAccountName: hypercloud4-admin
-      volumes:
-        - name : config-module
-          configMap:
-            name: hc-version
+      serviceAccountName: default
 
 ---
 

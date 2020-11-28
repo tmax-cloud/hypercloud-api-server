@@ -175,5 +175,6 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	wg.Wait()
 
 	// encode to JSON format and response
-	res = util.SetResponse(res, "", result, http.StatusOK)
+	util.SetResponse(res, "", result, http.StatusOK)
+	return
 }

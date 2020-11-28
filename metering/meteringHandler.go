@@ -4,14 +4,15 @@ import (
 	"database/sql"
 	meteringModel "hypercloud-api-server/metering/model"
 	"hypercloud-api-server/util"
-	"k8s.io/klog"
 	"net/http"
 	"strconv"
 	"time"
+
+	"k8s.io/klog"
 )
 
-func Get(res http.ResponseWriter, req *http.Request)  {
-	klog.Infoln("**** GET /metering");
+func Get(res http.ResponseWriter, req *http.Request) {
+	klog.Infoln("**** GET /metering")
 	queryParams := req.URL.Query()
 	offset := queryParams.Get(util.QUERY_PARAMETER_OFFSET)
 	limit := queryParams.Get(util.QUERY_PARAMETER_LIMIT)
@@ -21,11 +22,11 @@ func Get(res http.ResponseWriter, req *http.Request)  {
 	endTime := queryParams.Get(util.QUERY_PARAMETER_ENDTIME)
 	sorts := queryParams[util.QUERY_PARAMETER_SORT]
 
-	if  timeUnit == "" || !(timeUnit == "hour"||timeUnit == "day"||timeUnit == "month"||timeUnit == "year")  {
+	if timeUnit == "" || !(timeUnit == "hour" || timeUnit == "day" || timeUnit == "month" || timeUnit == "year") {
 		timeUnit = "day" // default time unit
 	}
 	var query string
-	query = makeTimeRange ( timeUnit, startTime, endTime , query )
+	query = makeTimeRange(timeUnit, startTime, endTime, query)
 
 	if namespace != "" {
 		query += "and namespace like '%" + namespace + "%'"
@@ -35,7 +36,7 @@ func Get(res http.ResponseWriter, req *http.Request)  {
 		query += "order by"
 		for _, sort := range sorts {
 			order := " asc, "
-			if sort[0] == '-'{
+			if sort[0] == '-' {
 				order = " desc, "
 				sort = sort[1:]
 			}
@@ -61,11 +62,12 @@ func Get(res http.ResponseWriter, req *http.Request)  {
 
 	meteringDataList := getMeteringDataFromDB(query)
 	util.SetResponse(res, "", meteringDataList, http.StatusOK)
+	return
 }
 
 func getMeteringDataFromDB(query string) []meteringModel.Metering {
-	klog.Infoln( "=== query ===" )
-	klog.Infoln( query )
+	klog.Infoln("=== query ===")
+	klog.Infoln(query)
 	db, err := sql.Open(DB_DRIVER, DB_URI)
 	if err != nil {
 		klog.Error(err)
@@ -111,31 +113,31 @@ func makeTimeRange(timeUnit string, startTime string, endTime string, query stri
 	if startTime != "" {
 		start, _ = strconv.ParseInt(startTime, 10, 64)
 	}
-	if endTime != ""{
+	if endTime != "" {
 		end, _ = strconv.ParseInt(endTime, 10, 64)
 	}
 
 	switch timeUnit {
-	case "hour" :
+	case "hour":
 		query += "select * from metering.metering_hour"
 		break
-	case "day" :
+	case "day":
 		query += "select * from metering.metering_day"
 		break
-	case "month" :
+	case "month":
 		query += "select * from metering.metering_month"
 		break
-	case "year" :
+	case "year":
 		query += "select * from metering.metering_year"
 		break
 	}
-	query += " where metering_time between '" + time.Unix(start, 0).Format("2006-01-02 15:04:05") + "' and '" + time.Unix(end, 0).Format("2006-01-02 15:04:05")+ "'"
+	query += " where metering_time between '" + time.Unix(start, 0).Format("2006-01-02 15:04:05") + "' and '" + time.Unix(end, 0).Format("2006-01-02 15:04:05") + "'"
 	return query
 }
-
 
 func Options(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("**** OPTIONS/metering")
 	out := "**** OPTIONS/metering"
 	util.SetResponse(res, out, nil, http.StatusOK)
+	return
 }
