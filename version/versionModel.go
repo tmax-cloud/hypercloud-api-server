@@ -1,13 +1,5 @@
 package version
 
-import (
-	"regexp"
-	"strconv"
-	"strings"
-
-	"k8s.io/klog"
-)
-
 // ModuleInfo is a strcut for storing configMap file.
 // It must support all possible cases described in configMap.
 type ModuleInfo struct {
@@ -63,30 +55,4 @@ func NewPodStatus() *PodStatus {
 	p := PodStatus{}
 	p.Data = map[string]int{}
 	return &p
-}
-
-// AppendStatusResult connects status of each pod to one string.
-func AppendStatusResult(p PodStatus) string {
-	temp := ""
-	for s, num := range p.Data {
-		temp += s + "(" + strconv.Itoa(num) + "),"
-	}
-	return strings.TrimRight(temp, ",")
-}
-
-// ParsingVersion parses version using regular expression
-func ParsingVersion(str string) string {
-	isLatest, err := regexp.MatchString("latest", str)
-	if err != nil {
-		klog.Errorln(err)
-	} else if isLatest {
-		return "latest"
-	}
-
-	r, err := regexp.Compile(":[a-z]*[A-Z]*[0-9]+\\.[0-9]+\\.[0-9]+")
-	if err != nil {
-		klog.Errorln(err)
-	}
-
-	return strings.TrimLeft(r.FindString(str), ":")
 }

@@ -5,6 +5,8 @@ import (
 	"io/ioutil"
 	"net"
 	"reflect"
+	"regexp"
+	"strconv"
 	"sync"
 	"time"
 
@@ -26,7 +28,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 
 	// 1. READ CONFIG FILE
 	// File path should be same with what declared on volume mount in yaml file.
-	yamlFile, err := ioutil.ReadFile("/config/module.config")
+	yamlFile, err := ioutil.ReadFile("version/module.config")
 	if err != nil {
 		klog.Errorln(err)
 	}
@@ -177,4 +179,30 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	// encode to JSON format and response
 	util.SetResponse(res, "", result, http.StatusOK)
 	return
+}
+
+// AppendStatusResult connects status of each pod to one string.
+func AppendStatusResult(p PodStatus) string {
+	temp := ""
+	for s, num := range p.Data {
+		temp += s + "(" + strconv.Itoa(num) + "),"
+	}
+	return strings.TrimRight(temp, ",")
+}
+
+// ParsingVersion parses version using regular expression
+func ParsingVersion(str string) string {
+	isLatest, err := regexp.MatchString("latest", str)
+	if err != nil {
+		klog.Errorln(err)
+	} else if isLatest {
+		return "latest"
+	}
+
+	r, err := regexp.Compile(":[a-z]*[A-Z]*[0-9]+\\.[0-9]+\\.[0-9]+")
+	if err != nil {
+		klog.Errorln(err)
+	}
+
+	return strings.TrimLeft(r.FindString(str), ":")
 }

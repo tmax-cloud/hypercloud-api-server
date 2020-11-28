@@ -32,6 +32,9 @@ spec:
               value: Asia/Seoul
           ports:
             - containerPort: 28678
+          volumeMounts:
+            - name: config-module
+              mountPath: /version
           resources:
             limits:
               cpu: "1"
