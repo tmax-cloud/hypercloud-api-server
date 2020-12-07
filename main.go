@@ -1,12 +1,12 @@
 package main
 
 import (
-	alert "hypercloud-api-server/alert"
-	metering "hypercloud-api-server/metering"
-	"hypercloud-api-server/namespace"
-	"hypercloud-api-server/namespaceClaim"
-	user "hypercloud-api-server/user"
-	version "hypercloud-api-server/version"
+	alert "github.com/tmax-cloud/hypercloud-api-server/alert"
+	metering "github.com/tmax-cloud/hypercloud-api-server/metering"
+	"github.com/tmax-cloud/hypercloud-api-server/namespace"
+	"github.com/tmax-cloud/hypercloud-api-server/namespaceClaim"
+	user "github.com/tmax-cloud/hypercloud-api-server/user"
+	version "github.com/tmax-cloud/hypercloud-api-server/version"
 
 	"k8s.io/klog"
 
