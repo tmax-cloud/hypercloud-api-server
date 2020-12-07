@@ -1,4 +1,4 @@
-module hypercloud-api-server
+module github.com/tmax-cloud/hypercloud-api-server
 
 go 1.15
 

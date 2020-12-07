@@ -3,21 +3,22 @@ package metering
 import (
 	"database/sql"
 	"encoding/json"
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/google/uuid"
-	meteringModel "hypercloud-api-server/metering/model"
-	"hypercloud-api-server/util"
 	"io/ioutil"
-	"k8s.io/klog"
 	"net/http"
 	"strconv"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
+	meteringModel "github.com/tmax-cloud/hypercloud-api-server/metering/model"
+	"github.com/tmax-cloud/hypercloud-api-server/util"
+	"k8s.io/klog"
 )
 
 const (
 	DB_DRIVER = "mysql"
 	//DB_URI = "root:tmax@tcp(mysql-service.hypercloud4-system.svc:3306)/metering?parseTime=true"
-	DB_URI = "root:tmax@tcp(192.168.6.171:31420)/metering?parseTime=true"
+	DB_URI                = "root:tmax@tcp(192.168.6.171:31420)/metering?parseTime=true"
 	METERING_INSERT_QUERY = "insert into metering.metering (id,namespace,cpu,memory,storage,gpu,public_ip,private_ip,metering_time,status) " +
 		"values (?,?,truncate(?,2),?,?,truncate(?,2),?,?,?,?)"
 	METERING_DELETE_QUERY = "truncate metering.metering"
@@ -52,50 +53,50 @@ const (
 		"date_format(metering_time,'%Y-01-01 %H:00:00') as metering_time, status from metering.metering_month where status = 'Success' " +
 		"group by year(metering_time), namespace"
 
-	PROMETHEUS_URI = "http://192.168.6.155:9090/api/v1/query" //FIXME
-	PROMETHEUS_GET_CPU_QUERY = "sum(kube_pod_container_resource_requests{resource=\"cpu\"})by(namespace)"
-	PROMETHEUS_GET_MEMORY_QUERY = "sum(kube_pod_container_resource_requests{resource=\"memory\"})by(namespace)"
-	PROMETHEUS_GET_STORAGE_QUERY = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)by(namespace)"
+	PROMETHEUS_URI                 = "http://192.168.6.155:9090/api/v1/query" //FIXME
+	PROMETHEUS_GET_CPU_QUERY       = "sum(kube_pod_container_resource_requests{resource=\"cpu\"})by(namespace)"
+	PROMETHEUS_GET_MEMORY_QUERY    = "sum(kube_pod_container_resource_requests{resource=\"memory\"})by(namespace)"
+	PROMETHEUS_GET_STORAGE_QUERY   = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)by(namespace)"
 	PROMETHEUS_GET_PUBLIC_IP_QUERY = "count(kube_service_spec_type{type=\"LoadBalancer\"})by(namespace)"
 )
 
 var t time.Time
 
-func MeteringJob(){
+func MeteringJob() {
 	t = time.Now()
 	klog.Infoln("============= Metering Time =============")
-	klog.Infoln("Current Time   : " , t.Format("2006-01-02 15:04:05"))
+	klog.Infoln("Current Time   : ", t.Format("2006-01-02 15:04:05"))
 	klog.Infoln("minute of hour : ", t.Minute())
 	klog.Infoln("hour of day    : ", t.Hour())
 	klog.Infoln("day of month   : ", t.Day())
 	klog.Infoln("day of year    : ", t.YearDay())
 
-	if  t.Minute() == 0  {
+	if t.Minute() == 0 {
 		// Insert into metering_hour
 		insertMeteringHour()
-	} else if  t.Hour() == 0  {
+	} else if t.Hour() == 0 {
 		// Insert into metering_day
 		insertMeteringDay()
-	} else if  t.Day() == 1  {
+	} else if t.Day() == 1 {
 		// Insert into metering_month
 		insertMeteringMonth()
-	} else if t.YearDay() == 1  {
+	} else if t.YearDay() == 1 {
 		// Insert into metering_year
 		insertMeteringYear()
 	}
 
 	meteringData := makeMeteringMap()
 
-	klog.Infoln( "============= Metering Data =============" )
+	klog.Infoln("============= Metering Data =============")
 	for key, value := range meteringData {
-		klog.Infoln( key + "/cpu : " , value.Cpu )
-		klog.Infoln( key + "/memory : " , value.Memory )
-		klog.Infoln( key + "/storage : " , value.Storage )
-		klog.Infoln( key + "/publicIp : " , value.PublicIp )
-		klog.Infoln( "-----------------------------------------" )
+		klog.Infoln(key+"/cpu : ", value.Cpu)
+		klog.Infoln(key+"/memory : ", value.Memory)
+		klog.Infoln(key+"/storage : ", value.Storage)
+		klog.Infoln(key+"/publicIp : ", value.PublicIp)
+		klog.Infoln("-----------------------------------------")
 	}
 	//Insert into metering (new data)
-	insertMeteringData( meteringData )
+	insertMeteringData(meteringData)
 
 	deleteMeteringData()
 
@@ -105,9 +106,9 @@ func deleteMeteringData() {
 
 }
 
-func insertMeteringData( meteringData map[string]*meteringModel.Metering ) {
-	klog.Infoln("Insert into METERING Start!!");
-	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"));
+func insertMeteringData(meteringData map[string]*meteringModel.Metering) {
+	klog.Infoln("Insert into METERING Start!!")
+	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"))
 
 	db, err := sql.Open(DB_DRIVER, DB_URI)
 	if err != nil {
@@ -117,7 +118,7 @@ func insertMeteringData( meteringData map[string]*meteringModel.Metering ) {
 
 	for key, data := range meteringData {
 		_, err := db.Exec(METERING_INSERT_QUERY,
-			uuid.New() ,
+			uuid.New(),
 			key,
 			data.Cpu,
 			data.Memory,
@@ -125,14 +126,14 @@ func insertMeteringData( meteringData map[string]*meteringModel.Metering ) {
 			data.Gpu,
 			data.PublicIp,
 			data.PrivateIp,
-			t.Format("2006-01-02 15:04:00"), "Success" )
+			t.Format("2006-01-02 15:04:00"), "Success")
 
 		if err != nil {
 			klog.Error(err)
 		}
 	}
 
-	klog.Infoln("Insert into METERING Success!!");
+	klog.Infoln("Insert into METERING Success!!")
 }
 
 func makeMeteringMap() map[string]*meteringModel.Metering {
@@ -143,12 +144,12 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 		for k := range meteringData {
 			keys = append(keys, k)
 		}
-		if util.Contains( keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].Cpu, _ = strconv.ParseFloat( metric.Value[1],64)
+		if util.Contains(keys, metric.Metric["namespace"]) {
+			meteringData[metric.Metric["namespace"]].Cpu, _ = strconv.ParseFloat(metric.Value[1], 64)
 		} else {
 			metering := new(meteringModel.Metering)
 			metering.Namespace = metric.Metric["namespace"]
-			metering.Cpu, _ = strconv.ParseFloat( metric.Value[1],64)
+			metering.Cpu, _ = strconv.ParseFloat(metric.Value[1], 64)
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
@@ -159,12 +160,12 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 		for k := range meteringData {
 			keys = append(keys, k)
 		}
-		if util.Contains( keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].Memory, _ = strconv.ParseFloat( metric.Value[1],64)
+		if util.Contains(keys, metric.Metric["namespace"]) {
+			meteringData[metric.Metric["namespace"]].Memory, _ = strconv.ParseFloat(metric.Value[1], 64)
 		} else {
 			metering := new(meteringModel.Metering)
 			metering.Namespace = metric.Metric["namespace"]
-			metering.Memory, _ = strconv.ParseFloat( metric.Value[1],64)
+			metering.Memory, _ = strconv.ParseFloat(metric.Value[1], 64)
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
@@ -175,12 +176,12 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 		for k := range meteringData {
 			keys = append(keys, k)
 		}
-		if util.Contains( keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].Storage, _ = strconv.ParseFloat( metric.Value[1],64)
+		if util.Contains(keys, metric.Metric["namespace"]) {
+			meteringData[metric.Metric["namespace"]].Storage, _ = strconv.ParseFloat(metric.Value[1], 64)
 		} else {
 			metering := new(meteringModel.Metering)
 			metering.Namespace = metric.Metric["namespace"]
-			metering.Storage, _ = strconv.ParseFloat( metric.Value[1],64)
+			metering.Storage, _ = strconv.ParseFloat(metric.Value[1], 64)
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
@@ -191,7 +192,7 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 		for k := range meteringData {
 			keys = append(keys, k)
 		}
-		if util.Contains( keys, metric.Metric["namespace"]) {
+		if util.Contains(keys, metric.Metric["namespace"]) {
 			meteringData[metric.Metric["namespace"]].PublicIp, _ = strconv.ParseInt(metric.Value[1], 10, 64)
 		} else {
 			metering := new(meteringModel.Metering)
@@ -237,8 +238,8 @@ func getMeteringData(query string) meteringModel.MetricDataList {
 }
 
 func insertMeteringYear() {
-	klog.Infoln("Insert into METERING_YEAR Start!!");
-	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"));
+	klog.Infoln("Insert into METERING_YEAR Start!!")
+	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"))
 
 	db, err := sql.Open(DB_DRIVER, DB_URI)
 	if err != nil {
@@ -292,20 +293,20 @@ func insertMeteringYear() {
 			return
 		}
 	}
-	klog.Infoln("Insert into METERING_YEAR Success!!");
-	klog.Infoln( "--------------------------------------" )
-	klog.Infoln("Update METERING_MONTH Past data to 'Merged' Start!!");
+	klog.Infoln("Insert into METERING_YEAR Success!!")
+	klog.Infoln("--------------------------------------")
+	klog.Infoln("Update METERING_MONTH Past data to 'Merged' Start!!")
 	_, err = db.Exec(METERING_MONTH_UPDATE_QUERY)
 	if err != nil {
 		klog.Error(err)
 		return
 	}
-	klog.Infoln("Update METERING_MONTH Past data to 'Merged' Success!!");
+	klog.Infoln("Update METERING_MONTH Past data to 'Merged' Success!!")
 }
 
 func insertMeteringMonth() {
-	klog.Infoln("Insert into METERING_MONTH Start!!");
-	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"));
+	klog.Infoln("Insert into METERING_MONTH Start!!")
+	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"))
 
 	db, err := sql.Open(DB_DRIVER, DB_URI)
 	if err != nil {
@@ -359,20 +360,20 @@ func insertMeteringMonth() {
 			return
 		}
 	}
-	klog.Infoln("Insert into METERING_MONTH Success!!");
-	klog.Infoln( "--------------------------------------" )
-	klog.Infoln("Update METERING_DAY Past data to 'Merged' Start!!");
+	klog.Infoln("Insert into METERING_MONTH Success!!")
+	klog.Infoln("--------------------------------------")
+	klog.Infoln("Update METERING_DAY Past data to 'Merged' Start!!")
 	_, err = db.Exec(METERING_DAY_UPDATE_QUERY)
 	if err != nil {
 		klog.Error(err)
 		return
 	}
-	klog.Infoln("Update METERING_DAY Past data to 'Merged' Success!!");
+	klog.Infoln("Update METERING_DAY Past data to 'Merged' Success!!")
 }
 
 func insertMeteringDay() {
-	klog.Infoln("Insert into METERING_DAY Start!!");
-	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"));
+	klog.Infoln("Insert into METERING_DAY Start!!")
+	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"))
 
 	db, err := sql.Open(DB_DRIVER, DB_URI)
 	if err != nil {
@@ -424,20 +425,20 @@ func insertMeteringDay() {
 			return
 		}
 	}
-	klog.Infoln("Insert into METERING_DAY Success!!");
-	klog.Infoln( "--------------------------------------" )
-	klog.Infoln("Update METERING_HOUR Past data to 'Merged' Start!!");
+	klog.Infoln("Insert into METERING_DAY Success!!")
+	klog.Infoln("--------------------------------------")
+	klog.Infoln("Update METERING_HOUR Past data to 'Merged' Start!!")
 	_, err = db.Exec(METERING_HOUR_UPDATE_QUERY)
 	if err != nil {
 		klog.Error(err)
 		return
 	}
-	klog.Infoln("Update METERING_HOUR Past data to 'Merged' Success!!");
+	klog.Infoln("Update METERING_HOUR Past data to 'Merged' Success!!")
 }
 
 func insertMeteringHour() {
-	klog.Infoln("Insert into METERING_HOUR Start!!");
-	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"));
+	klog.Infoln("Insert into METERING_HOUR Start!!")
+	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"))
 
 	db, err := sql.Open(DB_DRIVER, DB_URI)
 	if err != nil {
@@ -489,14 +490,13 @@ func insertMeteringHour() {
 			return
 		}
 	}
-	klog.Infoln("Insert into METERING_HOUR Success!!");
-	klog.Infoln( "--------------------------------------" )
-	klog.Infoln("Delete METERING for past 1 hour Start!!");
+	klog.Infoln("Insert into METERING_HOUR Success!!")
+	klog.Infoln("--------------------------------------")
+	klog.Infoln("Delete METERING for past 1 hour Start!!")
 	_, err = db.Exec(METERING_DELETE_QUERY)
 	if err != nil {
 		klog.Error(err)
 		return
 	}
-	klog.Infoln("Delete METERING for past 1 hour Success!!");
+	klog.Infoln("Delete METERING for past 1 hour Success!!")
 }
-

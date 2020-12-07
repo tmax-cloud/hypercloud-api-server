@@ -12,8 +12,8 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"hypercloud-api-server/util"
-	k8sApiCaller "hypercloud-api-server/util/Caller"
+	"github.com/tmax-cloud/hypercloud-api-server/util"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
 
 	"net/http"
 	"strings"

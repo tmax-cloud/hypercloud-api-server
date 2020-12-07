@@ -1,10 +1,11 @@
 package namespaceClaim
 
 import (
-	"hypercloud-api-server/util"
-	k8sApiCaller "hypercloud-api-server/util/Caller"
 	"net/http"
 	"strconv"
+
+	"github.com/tmax-cloud/hypercloud-api-server/util"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
 
 	claim "github.com/tmax-cloud/hypercloud-go-operator/api/v1alpha1"
 

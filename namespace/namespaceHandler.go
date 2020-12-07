@@ -1,10 +1,11 @@
 package namespace
 
 import (
-	"hypercloud-api-server/util"
-	k8sApiCaller "hypercloud-api-server/util/Caller"
 	"net/http"
 	"strconv"
+
+	"github.com/tmax-cloud/hypercloud-api-server/util"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"

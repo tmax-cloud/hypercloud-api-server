@@ -3,10 +3,11 @@ package alert
 import (
 	"encoding/json"
 	"fmt"
-	alertModel "hypercloud-api-server/alert/model"
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	alertModel "github.com/tmax-cloud/hypercloud-api-server/alert/model"
 
 	"k8s.io/apiserver/pkg/apis/audit"
 

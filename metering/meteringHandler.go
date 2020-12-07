@@ -2,11 +2,12 @@ package metering
 
 import (
 	"database/sql"
-	meteringModel "hypercloud-api-server/metering/model"
-	"hypercloud-api-server/util"
 	"net/http"
 	"strconv"
 	"time"
+
+	meteringModel "github.com/tmax-cloud/hypercloud-api-server/metering/model"
+	"github.com/tmax-cloud/hypercloud-api-server/util"
 
 	"k8s.io/klog"
 )
