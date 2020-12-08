@@ -1,0 +1,10 @@
+I1208 20:12:23.937998 2277235 main.go:78] Starting Hypercloud-Operator-API server...
+I1208 20:12:32.131689 2277235 namespaceHandler.go:15] **** GET/namespace
+I1208 20:12:32.131769 2277235 namespaceHandler.go:22] userId :  admin@tmax.co.kr
+I1208 20:12:32.131791 2277235 namespaceHandler.go:30] limit :  
+I1208 20:12:32.131817 2277235 namespaceHandler.go:31] labelSelector :  
+I1208 20:12:32.131892 2277235 K8sApiCaller.go:128] userId :  admin@tmax.co.kr
+I1208 20:12:32.131925 2277235 HyperAuthCaller.go:62]  [HyperAuth] HyperAuth Get User Detail Without Token Service
+E1208 20:12:35.197698 2277235 HyperAuthCaller.go:75] Get "http://192.168.6.151:8080/auth/realms/tmax/user/admin@tmax.co.kr": dial tcp 192.168.6.151:8080: connect: no route to host
+E1208 20:12:35.197698 2277235 HyperAuthCaller.go:75] Get "http://192.168.6.151:8080/auth/realms/tmax/user/admin@tmax.co.kr": dial tcp 192.168.6.151:8080: connect: no route to host
+E1208 20:12:35.197698 2277235 HyperAuthCaller.go:75] Get "http://192.168.6.151:8080/auth/realms/tmax/user/admin@tmax.co.kr": dial tcp 192.168.6.151:8080: connect: no route to host
