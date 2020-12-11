@@ -52,14 +52,15 @@ func SetResponse(res http.ResponseWriter, outString string, outJson interface{},
 		//set StatusCode
 		res.WriteHeader(status)
 		res.Write(js)
+		return res
 
 	} else {
 		//set StatusCode
 		res.WriteHeader(status)
 		res.Write([]byte(outString))
-	}
+		return res
 
-	return res
+	}
 }
 
 func Contains(slice []string, item string) bool {

@@ -12,8 +12,8 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
-	"hypercloud-api-server/util"
-	k8sApiCaller "hypercloud-api-server/util/Caller"
+	"github.com/tmax-cloud/hypercloud-api-server/util"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
 
 	"net/http"
 	"strings"
@@ -177,7 +177,8 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	wg.Wait()
 
 	// encode to JSON format and response
-	res = util.SetResponse(res, "", result, http.StatusOK)
+	util.SetResponse(res, "", result, http.StatusOK)
+	return
 }
 
 // AppendStatusResult connects status of each pod to one string.

@@ -3,8 +3,6 @@ package metering
 import (
 	"database/sql"
 	"encoding/json"
-	meteringModel "hypercloud-api-server/metering/model"
-	"hypercloud-api-server/util"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -12,12 +10,15 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
+	meteringModel "github.com/tmax-cloud/hypercloud-api-server/metering/model"
+	"github.com/tmax-cloud/hypercloud-api-server/util"
 	"k8s.io/klog"
 )
 
 const (
 	DB_DRIVER = "mysql"
 	//DB_URI = "root:tmax@tcp(mysql-service.hypercloud4-system.svc:3306)/metering?parseTime=true"
+	//DB_URI = "root:tmax@tcp(192.168.6.171:31420)/metering?parseTime=true"
 	DB_URI                = "tmax:tmax@tcp(192.168.6.116:3306)/metering?parseTime=true"
 	METERING_INSERT_QUERY = "insert into metering.metering (id,namespace,cpu,memory,storage,gpu,public_ip,private_ip,metering_time,status) " +
 		"values (?,?,truncate(?,2),?,?,truncate(?,2),?,?,?,?)"
@@ -56,6 +57,7 @@ const (
 		"date_format(metering_time,'%Y-01-01 %H:00:00') as metering_time, status from metering.metering_month where status = 'Success' " +
 		"group by year(metering_time), namespace"
 
+	//PROMETHEUS_URI = "http://192.168.6.155:9090/api/v1/query" //FIXME
 	PROMETHEUS_URI                 = "http://10.101.168.154:9090/api/v1/query" //FIXME
 	PROMETHEUS_GET_CPU_QUERY       = "sum(kube_pod_container_resource_requests{resource=\"cpu\"})by(namespace)"
 	PROMETHEUS_GET_MEMORY_QUERY    = "sum(kube_pod_container_resource_requests{resource=\"memory\"})by(namespace)"
@@ -305,14 +307,16 @@ func insertMeteringYear() {
 		return
 	}
 	klog.Infoln("Update METERING_MONTH Past data to 'Merged' Success!!")
-	klog.Infoln("--------------------------------------")
-	klog.Infoln("Delete METERING for past 1 year Start!!")
-	_, err = db.Exec(METERING_MONTH_DELETE_QUERY)
-	if err != nil {
-		klog.Error(err)
-		return
-	}
-	klog.Infoln("Delete METERING for past 1 year Success!!")
+	/*
+		klog.Infoln("--------------------------------------")
+		klog.Infoln("Delete METERING for past 1 year Start!!")
+		_, err = db.Exec(METERING_MONTH_DELETE_QUERY)
+		if err != nil {
+			klog.Error(err)
+			return
+		}
+		klog.Infoln("Delete METERING for past 1 year Success!!")
+	*/
 }
 
 func insertMeteringMonth() {
@@ -380,14 +384,16 @@ func insertMeteringMonth() {
 		return
 	}
 	klog.Infoln("Update METERING_DAY Past data to 'Merged' Success!!")
-	klog.Infoln("--------------------------------------")
-	klog.Infoln("Delete METERING for past 1 month Start!!")
-	_, err = db.Exec(METERING_DAY_DELETE_QUERY)
-	if err != nil {
-		klog.Error(err)
-		return
-	}
-	klog.Infoln("Delete METERING for past 1 month Success!!")
+	/*
+		klog.Infoln("--------------------------------------")
+		klog.Infoln("Delete METERING for past 1 month Start!!")
+		_, err = db.Exec(METERING_DAY_DELETE_QUERY)
+		if err != nil {
+			klog.Error(err)
+			return
+		}
+		klog.Infoln("Delete METERING for past 1 month Success!!")
+	*/
 }
 
 func insertMeteringDay() {
@@ -453,14 +459,16 @@ func insertMeteringDay() {
 		return
 	}
 	klog.Infoln("Update METERING_HOUR Past data to 'Merged' Success!!")
-	klog.Infoln("--------------------------------------")
-	klog.Infoln("Delete METERING for past 1 day Start!!")
-	_, err = db.Exec(METERING_HOUR_DELETE_QUERY)
-	if err != nil {
-		klog.Error(err)
-		return
-	}
-	klog.Infoln("Delete METERING for past 1 day Success!!")
+	/*
+		klog.Infoln("--------------------------------------")
+		klog.Infoln("Delete METERING for past 1 day Start!!")
+		_, err = db.Exec(METERING_HOUR_DELETE_QUERY)
+		if err != nil {
+			klog.Error(err)
+			return
+		}
+		klog.Infoln("Delete METERING for past 1 day Success!!")
+	*/
 }
 
 func insertMeteringHour() {

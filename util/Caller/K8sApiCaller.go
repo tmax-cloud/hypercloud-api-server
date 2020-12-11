@@ -5,11 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"hypercloud-api-server/util"
 	"io"
 	"path/filepath"
 	"reflect"
 	"sync"
+
+	"github.com/tmax-cloud/hypercloud-api-server/util"
 
 	claim "github.com/tmax-cloud/hypercloud-go-operator/api/v1alpha1"
 
@@ -17,6 +18,7 @@ import (
 	coreApi "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacApi "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
@@ -69,6 +71,35 @@ func init() {
 	// 	panic(err.Error())
 	// }
 
+}
+
+func GetNamespace(nsName string) *v1.Namespace {
+	namespace, err := Clientset.CoreV1().Namespaces().Get(context.TODO(), nsName, metav1.GetOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			klog.Info(" Namespace [ " + nsName + " ] is Not Exists")
+			return nil
+		} else {
+			klog.Info("Get Namespace [ " + nsName + " ] Failed")
+			klog.Errorln(err)
+			panic(err)
+		}
+	} else {
+		klog.Info("Get Namespace [ " + nsName + " ] Success")
+		return namespace
+	}
+}
+
+func UpdateNamespace(namespace *v1.Namespace) *v1.Namespace {
+	namespace, err := Clientset.CoreV1().Namespaces().Update(context.TODO(), namespace, metav1.UpdateOptions{})
+	if err != nil {
+		klog.Info("Update Namespace [ " + namespace.Name + " ] Failed")
+		klog.Errorln(err)
+		panic(err)
+	} else {
+		klog.Info("Update Namespace [ " + namespace.Name + " ] Success")
+		return namespace
+	}
 }
 
 func CreateClusterRoleBinding(ClusterRoleBinding *rbacApi.ClusterRoleBinding) {

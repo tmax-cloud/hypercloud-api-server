@@ -1,16 +1,18 @@
 package user
 
 import (
-	"hypercloud-api-server/util"
+	"net/http"
+
+	"github.com/tmax-cloud/hypercloud-api-server/util"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
+
+	rbacApi "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
-	"net/http"
-	rbacApi "k8s.io/api/rbac/v1"
-	k8sApiCaller "hypercloud-api-server/util/Caller"
 )
 
-func Post(res http.ResponseWriter, req *http.Request)  {
-	klog.Infoln("**** POST /user");
+func Post(res http.ResponseWriter, req *http.Request) {
+	klog.Infoln("**** POST /user")
 	queryParams := req.URL.Query()
 	userId := queryParams.Get("userId")
 
@@ -30,24 +32,25 @@ func Post(res http.ResponseWriter, req *http.Request)  {
 		},
 		RoleRef: rbacApi.RoleRef{
 			APIGroup: "rbac.authorization.k8s.io",
-			Kind: "ClusterRole",
-			Name: "clusterrole-new-user",
+			Kind:     "ClusterRole",
+			Name:     "clusterrole-new-user",
 		},
-		Subjects : []rbacApi.Subject{
+		Subjects: []rbacApi.Subject{
 			{
 				APIGroup: "rbac.authorization.k8s.io",
-				Kind: "User",
-				Name: userId,
+				Kind:     "User",
+				Name:     userId,
 			},
 		},
 	}
 	k8sApiCaller.CreateClusterRoleBinding(&clusterRoleBinding)
 	out := "Create ClusterRoleBinding for New User Success"
 	util.SetResponse(res, out, nil, http.StatusOK)
+	return
 }
 
 func Delete(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** DELETE /user");
+	klog.Infoln("**** DELETE /user")
 	queryParams := req.URL.Query()
 	userId := queryParams.Get("userId")
 
@@ -67,7 +70,8 @@ func Delete(res http.ResponseWriter, req *http.Request) {
 }
 
 func Options(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** OPTIONS/user");
+	klog.Infoln("**** OPTIONS/user")
 	out := "**** OPTIONS/user"
 	util.SetResponse(res, out, nil, http.StatusOK)
+	return
 }

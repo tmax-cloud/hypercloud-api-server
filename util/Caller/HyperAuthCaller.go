@@ -2,19 +2,20 @@ package Caller
 
 import (
 	"encoding/json"
-	"hypercloud-api-server/util"
 	"io/ioutil"
-	"k8s.io/klog"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/tmax-cloud/hypercloud-api-server/util"
+	"k8s.io/klog"
 )
 
-func setHyperAuthURL (serviceName string) string {
+func setHyperAuthURL(serviceName string) string {
 	hyperauthHttpPort := "8080"
 	if os.Getenv("HYPERAUTH_HTTP_PORT") != "" {
-		hyperauthHttpPort =  os.Getenv("HYPERAUTH_HTTP_PORT")
+		hyperauthHttpPort = os.Getenv("HYPERAUTH_HTTP_PORT")
 	}
 	return util.HYPERAUTH_URL + ":" + hyperauthHttpPort + "/" + serviceName
 }
@@ -55,11 +56,11 @@ func LoginAsAdmin() string {
 	return accessToken
 }
 
-func getUserDetailWithoutToken ( userId string ) map[string]interface{} {
+func getUserDetailWithoutToken(userId string) map[string]interface{} {
 	klog.Infoln(" [HyperAuth] HyperAuth Get User Detail Without Token Service")
 
 	// Make Request Object
-	req, err := http.NewRequest("GET", setHyperAuthURL(util.HYPERAUTH_SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN) + userId,nil)
+	req, err := http.NewRequest("GET", setHyperAuthURL(util.HYPERAUTH_SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN)+userId, nil)
 	if err != nil {
 		panic(err)
 	}
