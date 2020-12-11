@@ -32,6 +32,7 @@ func LoginAsAdmin() string {
 	// Make Request Object
 	req, err := http.NewRequest("POST", setHyperAuthURL(util.HYPERAUTH_SERVICE_NAME_LOGIN_AS_ADMIN), strings.NewReader(data.Encode()))
 	if err != nil {
+		klog.Error(err)
 		panic(err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -40,6 +41,7 @@ func LoginAsAdmin() string {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		klog.Error(err)
 		panic(err)
 	}
 	defer resp.Body.Close()
@@ -62,6 +64,7 @@ func getUserDetailWithoutToken(userId string) map[string]interface{} {
 	// Make Request Object
 	req, err := http.NewRequest("GET", setHyperAuthURL(util.HYPERAUTH_SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN)+userId, nil)
 	if err != nil {
+		klog.Error(err)
 		panic(err)
 	}
 
@@ -69,6 +72,7 @@ func getUserDetailWithoutToken(userId string) map[string]interface{} {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		klog.Error(err)
 		panic(err)
 	}
 	defer resp.Body.Close()
@@ -80,6 +84,8 @@ func getUserDetailWithoutToken(userId string) map[string]interface{} {
 
 	var resultJson map[string]interface{}
 	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
+		klog.Error(err)
+		panic(err)
 	}
 	return resultJson
 }

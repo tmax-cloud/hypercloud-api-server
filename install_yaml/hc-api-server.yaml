@@ -42,6 +42,13 @@ spec:
             requests:
               cpu: "1"
               memory: "1Gi"
+          volumeMounts:
+          - name: api-server-log-mnt
+            mountPath: /logs    
+      volumes:
+      - name: api-server-log-mnt
+        hostPath:
+          path: /root/woo/go-workspace/src/hypercloud-api-server/logs  # need to be changed per Env
       serviceAccountName: default
 
 ---
