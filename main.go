@@ -147,8 +147,8 @@ func serveVersion(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		version.Get(res, req)
-
 	default:
 		//error
+		//This is test
 	}
 }
