@@ -27,7 +27,7 @@ const (
 	METERING_HOUR_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory," +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu," +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " +
-		"truncate(sum(traffic_in/count(*),2) as traffic_in, truncate(sum(traffic_out/count(*),2) as traffic_out" +
+		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out" +
 		"metering_time, status from metering.metering group by hour(metering_time), namespace"
 	METERING_HOUR_UPDATE_QUERY = "update metering.metering_hour set status = 'Merged' where status = 'Success'"
 	METERING_HOUR_DELETE_QUERY = "delete from metering.metering_hour where status = 'Merged'"
@@ -36,7 +36,7 @@ const (
 	METERING_DAY_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, " +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, " +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip," +
-		"truncate(sum(traffic_in/count(*),2) as traffic_in, truncate(sum(traffic_out/count(*),2) as traffic_out" +
+		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out" +
 		"metering_time, status from metering.metering_hour where status = 'Success' " +
 		"group by day(metering_time), namespace"
 	METERING_DAY_UPDATE_QUERY = "update metering.metering_day set status = 'Merged' where status = 'Success'"
@@ -46,7 +46,7 @@ const (
 	METERING_MONTH_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, " +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, " +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " +
-		"truncate(sum(traffic_in/count(*),2) as traffic_in, truncate(sum(traffic_out/count(*),2) as traffic_out" +
+		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out" +
 		"metering_time, status from metering.metering_day where status = 'Success' " +
 		"group by month(metering_time), namespace"
 	METERING_MONTH_UPDATE_QUERY = "update metering.metering_month set status = 'Merged' where status = 'Success'"
@@ -56,12 +56,12 @@ const (
 	METERING_YEAR_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, " +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, " +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " +
-		"truncate(sum(traffic_in/count(*),2) as traffic_in, truncate(sum(traffic_out/count(*),2) as traffic_out" +
+		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out" +
 		"date_format(metering_time,'%Y-01-01 %H:00:00') as metering_time, status from metering.metering_month where status = 'Success' " +
 		"group by year(metering_time), namespace"
 
-	//PROMETHEUS_URI = "http://192.168.6.155:9090/api/v1/query" //FIXME
-	PROMETHEUS_URI                   = "http://prometheus-k8s.monitoring:9090/api/v1/query"
+	//PROMETHEUS_URI                   = "http://prometheus-k8s.monitoring:9090/api/v1/query" // use this when running on pod
+	PROMETHEUS_URI                   = "http://10.101.168.154:9090:/api/v1/query" // use this when running on process
 	PROMETHEUS_GET_CPU_QUERY         = "namespace:container_cpu_usage_seconds_total:sum_rate"
 	PROMETHEUS_GET_MEMORY_QUERY      = "namespace:container_memory_usage_bytes:sum"
 	PROMETHEUS_GET_STORAGE_QUERY     = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)by(namespace)"
