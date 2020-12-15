@@ -149,6 +149,5 @@ func serveVersion(res http.ResponseWriter, req *http.Request) {
 		version.Get(res, req)
 	default:
 		//error
-		//This is test
 	}
 }

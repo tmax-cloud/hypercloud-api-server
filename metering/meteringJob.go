@@ -66,8 +66,8 @@ const (
 	PROMETHEUS_GET_MEMORY_QUERY      = "namespace:container_memory_usage_bytes:sum"
 	PROMETHEUS_GET_STORAGE_QUERY     = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)by(namespace)"
 	PROMETHEUS_GET_PUBLIC_IP_QUERY   = "count(kube_service_spec_type{type=\"LoadBalancer\"})by(namespace)"
-	PROMETHEUS_GET_TRAFFIC_IN_QUERY  = "namespace:container_network_receive_bytes_total:sum"
-	PROMETHEUS_GET_TRAFFIC_OUT_QUERY = "namespace:container_network_transmit_bytes_total:sum"
+	PROMETHEUS_GET_TRAFFIC_IN_QUERY  = "sum(container_network_receive_bytes_total)by(namespace)"
+	PROMETHEUS_GET_TRAFFIC_OUT_QUERY = "sum(container_network_transmit_bytes_total)by(namespace)"
 )
 
 var t time.Time
@@ -103,8 +103,8 @@ func MeteringJob() {
 		klog.Infoln(key+"/memory : ", value.Memory)
 		klog.Infoln(key+"/storage : ", value.Storage)
 		klog.Infoln(key+"/publicIp : ", value.PublicIp)
-		klog.Infoln(key+"/TrafficIn : ", value.TrafficIn)
-		klog.Infoln(key+"/TrafficOut : ", value.TrafficOut)
+		klog.Infoln(key+"/trafficIn : ", value.TrafficIn)
+		klog.Infoln(key+"/trafficOut : ", value.TrafficOut)
 		klog.Infoln("-----------------------------------------")
 	}
 	//Insert into metering (new data)
