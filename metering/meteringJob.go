@@ -18,51 +18,56 @@ import (
 const (
 	DB_DRIVER = "mysql"
 	//DB_URI = "root:tmax@tcp(mysql-service.hypercloud4-system.svc:3306)/metering?parseTime=true"
-	//DB_URI = "root:tmax@tcp(192.168.6.171:31420)/metering?parseTime=true"
-	DB_URI                = "tmax:tmax@tcp(192.168.6.116:3306)/metering?parseTime=true"
-	METERING_INSERT_QUERY = "insert into metering.metering (id,namespace,cpu,memory,storage,gpu,public_ip,private_ip,metering_time,status) " +
-		"values (?,?,truncate(?,2),?,?,truncate(?,2),?,?,?,?)"
+	DB_URI                = "tmax:tmax@tcp(192.168.6.116:3306)/metering?parseTime=true" // temporary database, should be changed
+	METERING_INSERT_QUERY = "insert into metering.metering (id,namespace,cpu,memory,storage,gpu,public_ip,private_ip, traffic_in, traffic_out, metering_time, status) " +
+		"values (?,?,truncate(?,2),?,?,truncate(?,2),?,?,?,?,?,?)"
 	METERING_DELETE_QUERY = "truncate metering.metering"
 
-	METERING_HOUR_INSERT_QUERY = "insert into metering.metering_hour values (?,?,?,?,?,?,?,?,?,?)"
+	METERING_HOUR_INSERT_QUERY = "insert into metering.metering_hour values (?,?,?,?,?,?,?,?,?,?,?,?)"
 	METERING_HOUR_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory," +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu," +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " +
+		"truncate(sum(traffic_in/count(*),2) as traffic_in, truncate(sum(traffic_out/count(*),2) as traffic_out" +
 		"metering_time, status from metering.metering group by hour(metering_time), namespace"
 	METERING_HOUR_UPDATE_QUERY = "update metering.metering_hour set status = 'Merged' where status = 'Success'"
 	METERING_HOUR_DELETE_QUERY = "delete from metering.metering_hour where status = 'Merged'"
 
-	METERING_DAY_INSERT_QUERY = "insert into metering.metering_day values (?,?,?,?,?,?,?,?,?,?)"
+	METERING_DAY_INSERT_QUERY = "insert into metering.metering_day values (?,?,?,?,?,?,?,?,?,?,?,?)"
 	METERING_DAY_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, " +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, " +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip," +
+		"truncate(sum(traffic_in/count(*),2) as traffic_in, truncate(sum(traffic_out/count(*),2) as traffic_out" +
 		"metering_time, status from metering.metering_hour where status = 'Success' " +
 		"group by day(metering_time), namespace"
 	METERING_DAY_UPDATE_QUERY = "update metering.metering_day set status = 'Merged' where status = 'Success'"
 	METERING_DAY_DELETE_QUERY = "delete from metering.metering_day where status = 'Merged'"
 
-	METERING_MONTH_INSERT_QUERY = "insert into metering.metering_month values (?,?,?,?,?,?,?,?,?,?)"
+	METERING_MONTH_INSERT_QUERY = "insert into metering.metering_month values (?,?,?,?,?,?,?,?,?,?,?,?)"
 	METERING_MONTH_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, " +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, " +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " +
+		"truncate(sum(traffic_in/count(*),2) as traffic_in, truncate(sum(traffic_out/count(*),2) as traffic_out" +
 		"metering_time, status from metering.metering_day where status = 'Success' " +
 		"group by month(metering_time), namespace"
 	METERING_MONTH_UPDATE_QUERY = "update metering.metering_month set status = 'Merged' where status = 'Success'"
 	METERING_MONTH_DELETE_QUERY = "delete from metering.metering_month where status = 'Merged'"
 
-	METERING_YEAR_INSERT_QUERY = "insert into metering.metering_year values (?,?,?,?,?,?,?,?,?,?)"
+	METERING_YEAR_INSERT_QUERY = "insert into metering.metering_year values (?,?,?,?,?,?,?,?,?,?,?,?)"
 	METERING_YEAR_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, " +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, " +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " +
+		"truncate(sum(traffic_in/count(*),2) as traffic_in, truncate(sum(traffic_out/count(*),2) as traffic_out" +
 		"date_format(metering_time,'%Y-01-01 %H:00:00') as metering_time, status from metering.metering_month where status = 'Success' " +
 		"group by year(metering_time), namespace"
 
 	//PROMETHEUS_URI = "http://192.168.6.155:9090/api/v1/query" //FIXME
-	PROMETHEUS_URI                 = "http://10.101.168.154:9090/api/v1/query" //FIXME
-	PROMETHEUS_GET_CPU_QUERY       = "sum(kube_pod_container_resource_requests{resource=\"cpu\"})by(namespace)"
-	PROMETHEUS_GET_MEMORY_QUERY    = "sum(kube_pod_container_resource_requests{resource=\"memory\"})by(namespace)"
-	PROMETHEUS_GET_STORAGE_QUERY   = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)by(namespace)"
-	PROMETHEUS_GET_PUBLIC_IP_QUERY = "count(kube_service_spec_type{type=\"LoadBalancer\"})by(namespace)"
+	PROMETHEUS_URI                   = "http://prometheus-k8s.monitoring:9090/api/v1/query"
+	PROMETHEUS_GET_CPU_QUERY         = "namespace:container_cpu_usage_seconds_total:sum_rate"
+	PROMETHEUS_GET_MEMORY_QUERY      = "namespace:container_memory_usage_bytes:sum"
+	PROMETHEUS_GET_STORAGE_QUERY     = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)by(namespace)"
+	PROMETHEUS_GET_PUBLIC_IP_QUERY   = "count(kube_service_spec_type{type=\"LoadBalancer\"})by(namespace)"
+	PROMETHEUS_GET_TRAFFIC_IN_QUERY  = "namespace:container_network_receive_bytes_total:sum"
+	PROMETHEUS_GET_TRAFFIC_OUT_QUERY = "namespace:container_network_transmit_bytes_total:sum"
 )
 
 var t time.Time
@@ -98,6 +103,8 @@ func MeteringJob() {
 		klog.Infoln(key+"/memory : ", value.Memory)
 		klog.Infoln(key+"/storage : ", value.Storage)
 		klog.Infoln(key+"/publicIp : ", value.PublicIp)
+		klog.Infoln(key+"/TrafficIn : ", value.TrafficIn)
+		klog.Infoln(key+"/TrafficOut : ", value.TrafficOut)
 		klog.Infoln("-----------------------------------------")
 	}
 	//Insert into metering (new data)
@@ -131,6 +138,8 @@ func insertMeteringData(meteringData map[string]*meteringModel.Metering) {
 			data.Gpu,
 			data.PublicIp,
 			data.PrivateIp,
+			data.TrafficIn,
+			data.TrafficOut,
 			t.Format("2006-01-02 15:04:00"), "Success")
 
 		if err != nil {
@@ -206,6 +215,39 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
+
+	trafficIn := getMeteringData(PROMETHEUS_GET_TRAFFIC_IN_QUERY)
+	for _, metric := range trafficIn.Result {
+		var keys []string
+		for k := range meteringData {
+			keys = append(keys, k)
+		}
+		if util.Contains(keys, metric.Metric["namespace"]) {
+			meteringData[metric.Metric["namespace"]].TrafficIn, _ = strconv.ParseFloat(metric.Value[1], 64)
+		} else {
+			metering := new(meteringModel.Metering)
+			metering.Namespace = metric.Metric["namespace"]
+			metering.TrafficIn, _ = strconv.ParseFloat(metric.Value[1], 64)
+			meteringData[metric.Metric["namespace"]] = metering
+		}
+	}
+
+	trafficOut := getMeteringData(PROMETHEUS_GET_TRAFFIC_OUT_QUERY)
+	for _, metric := range trafficOut.Result {
+		var keys []string
+		for k := range meteringData {
+			keys = append(keys, k)
+		}
+		if util.Contains(keys, metric.Metric["namespace"]) {
+			meteringData[metric.Metric["namespace"]].TrafficOut, _ = strconv.ParseFloat(metric.Value[1], 64)
+		} else {
+			metering := new(meteringModel.Metering)
+			metering.Namespace = metric.Metric["namespace"]
+			metering.TrafficOut, _ = strconv.ParseFloat(metric.Value[1], 64)
+			meteringData[metric.Metric["namespace"]] = metering
+		}
+	}
+
 	return meteringData
 }
 
@@ -227,7 +269,17 @@ func getMeteringData(query string) meteringModel.MetricDataList {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		for i := 0; i < 10; i++ {
+			klog.Errorln("Connection Failed. Retry in 5 seconds.")
+			time.Sleep(time.Second * 5)
+			resp, err = client.Do(req)
+			if err == nil {
+				break
+			}
+		}
+		if err != nil {
+			panic(err)
+		}
 	}
 	defer resp.Body.Close()
 
@@ -273,6 +325,8 @@ func insertMeteringYear() {
 			&meteringData.Gpu,
 			&meteringData.PublicIp,
 			&meteringData.PrivateIp,
+			&meteringData.TrafficIn,
+			&meteringData.TrafficOut,
 			&meteringData.MeteringTime,
 			&status)
 		if err != nil {
@@ -289,6 +343,8 @@ func insertMeteringYear() {
 			meteringData.Gpu,
 			meteringData.PublicIp,
 			meteringData.PrivateIp,
+			meteringData.TrafficIn,
+			meteringData.TrafficOut,
 			meteringData.MeteringTime.AddDate(0, -(util.MonthToInt(meteringData.MeteringTime.Month())-1),
 				-(meteringData.MeteringTime.Day()-1)).Format("2006-01-02 00:00:00"),
 			//date_format(metering_time,'%Y-01-01 00:00:00'),
@@ -350,6 +406,8 @@ func insertMeteringMonth() {
 			&meteringData.Gpu,
 			&meteringData.PublicIp,
 			&meteringData.PrivateIp,
+			&meteringData.TrafficIn,
+			&meteringData.TrafficOut,
 			&meteringData.MeteringTime,
 			&status)
 		if err != nil {
@@ -366,6 +424,8 @@ func insertMeteringMonth() {
 			meteringData.Gpu,
 			meteringData.PublicIp,
 			meteringData.PrivateIp,
+			meteringData.TrafficIn,
+			meteringData.TrafficOut,
 			meteringData.MeteringTime.AddDate(0, 0,
 				-(meteringData.MeteringTime.Day()-1)).Format("2006-01-02 00:00:00"),
 			//date_format(metering_time,'%Y-%m-01 00:00:00'),
@@ -427,6 +487,8 @@ func insertMeteringDay() {
 			&meteringData.Gpu,
 			&meteringData.PublicIp,
 			&meteringData.PrivateIp,
+			&meteringData.TrafficIn,
+			&meteringData.TrafficOut,
 			&meteringData.MeteringTime,
 			&status)
 		if err != nil {
@@ -443,6 +505,8 @@ func insertMeteringDay() {
 			meteringData.Gpu,
 			meteringData.PublicIp,
 			meteringData.PrivateIp,
+			meteringData.TrafficIn,
+			meteringData.TrafficOut,
 			meteringData.MeteringTime.Format("2006-01-02 00:00:00"), //date_format(metering_time,'%Y-%m-%d 00:00:00')
 			status)
 		if err != nil {
@@ -502,6 +566,8 @@ func insertMeteringHour() {
 			&meteringData.Gpu,
 			&meteringData.PublicIp,
 			&meteringData.PrivateIp,
+			&meteringData.TrafficIn,
+			&meteringData.TrafficOut,
 			&meteringData.MeteringTime,
 			&status)
 		if err != nil {
@@ -518,6 +584,8 @@ func insertMeteringHour() {
 			meteringData.Gpu,
 			meteringData.PublicIp,
 			meteringData.PrivateIp,
+			meteringData.TrafficIn,
+			meteringData.TrafficOut,
 			meteringData.MeteringTime.Format("2006-01-02 15:00:00"),
 			status)
 		if err != nil {
