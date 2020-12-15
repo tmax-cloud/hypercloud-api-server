@@ -1088,3 +1088,715 @@ I1215 15:23:00.016712       6 meteringJob.go:108] ------------------------------
 I1215 15:23:00.016720       6 meteringJob.go:122] Insert into METERING Start!!
 I1215 15:23:00.016732       6 meteringJob.go:123] Current Time : 2020-12-15 15:23:00
 I1215 15:23:00.155900       6 meteringJob.go:150] Insert into METERING Success!!
+I1215 15:24:00.000438       6 meteringJob.go:77] ============= Metering Time =============
+I1215 15:24:00.000540       6 meteringJob.go:78] Current Time   :  2020-12-15 15:24:00
+I1215 15:24:00.000569       6 meteringJob.go:79] minute of hour :  24
+I1215 15:24:00.000623       6 meteringJob.go:80] hour of day    :  15
+I1215 15:24:00.000649       6 meteringJob.go:81] day of month   :  15
+I1215 15:24:00.000672       6 meteringJob.go:82] day of year    :  350
+I1215 15:24:00.020643       6 meteringJob.go:100] ============= Metering Data =============
+I1215 15:24:00.020725       6 meteringJob.go:102] hypercloud4-system/cpu :  0.008732860598280472
+I1215 15:24:00.020762       6 meteringJob.go:103] hypercloud4-system/memory :  1.255497728e+09
+I1215 15:24:00.020790       6 meteringJob.go:104] hypercloud4-system/storage :  1.073741824e+10
+I1215 15:24:00.020843       6 meteringJob.go:105] hypercloud4-system/publicIp :  2
+I1215 15:24:00.020880       6 meteringJob.go:106] hypercloud4-system/TrafficIn :  0
+I1215 15:24:00.020930       6 meteringJob.go:107] hypercloud4-system/TrafficOut :  0
+I1215 15:24:00.020974       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.021011       6 meteringJob.go:102] ingress-nginx/cpu :  0.007211795481676451
+I1215 15:24:00.021138       6 meteringJob.go:103] ingress-nginx/memory :  2.22420992e+08
+I1215 15:24:00.021169       6 meteringJob.go:104] ingress-nginx/storage :  0
+I1215 15:24:00.021194       6 meteringJob.go:105] ingress-nginx/publicIp :  1
+I1215 15:24:00.021219       6 meteringJob.go:106] ingress-nginx/TrafficIn :  0
+I1215 15:24:00.021244       6 meteringJob.go:107] ingress-nginx/TrafficOut :  0
+I1215 15:24:00.021269       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.021293       6 meteringJob.go:102] kubesphere-system/cpu :  0.0019877443391371056
+I1215 15:24:00.021327       6 meteringJob.go:103] kubesphere-system/memory :  8.157184e+07
+I1215 15:24:00.021353       6 meteringJob.go:104] kubesphere-system/storage :  4.294967296e+09
+I1215 15:24:00.021378       6 meteringJob.go:105] kubesphere-system/publicIp :  0
+I1215 15:24:00.021407       6 meteringJob.go:106] kubesphere-system/TrafficIn :  0
+I1215 15:24:00.021432       6 meteringJob.go:107] kubesphere-system/TrafficOut :  0
+I1215 15:24:00.021469       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.021500       6 meteringJob.go:102] metallb-system/cpu :  0.21969646604955098
+I1215 15:24:00.021534       6 meteringJob.go:103] metallb-system/memory :  1.96657152e+08
+I1215 15:24:00.021583       6 meteringJob.go:104] metallb-system/storage :  0
+I1215 15:24:00.021628       6 meteringJob.go:105] metallb-system/publicIp :  0
+I1215 15:24:00.021675       6 meteringJob.go:106] metallb-system/TrafficIn :  0
+I1215 15:24:00.021717       6 meteringJob.go:107] metallb-system/TrafficOut :  0
+I1215 15:24:00.021748       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.021782       6 meteringJob.go:102] test-pods/cpu :  0
+I1215 15:24:00.021810       6 meteringJob.go:103] test-pods/memory :  1.6330752e+07
+I1215 15:24:00.021835       6 meteringJob.go:104] test-pods/storage :  0
+I1215 15:24:00.021875       6 meteringJob.go:105] test-pods/publicIp :  0
+I1215 15:24:00.021913       6 meteringJob.go:106] test-pods/TrafficIn :  0
+I1215 15:24:00.021941       6 meteringJob.go:107] test-pods/TrafficOut :  0
+I1215 15:24:00.021971       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.022009       6 meteringJob.go:102] uragent-system/cpu :  0.01566967676199391
+I1215 15:24:00.022049       6 meteringJob.go:103] uragent-system/memory :  2.25067008e+08
+I1215 15:24:00.022083       6 meteringJob.go:104] uragent-system/storage :  0
+I1215 15:24:00.022108       6 meteringJob.go:105] uragent-system/publicIp :  0
+I1215 15:24:00.022134       6 meteringJob.go:106] uragent-system/TrafficIn :  0
+I1215 15:24:00.022159       6 meteringJob.go:107] uragent-system/TrafficOut :  0
+I1215 15:24:00.022184       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.022208       6 meteringJob.go:102] approval-op/cpu :  1.0073322691544714e-06
+I1215 15:24:00.022240       6 meteringJob.go:103] approval-op/memory :  2.002944e+06
+I1215 15:24:00.022265       6 meteringJob.go:104] approval-op/storage :  0
+I1215 15:24:00.022288       6 meteringJob.go:105] approval-op/publicIp :  0
+I1215 15:24:00.022313       6 meteringJob.go:106] approval-op/TrafficIn :  0
+I1215 15:24:00.022338       6 meteringJob.go:107] approval-op/TrafficOut :  0
+I1215 15:24:00.022363       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.022387       6 meteringJob.go:102] catalog/cpu :  0.005462150452893103
+I1215 15:24:00.022418       6 meteringJob.go:103] catalog/memory :  4.3196416e+07
+I1215 15:24:00.022468       6 meteringJob.go:104] catalog/storage :  0
+I1215 15:24:00.022493       6 meteringJob.go:105] catalog/publicIp :  0
+I1215 15:24:00.022517       6 meteringJob.go:106] catalog/TrafficIn :  0
+I1215 15:24:00.022542       6 meteringJob.go:107] catalog/TrafficOut :  0
+I1215 15:24:00.022571       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.022595       6 meteringJob.go:102] cert-manager/cpu :  0.013388942188110247
+I1215 15:24:00.022619       6 meteringJob.go:103] cert-manager/memory :  1.7016832e+08
+I1215 15:24:00.022644       6 meteringJob.go:104] cert-manager/storage :  0
+I1215 15:24:00.022668       6 meteringJob.go:105] cert-manager/publicIp :  0
+I1215 15:24:00.022701       6 meteringJob.go:106] cert-manager/TrafficIn :  0
+I1215 15:24:00.022726       6 meteringJob.go:107] cert-manager/TrafficOut :  0
+I1215 15:24:00.022751       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.022773       6 meteringJob.go:102] console-system/cpu :  0.0006077789154845095
+I1215 15:24:00.022797       6 meteringJob.go:103] console-system/memory :  1.4993408e+08
+I1215 15:24:00.022821       6 meteringJob.go:104] console-system/storage :  0
+I1215 15:24:00.022845       6 meteringJob.go:105] console-system/publicIp :  1
+I1215 15:24:00.022871       6 meteringJob.go:106] console-system/TrafficIn :  0
+I1215 15:24:00.022905       6 meteringJob.go:107] console-system/TrafficOut :  0
+I1215 15:24:00.022930       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.022955       6 meteringJob.go:102] ingress-nginx-shared/cpu :  0.007916538919465099
+I1215 15:24:00.022980       6 meteringJob.go:103] ingress-nginx-shared/memory :  1.73268992e+08
+I1215 15:24:00.023005       6 meteringJob.go:104] ingress-nginx-shared/storage :  0
+I1215 15:24:00.023029       6 meteringJob.go:105] ingress-nginx-shared/publicIp :  1
+I1215 15:24:00.023053       6 meteringJob.go:106] ingress-nginx-shared/TrafficIn :  0
+I1215 15:24:00.023079       6 meteringJob.go:107] ingress-nginx-shared/TrafficOut :  0
+I1215 15:24:00.023107       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.023130       6 meteringJob.go:102] tekton-pipelines/cpu :  0.006398925664947194
+I1215 15:24:00.023159       6 meteringJob.go:103] tekton-pipelines/memory :  1.67305216e+08
+I1215 15:24:00.023184       6 meteringJob.go:104] tekton-pipelines/storage :  0
+I1215 15:24:00.023209       6 meteringJob.go:105] tekton-pipelines/publicIp :  0
+I1215 15:24:00.023245       6 meteringJob.go:106] tekton-pipelines/TrafficIn :  0
+I1215 15:24:00.023289       6 meteringJob.go:107] tekton-pipelines/TrafficOut :  0
+I1215 15:24:00.023318       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.023341       6 meteringJob.go:102] approval-system/cpu :  0.0002863241234883959
+I1215 15:24:00.023372       6 meteringJob.go:103] approval-system/memory :  1.7358848e+07
+I1215 15:24:00.023397       6 meteringJob.go:104] approval-system/storage :  0
+I1215 15:24:00.023427       6 meteringJob.go:105] approval-system/publicIp :  0
+I1215 15:24:00.023453       6 meteringJob.go:106] approval-system/TrafficIn :  0
+I1215 15:24:00.023478       6 meteringJob.go:107] approval-system/TrafficOut :  0
+I1215 15:24:00.023503       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.023525       6 meteringJob.go:102] default/cpu :  0.03562998526272919
+I1215 15:24:00.023561       6 meteringJob.go:103] default/memory :  3.61611264e+08
+I1215 15:24:00.023585       6 meteringJob.go:104] default/storage :  0
+I1215 15:24:00.023610       6 meteringJob.go:105] default/publicIp :  1
+I1215 15:24:00.023634       6 meteringJob.go:106] default/TrafficIn :  0
+I1215 15:24:00.023667       6 meteringJob.go:107] default/TrafficOut :  0
+I1215 15:24:00.023693       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.023716       6 meteringJob.go:102] hypercloud-system/cpu :  0.03253729330264783
+I1215 15:24:00.023740       6 meteringJob.go:103] hypercloud-system/memory :  5.210181632e+09
+I1215 15:24:00.023780       6 meteringJob.go:104] hypercloud-system/storage :  1.073741824e+10
+I1215 15:24:00.023806       6 meteringJob.go:105] hypercloud-system/publicIp :  5
+I1215 15:24:00.023831       6 meteringJob.go:106] hypercloud-system/TrafficIn :  0
+I1215 15:24:00.023855       6 meteringJob.go:107] hypercloud-system/TrafficOut :  0
+I1215 15:24:00.023881       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.023905       6 meteringJob.go:102] jitaeyun-test/cpu :  0.0007604867976396098
+I1215 15:24:00.023930       6 meteringJob.go:103] jitaeyun-test/memory :  8.8567808e+07
+I1215 15:24:00.023953       6 meteringJob.go:104] jitaeyun-test/storage :  0
+I1215 15:24:00.023982       6 meteringJob.go:105] jitaeyun-test/publicIp :  2
+I1215 15:24:00.024007       6 meteringJob.go:106] jitaeyun-test/TrafficIn :  0
+I1215 15:24:00.024032       6 meteringJob.go:107] jitaeyun-test/TrafficOut :  0
+I1215 15:24:00.024057       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.024086       6 meteringJob.go:102] monitoring/cpu :  0.3600321965135306
+I1215 15:24:00.024111       6 meteringJob.go:103] monitoring/memory :  6.201602048e+09
+I1215 15:24:00.024265       6 meteringJob.go:104] monitoring/storage :  2.68435456e+10
+I1215 15:24:00.024315       6 meteringJob.go:105] monitoring/publicIp :  0
+I1215 15:24:00.024342       6 meteringJob.go:106] monitoring/TrafficIn :  0
+I1215 15:24:00.024368       6 meteringJob.go:107] monitoring/TrafficOut :  0
+I1215 15:24:00.024393       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.024415       6 meteringJob.go:102] rook-ceph/cpu :  0.1611438012868608
+I1215 15:24:00.024441       6 meteringJob.go:103] rook-ceph/memory :  1.1479441408e+10
+I1215 15:24:00.024466       6 meteringJob.go:104] rook-ceph/storage :  0
+I1215 15:24:00.024491       6 meteringJob.go:105] rook-ceph/publicIp :  0
+I1215 15:24:00.024519       6 meteringJob.go:106] rook-ceph/TrafficIn :  0
+I1215 15:24:00.024544       6 meteringJob.go:107] rook-ceph/TrafficOut :  0
+I1215 15:24:00.024569       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.024595       6 meteringJob.go:102] bookinfo/cpu :  0.07196096486796748
+I1215 15:24:00.024637       6 meteringJob.go:103] bookinfo/memory :  7.20449536e+08
+I1215 15:24:00.024665       6 meteringJob.go:104] bookinfo/storage :  0
+I1215 15:24:00.024689       6 meteringJob.go:105] bookinfo/publicIp :  1
+I1215 15:24:00.024713       6 meteringJob.go:106] bookinfo/TrafficIn :  0
+I1215 15:24:00.024738       6 meteringJob.go:107] bookinfo/TrafficOut :  0
+I1215 15:24:00.024774       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.024799       6 meteringJob.go:102] gitlab/cpu :  0.18347369169693756
+I1215 15:24:00.024831       6 meteringJob.go:103] gitlab/memory :  5.51329792e+09
+I1215 15:24:00.024856       6 meteringJob.go:104] gitlab/storage :  0
+I1215 15:24:00.024888       6 meteringJob.go:105] gitlab/publicIp :  1
+I1215 15:24:00.024912       6 meteringJob.go:106] gitlab/TrafficIn :  0
+I1215 15:24:00.024937       6 meteringJob.go:107] gitlab/TrafficOut :  0
+I1215 15:24:00.024962       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.024985       6 meteringJob.go:102] hyperauth/cpu :  0.012489346872709006
+I1215 15:24:00.025014       6 meteringJob.go:103] hyperauth/memory :  1.27062016e+09
+I1215 15:24:00.025039       6 meteringJob.go:104] hyperauth/storage :  1.073741824e+11
+I1215 15:24:00.025064       6 meteringJob.go:105] hyperauth/publicIp :  1
+I1215 15:24:00.025089       6 meteringJob.go:106] hyperauth/TrafficIn :  0
+I1215 15:24:00.025137       6 meteringJob.go:107] hyperauth/TrafficOut :  0
+I1215 15:24:00.025177       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.025217       6 meteringJob.go:102] istio-system/cpu :  0.14070819730740136
+I1215 15:24:00.025256       6 meteringJob.go:103] istio-system/memory :  4.81646592e+09
+I1215 15:24:00.025301       6 meteringJob.go:104] istio-system/storage :  0
+I1215 15:24:00.025345       6 meteringJob.go:105] istio-system/publicIp :  1
+I1215 15:24:00.025372       6 meteringJob.go:106] istio-system/TrafficIn :  0
+I1215 15:24:00.025406       6 meteringJob.go:107] istio-system/TrafficOut :  0
+I1215 15:24:00.025431       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.025453       6 meteringJob.go:102] kube-system/cpu :  0.7639969466931458
+I1215 15:24:00.025478       6 meteringJob.go:103] kube-system/memory :  3.029671936e+09
+I1215 15:24:00.025505       6 meteringJob.go:104] kube-system/storage :  0
+I1215 15:24:00.025530       6 meteringJob.go:105] kube-system/publicIp :  0
+I1215 15:24:00.025557       6 meteringJob.go:106] kube-system/TrafficIn :  0
+I1215 15:24:00.025582       6 meteringJob.go:107] kube-system/TrafficOut :  0
+I1215 15:24:00.025611       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.025646       6 meteringJob.go:102] ck2-2/cpu :  0.07603562134635074
+I1215 15:24:00.025674       6 meteringJob.go:103] ck2-2/memory :  1.22925056e+08
+I1215 15:24:00.025705       6 meteringJob.go:104] ck2-2/storage :  6.7645734912e+10
+I1215 15:24:00.025731       6 meteringJob.go:105] ck2-2/publicIp :  4
+I1215 15:24:00.025761       6 meteringJob.go:106] ck2-2/TrafficIn :  0
+I1215 15:24:00.025787       6 meteringJob.go:107] ck2-2/TrafficOut :  0
+I1215 15:24:00.025812       6 meteringJob.go:108] -----------------------------------------
+I1215 15:24:00.025830       6 meteringJob.go:122] Insert into METERING Start!!
+I1215 15:24:00.025856       6 meteringJob.go:123] Current Time : 2020-12-15 15:24:00
+I1215 15:24:00.179852       6 meteringJob.go:150] Insert into METERING Success!!
+I1215 15:25:00.000511       6 meteringJob.go:77] ============= Metering Time =============
+I1215 15:25:00.000615       6 meteringJob.go:78] Current Time   :  2020-12-15 15:25:00
+I1215 15:25:00.000657       6 meteringJob.go:79] minute of hour :  25
+I1215 15:25:00.000692       6 meteringJob.go:80] hour of day    :  15
+I1215 15:25:00.000725       6 meteringJob.go:81] day of month   :  15
+I1215 15:25:00.000766       6 meteringJob.go:82] day of year    :  350
+I1215 15:25:00.020792       6 meteringJob.go:100] ============= Metering Data =============
+I1215 15:25:00.020892       6 meteringJob.go:102] console-system/cpu :  0.0009812549613266396
+I1215 15:25:00.020947       6 meteringJob.go:103] console-system/memory :  1.49819392e+08
+I1215 15:25:00.020989       6 meteringJob.go:104] console-system/storage :  0
+I1215 15:25:00.021029       6 meteringJob.go:105] console-system/publicIp :  1
+I1215 15:25:00.021084       6 meteringJob.go:106] console-system/TrafficIn :  0
+I1215 15:25:00.021127       6 meteringJob.go:107] console-system/TrafficOut :  0
+I1215 15:25:00.021176       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.021218       6 meteringJob.go:102] hyperauth/cpu :  0.011793190357880907
+I1215 15:25:00.021268       6 meteringJob.go:103] hyperauth/memory :  1.270530048e+09
+I1215 15:25:00.021312       6 meteringJob.go:104] hyperauth/storage :  1.073741824e+11
+I1215 15:25:00.021360       6 meteringJob.go:105] hyperauth/publicIp :  1
+I1215 15:25:00.021409       6 meteringJob.go:106] hyperauth/TrafficIn :  0
+I1215 15:25:00.021455       6 meteringJob.go:107] hyperauth/TrafficOut :  0
+I1215 15:25:00.021499       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.021558       6 meteringJob.go:102] jitaeyun-test/cpu :  0.0007638272896601038
+I1215 15:25:00.021609       6 meteringJob.go:103] jitaeyun-test/memory :  8.8567808e+07
+I1215 15:25:00.021658       6 meteringJob.go:104] jitaeyun-test/storage :  0
+I1215 15:25:00.021707       6 meteringJob.go:105] jitaeyun-test/publicIp :  2
+I1215 15:25:00.021756       6 meteringJob.go:106] jitaeyun-test/TrafficIn :  0
+I1215 15:25:00.021806       6 meteringJob.go:107] jitaeyun-test/TrafficOut :  0
+I1215 15:25:00.021855       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.021901       6 meteringJob.go:102] rook-ceph/cpu :  0.15978028145424625
+I1215 15:25:00.021982       6 meteringJob.go:103] rook-ceph/memory :  1.1486793728e+10
+I1215 15:25:00.022031       6 meteringJob.go:104] rook-ceph/storage :  0
+I1215 15:25:00.022078       6 meteringJob.go:105] rook-ceph/publicIp :  0
+I1215 15:25:00.022127       6 meteringJob.go:106] rook-ceph/TrafficIn :  0
+I1215 15:25:00.022178       6 meteringJob.go:107] rook-ceph/TrafficOut :  0
+I1215 15:25:00.022222       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.022271       6 meteringJob.go:102] monitoring/cpu :  0.35659556221557376
+I1215 15:25:00.022324       6 meteringJob.go:103] monitoring/memory :  6.210056192e+09
+I1215 15:25:00.022368       6 meteringJob.go:104] monitoring/storage :  2.68435456e+10
+I1215 15:25:00.022413       6 meteringJob.go:105] monitoring/publicIp :  0
+I1215 15:25:00.022459       6 meteringJob.go:106] monitoring/TrafficIn :  0
+I1215 15:25:00.022608       6 meteringJob.go:107] monitoring/TrafficOut :  0
+I1215 15:25:00.022670       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.022711       6 meteringJob.go:102] cert-manager/cpu :  0.013123945410081404
+I1215 15:25:00.022772       6 meteringJob.go:103] cert-manager/memory :  1.7016832e+08
+I1215 15:25:00.022822       6 meteringJob.go:104] cert-manager/storage :  0
+I1215 15:25:00.022870       6 meteringJob.go:105] cert-manager/publicIp :  0
+I1215 15:25:00.022919       6 meteringJob.go:106] cert-manager/TrafficIn :  0
+I1215 15:25:00.022967       6 meteringJob.go:107] cert-manager/TrafficOut :  0
+I1215 15:25:00.023018       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.023064       6 meteringJob.go:102] ck2-2/cpu :  0.07597713962524524
+I1215 15:25:00.023113       6 meteringJob.go:103] ck2-2/memory :  1.22925056e+08
+I1215 15:25:00.023157       6 meteringJob.go:104] ck2-2/storage :  6.7645734912e+10
+I1215 15:25:00.023205       6 meteringJob.go:105] ck2-2/publicIp :  4
+I1215 15:25:00.023253       6 meteringJob.go:106] ck2-2/TrafficIn :  0
+I1215 15:25:00.023305       6 meteringJob.go:107] ck2-2/TrafficOut :  0
+I1215 15:25:00.023348       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.023386       6 meteringJob.go:102] hypercloud-system/cpu :  0.03259881735263331
+I1215 15:25:00.023449       6 meteringJob.go:103] hypercloud-system/memory :  5.21025536e+09
+I1215 15:25:00.023490       6 meteringJob.go:104] hypercloud-system/storage :  1.073741824e+10
+I1215 15:25:00.023525       6 meteringJob.go:105] hypercloud-system/publicIp :  5
+I1215 15:25:00.023567       6 meteringJob.go:106] hypercloud-system/TrafficIn :  0
+I1215 15:25:00.023615       6 meteringJob.go:107] hypercloud-system/TrafficOut :  0
+I1215 15:25:00.023657       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.023698       6 meteringJob.go:102] hypercloud4-system/cpu :  0.008715090363525925
+I1215 15:25:00.023737       6 meteringJob.go:103] hypercloud4-system/memory :  1.2555264e+09
+I1215 15:25:00.023778       6 meteringJob.go:104] hypercloud4-system/storage :  1.073741824e+10
+I1215 15:25:00.023824       6 meteringJob.go:105] hypercloud4-system/publicIp :  2
+I1215 15:25:00.023866       6 meteringJob.go:106] hypercloud4-system/TrafficIn :  0
+I1215 15:25:00.023917       6 meteringJob.go:107] hypercloud4-system/TrafficOut :  0
+I1215 15:25:00.023974       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.024012       6 meteringJob.go:102] ingress-nginx/cpu :  0.007220795815492679
+I1215 15:25:00.024052       6 meteringJob.go:103] ingress-nginx/memory :  2.22420992e+08
+I1215 15:25:00.024088       6 meteringJob.go:104] ingress-nginx/storage :  0
+I1215 15:25:00.024278       6 meteringJob.go:105] ingress-nginx/publicIp :  1
+I1215 15:25:00.024335       6 meteringJob.go:106] ingress-nginx/TrafficIn :  0
+I1215 15:25:00.024387       6 meteringJob.go:107] ingress-nginx/TrafficOut :  0
+I1215 15:25:00.024429       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.024465       6 meteringJob.go:102] ingress-nginx-shared/cpu :  0.007759549328248059
+I1215 15:25:00.024540       6 meteringJob.go:103] ingress-nginx-shared/memory :  1.73268992e+08
+I1215 15:25:00.024581       6 meteringJob.go:104] ingress-nginx-shared/storage :  0
+I1215 15:25:00.024632       6 meteringJob.go:105] ingress-nginx-shared/publicIp :  1
+I1215 15:25:00.024674       6 meteringJob.go:106] ingress-nginx-shared/TrafficIn :  0
+I1215 15:25:00.024737       6 meteringJob.go:107] ingress-nginx-shared/TrafficOut :  0
+I1215 15:25:00.024787       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.024832       6 meteringJob.go:102] metallb-system/cpu :  0.22037505568433807
+I1215 15:25:00.024875       6 meteringJob.go:103] metallb-system/memory :  1.96681728e+08
+I1215 15:25:00.025019       6 meteringJob.go:104] metallb-system/storage :  0
+I1215 15:25:00.025077       6 meteringJob.go:105] metallb-system/publicIp :  0
+I1215 15:25:00.025121       6 meteringJob.go:106] metallb-system/TrafficIn :  0
+I1215 15:25:00.025168       6 meteringJob.go:107] metallb-system/TrafficOut :  0
+I1215 15:25:00.025219       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.025259       6 meteringJob.go:102] bookinfo/cpu :  0.07160944974568736
+I1215 15:25:00.025305       6 meteringJob.go:103] bookinfo/memory :  7.2046592e+08
+I1215 15:25:00.025349       6 meteringJob.go:104] bookinfo/storage :  0
+I1215 15:25:00.025390       6 meteringJob.go:105] bookinfo/publicIp :  1
+I1215 15:25:00.025439       6 meteringJob.go:106] bookinfo/TrafficIn :  0
+I1215 15:25:00.025482       6 meteringJob.go:107] bookinfo/TrafficOut :  0
+I1215 15:25:00.025523       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.025568       6 meteringJob.go:102] catalog/cpu :  0.005434578675872801
+I1215 15:25:00.025610       6 meteringJob.go:103] catalog/memory :  4.3196416e+07
+I1215 15:25:00.025657       6 meteringJob.go:104] catalog/storage :  0
+I1215 15:25:00.025707       6 meteringJob.go:105] catalog/publicIp :  0
+I1215 15:25:00.025756       6 meteringJob.go:106] catalog/TrafficIn :  0
+I1215 15:25:00.025811       6 meteringJob.go:107] catalog/TrafficOut :  0
+I1215 15:25:00.025860       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.025898       6 meteringJob.go:102] gitlab/cpu :  0.18540380402284928
+I1215 15:25:00.025947       6 meteringJob.go:103] gitlab/memory :  5.5197696e+09
+I1215 15:25:00.025990       6 meteringJob.go:104] gitlab/storage :  0
+I1215 15:25:00.026039       6 meteringJob.go:105] gitlab/publicIp :  1
+I1215 15:25:00.026093       6 meteringJob.go:106] gitlab/TrafficIn :  0
+I1215 15:25:00.026145       6 meteringJob.go:107] gitlab/TrafficOut :  0
+I1215 15:25:00.026194       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.026239       6 meteringJob.go:102] istio-system/cpu :  0.1429604063877134
+I1215 15:25:00.026282       6 meteringJob.go:103] istio-system/memory :  4.82207744e+09
+I1215 15:25:00.026329       6 meteringJob.go:104] istio-system/storage :  0
+I1215 15:25:00.026371       6 meteringJob.go:105] istio-system/publicIp :  1
+I1215 15:25:00.026413       6 meteringJob.go:106] istio-system/TrafficIn :  0
+I1215 15:25:00.026461       6 meteringJob.go:107] istio-system/TrafficOut :  0
+I1215 15:25:00.026505       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.026550       6 meteringJob.go:102] kube-system/cpu :  0.760004433853592
+I1215 15:25:00.026596       6 meteringJob.go:103] kube-system/memory :  3.030237184e+09
+I1215 15:25:00.026651       6 meteringJob.go:104] kube-system/storage :  0
+I1215 15:25:00.026704       6 meteringJob.go:105] kube-system/publicIp :  0
+I1215 15:25:00.026747       6 meteringJob.go:106] kube-system/TrafficIn :  0
+I1215 15:25:00.026794       6 meteringJob.go:107] kube-system/TrafficOut :  0
+I1215 15:25:00.026836       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.026885       6 meteringJob.go:102] kubesphere-system/cpu :  0.0019892469286100782
+I1215 15:25:00.026959       6 meteringJob.go:103] kubesphere-system/memory :  8.157184e+07
+I1215 15:25:00.027003       6 meteringJob.go:104] kubesphere-system/storage :  4.294967296e+09
+I1215 15:25:00.027053       6 meteringJob.go:105] kubesphere-system/publicIp :  0
+I1215 15:25:00.027109       6 meteringJob.go:106] kubesphere-system/TrafficIn :  0
+I1215 15:25:00.027154       6 meteringJob.go:107] kubesphere-system/TrafficOut :  0
+I1215 15:25:00.027214       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.027264       6 meteringJob.go:102] uragent-system/cpu :  0.01568296692630559
+I1215 15:25:00.027307       6 meteringJob.go:103] uragent-system/memory :  2.25067008e+08
+I1215 15:25:00.027352       6 meteringJob.go:104] uragent-system/storage :  0
+I1215 15:25:00.027394       6 meteringJob.go:105] uragent-system/publicIp :  0
+I1215 15:25:00.027438       6 meteringJob.go:106] uragent-system/TrafficIn :  0
+I1215 15:25:00.027490       6 meteringJob.go:107] uragent-system/TrafficOut :  0
+I1215 15:25:00.027534       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.027578       6 meteringJob.go:102] approval-op/cpu :  8.617682259691223e-07
+I1215 15:25:00.027621       6 meteringJob.go:103] approval-op/memory :  2.002944e+06
+I1215 15:25:00.027669       6 meteringJob.go:104] approval-op/storage :  0
+I1215 15:25:00.027715       6 meteringJob.go:105] approval-op/publicIp :  0
+I1215 15:25:00.027762       6 meteringJob.go:106] approval-op/TrafficIn :  0
+I1215 15:25:00.027810       6 meteringJob.go:107] approval-op/TrafficOut :  0
+I1215 15:25:00.027936       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.027992       6 meteringJob.go:102] approval-system/cpu :  0.0002078263718170603
+I1215 15:25:00.028037       6 meteringJob.go:103] approval-system/memory :  1.7358848e+07
+I1215 15:25:00.028079       6 meteringJob.go:104] approval-system/storage :  0
+I1215 15:25:00.028164       6 meteringJob.go:105] approval-system/publicIp :  0
+I1215 15:25:00.028220       6 meteringJob.go:106] approval-system/TrafficIn :  0
+I1215 15:25:00.028267       6 meteringJob.go:107] approval-system/TrafficOut :  0
+I1215 15:25:00.028310       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.028348       6 meteringJob.go:102] default/cpu :  0.035350119418001896
+I1215 15:25:00.028390       6 meteringJob.go:103] default/memory :  3.61611264e+08
+I1215 15:25:00.028432       6 meteringJob.go:104] default/storage :  0
+I1215 15:25:00.028473       6 meteringJob.go:105] default/publicIp :  1
+I1215 15:25:00.028518       6 meteringJob.go:106] default/TrafficIn :  0
+I1215 15:25:00.028588       6 meteringJob.go:107] default/TrafficOut :  0
+I1215 15:25:00.029156       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.029204       6 meteringJob.go:102] tekton-pipelines/cpu :  0.005996293085651366
+I1215 15:25:00.029252       6 meteringJob.go:103] tekton-pipelines/memory :  1.67305216e+08
+I1215 15:25:00.029296       6 meteringJob.go:104] tekton-pipelines/storage :  0
+I1215 15:25:00.029351       6 meteringJob.go:105] tekton-pipelines/publicIp :  0
+I1215 15:25:00.029395       6 meteringJob.go:106] tekton-pipelines/TrafficIn :  0
+I1215 15:25:00.029440       6 meteringJob.go:107] tekton-pipelines/TrafficOut :  0
+I1215 15:25:00.029483       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.029539       6 meteringJob.go:102] test-pods/cpu :  0
+I1215 15:25:00.029581       6 meteringJob.go:103] test-pods/memory :  1.6330752e+07
+I1215 15:25:00.029633       6 meteringJob.go:104] test-pods/storage :  0
+I1215 15:25:00.029689       6 meteringJob.go:105] test-pods/publicIp :  0
+I1215 15:25:00.029733       6 meteringJob.go:106] test-pods/TrafficIn :  0
+I1215 15:25:00.029788       6 meteringJob.go:107] test-pods/TrafficOut :  0
+I1215 15:25:00.029840       6 meteringJob.go:108] -----------------------------------------
+I1215 15:25:00.029878       6 meteringJob.go:122] Insert into METERING Start!!
+I1215 15:25:00.029920       6 meteringJob.go:123] Current Time : 2020-12-15 15:25:00
+I1215 15:25:00.181028       6 meteringJob.go:150] Insert into METERING Success!!
+I1215 15:26:00.000375       6 meteringJob.go:77] ============= Metering Time =============
+I1215 15:26:00.000470       6 meteringJob.go:78] Current Time   :  2020-12-15 15:26:00
+I1215 15:26:00.000499       6 meteringJob.go:79] minute of hour :  26
+I1215 15:26:00.000522       6 meteringJob.go:80] hour of day    :  15
+I1215 15:26:00.000554       6 meteringJob.go:81] day of month   :  15
+I1215 15:26:00.000588       6 meteringJob.go:82] day of year    :  350
+I1215 15:26:00.019369       6 meteringJob.go:100] ============= Metering Data =============
+I1215 15:26:00.019461       6 meteringJob.go:102] kubesphere-system/cpu :  0.0019713623948551967
+I1215 15:26:00.019514       6 meteringJob.go:103] kubesphere-system/memory :  8.157184e+07
+I1215 15:26:00.019559       6 meteringJob.go:104] kubesphere-system/storage :  4.294967296e+09
+I1215 15:26:00.019608       6 meteringJob.go:105] kubesphere-system/publicIp :  0
+I1215 15:26:00.019651       6 meteringJob.go:106] kubesphere-system/TrafficIn :  0
+I1215 15:26:00.019704       6 meteringJob.go:107] kubesphere-system/TrafficOut :  0
+I1215 15:26:00.019753       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.019794       6 meteringJob.go:102] monitoring/cpu :  0.35496094699692593
+I1215 15:26:00.019845       6 meteringJob.go:103] monitoring/memory :  6.215225344e+09
+I1215 15:26:00.019889       6 meteringJob.go:104] monitoring/storage :  2.68435456e+10
+I1215 15:26:00.019934       6 meteringJob.go:105] monitoring/publicIp :  0
+I1215 15:26:00.019980       6 meteringJob.go:106] monitoring/TrafficIn :  0
+I1215 15:26:00.020025       6 meteringJob.go:107] monitoring/TrafficOut :  0
+I1215 15:26:00.020077       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.020119       6 meteringJob.go:102] rook-ceph/cpu :  0.16249805257081634
+I1215 15:26:00.020294       6 meteringJob.go:103] rook-ceph/memory :  1.149995008e+10
+I1215 15:26:00.020348       6 meteringJob.go:104] rook-ceph/storage :  0
+I1215 15:26:00.020397       6 meteringJob.go:105] rook-ceph/publicIp :  0
+I1215 15:26:00.020449       6 meteringJob.go:106] rook-ceph/TrafficIn :  0
+I1215 15:26:00.020496       6 meteringJob.go:107] rook-ceph/TrafficOut :  0
+I1215 15:26:00.020546       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.020593       6 meteringJob.go:102] tekton-pipelines/cpu :  0.006101264520021885
+I1215 15:26:00.020640       6 meteringJob.go:103] tekton-pipelines/memory :  1.6728064e+08
+I1215 15:26:00.020687       6 meteringJob.go:104] tekton-pipelines/storage :  0
+I1215 15:26:00.020738       6 meteringJob.go:105] tekton-pipelines/publicIp :  0
+I1215 15:26:00.020788       6 meteringJob.go:106] tekton-pipelines/TrafficIn :  0
+I1215 15:26:00.020833       6 meteringJob.go:107] tekton-pipelines/TrafficOut :  0
+I1215 15:26:00.020884       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.020933       6 meteringJob.go:102] catalog/cpu :  0.004988922552003114
+I1215 15:26:00.020982       6 meteringJob.go:103] catalog/memory :  4.3196416e+07
+I1215 15:26:00.021032       6 meteringJob.go:104] catalog/storage :  0
+I1215 15:26:00.021076       6 meteringJob.go:105] catalog/publicIp :  0
+I1215 15:26:00.021127       6 meteringJob.go:106] catalog/TrafficIn :  0
+I1215 15:26:00.021174       6 meteringJob.go:107] catalog/TrafficOut :  0
+I1215 15:26:00.021222       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.021270       6 meteringJob.go:102] hyperauth/cpu :  0.02038368978130302
+I1215 15:26:00.021317       6 meteringJob.go:103] hyperauth/memory :  1.27465472e+09
+I1215 15:26:00.021365       6 meteringJob.go:104] hyperauth/storage :  1.073741824e+11
+I1215 15:26:00.021416       6 meteringJob.go:105] hyperauth/publicIp :  1
+I1215 15:26:00.021464       6 meteringJob.go:106] hyperauth/TrafficIn :  0
+I1215 15:26:00.021515       6 meteringJob.go:107] hyperauth/TrafficOut :  0
+I1215 15:26:00.021592       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.021634       6 meteringJob.go:102] istio-system/cpu :  0.13802126655983757
+I1215 15:26:00.021682       6 meteringJob.go:103] istio-system/memory :  4.82420736e+09
+I1215 15:26:00.021724       6 meteringJob.go:104] istio-system/storage :  0
+I1215 15:26:00.021771       6 meteringJob.go:105] istio-system/publicIp :  1
+I1215 15:26:00.021816       6 meteringJob.go:106] istio-system/TrafficIn :  0
+I1215 15:26:00.021863       6 meteringJob.go:107] istio-system/TrafficOut :  0
+I1215 15:26:00.021909       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.021953       6 meteringJob.go:102] kube-system/cpu :  0.7474866310841488
+I1215 15:26:00.021996       6 meteringJob.go:103] kube-system/memory :  3.030679552e+09
+I1215 15:26:00.022042       6 meteringJob.go:104] kube-system/storage :  0
+I1215 15:26:00.022090       6 meteringJob.go:105] kube-system/publicIp :  0
+I1215 15:26:00.022141       6 meteringJob.go:106] kube-system/TrafficIn :  0
+I1215 15:26:00.022189       6 meteringJob.go:107] kube-system/TrafficOut :  0
+I1215 15:26:00.022237       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.022277       6 meteringJob.go:102] uragent-system/cpu :  0.014935068423094963
+I1215 15:26:00.022319       6 meteringJob.go:103] uragent-system/memory :  2.25062912e+08
+I1215 15:26:00.022371       6 meteringJob.go:104] uragent-system/storage :  0
+I1215 15:26:00.022419       6 meteringJob.go:105] uragent-system/publicIp :  0
+I1215 15:26:00.022461       6 meteringJob.go:106] uragent-system/TrafficIn :  0
+I1215 15:26:00.022505       6 meteringJob.go:107] uragent-system/TrafficOut :  0
+I1215 15:26:00.022552       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.022596       6 meteringJob.go:102] metallb-system/cpu :  0.21566268153654342
+I1215 15:26:00.022641       6 meteringJob.go:103] metallb-system/memory :  1.96681728e+08
+I1215 15:26:00.022685       6 meteringJob.go:104] metallb-system/storage :  0
+I1215 15:26:00.022732       6 meteringJob.go:105] metallb-system/publicIp :  0
+I1215 15:26:00.022776       6 meteringJob.go:106] metallb-system/TrafficIn :  0
+I1215 15:26:00.022823       6 meteringJob.go:107] metallb-system/TrafficOut :  0
+I1215 15:26:00.022867       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.022905       6 meteringJob.go:102] console-system/cpu :  0.0013083851485961142
+I1215 15:26:00.022952       6 meteringJob.go:103] console-system/memory :  1.4985216e+08
+I1215 15:26:00.022997       6 meteringJob.go:104] console-system/storage :  0
+I1215 15:26:00.023044       6 meteringJob.go:105] console-system/publicIp :  1
+I1215 15:26:00.023093       6 meteringJob.go:106] console-system/TrafficIn :  0
+I1215 15:26:00.023141       6 meteringJob.go:107] console-system/TrafficOut :  0
+I1215 15:26:00.023192       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.023232       6 meteringJob.go:102] gitlab/cpu :  0.1817069444617015
+I1215 15:26:00.023275       6 meteringJob.go:103] gitlab/memory :  5.516845056e+09
+I1215 15:26:00.023320       6 meteringJob.go:104] gitlab/storage :  0
+I1215 15:26:00.023365       6 meteringJob.go:105] gitlab/publicIp :  1
+I1215 15:26:00.023406       6 meteringJob.go:106] gitlab/TrafficIn :  0
+I1215 15:26:00.023452       6 meteringJob.go:107] gitlab/TrafficOut :  0
+I1215 15:26:00.023494       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.023539       6 meteringJob.go:102] ingress-nginx/cpu :  0.007094110043222132
+I1215 15:26:00.023583       6 meteringJob.go:103] ingress-nginx/memory :  2.22396416e+08
+I1215 15:26:00.023629       6 meteringJob.go:104] ingress-nginx/storage :  0
+I1215 15:26:00.023672       6 meteringJob.go:105] ingress-nginx/publicIp :  1
+I1215 15:26:00.023718       6 meteringJob.go:106] ingress-nginx/TrafficIn :  0
+I1215 15:26:00.023770       6 meteringJob.go:107] ingress-nginx/TrafficOut :  0
+I1215 15:26:00.023816       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.023882       6 meteringJob.go:102] jitaeyun-test/cpu :  0.0007581023134131056
+I1215 15:26:00.023934       6 meteringJob.go:103] jitaeyun-test/memory :  8.8567808e+07
+I1215 15:26:00.023982       6 meteringJob.go:104] jitaeyun-test/storage :  0
+I1215 15:26:00.024025       6 meteringJob.go:105] jitaeyun-test/publicIp :  2
+I1215 15:26:00.024073       6 meteringJob.go:106] jitaeyun-test/TrafficIn :  0
+I1215 15:26:00.024119       6 meteringJob.go:107] jitaeyun-test/TrafficOut :  0
+I1215 15:26:00.024189       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.024234       6 meteringJob.go:102] default/cpu :  0.03478312228431598
+I1215 15:26:00.024276       6 meteringJob.go:103] default/memory :  3.61611264e+08
+I1215 15:26:00.024317       6 meteringJob.go:104] default/storage :  0
+I1215 15:26:00.024357       6 meteringJob.go:105] default/publicIp :  1
+I1215 15:26:00.024413       6 meteringJob.go:106] default/TrafficIn :  0
+I1215 15:26:00.024464       6 meteringJob.go:107] default/TrafficOut :  0
+I1215 15:26:00.024513       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.024552       6 meteringJob.go:102] approval-op/cpu :  5.247228411665097e-07
+I1215 15:26:00.024602       6 meteringJob.go:103] approval-op/memory :  2.002944e+06
+I1215 15:26:00.024643       6 meteringJob.go:104] approval-op/storage :  0
+I1215 15:26:00.024694       6 meteringJob.go:105] approval-op/publicIp :  0
+I1215 15:26:00.024743       6 meteringJob.go:106] approval-op/TrafficIn :  0
+I1215 15:26:00.024792       6 meteringJob.go:107] approval-op/TrafficOut :  0
+I1215 15:26:00.024836       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.024879       6 meteringJob.go:102] approval-system/cpu :  0.00021916156952798515
+I1215 15:26:00.024923       6 meteringJob.go:103] approval-system/memory :  1.7358848e+07
+I1215 15:26:00.024969       6 meteringJob.go:104] approval-system/storage :  0
+I1215 15:26:00.025016       6 meteringJob.go:105] approval-system/publicIp :  0
+I1215 15:26:00.025062       6 meteringJob.go:106] approval-system/TrafficIn :  0
+I1215 15:26:00.025111       6 meteringJob.go:107] approval-system/TrafficOut :  0
+I1215 15:26:00.025157       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.025201       6 meteringJob.go:102] bookinfo/cpu :  0.07080457839362732
+I1215 15:26:00.025243       6 meteringJob.go:103] bookinfo/memory :  7.20498688e+08
+I1215 15:26:00.025281       6 meteringJob.go:104] bookinfo/storage :  0
+I1215 15:26:00.025326       6 meteringJob.go:105] bookinfo/publicIp :  1
+I1215 15:26:00.025370       6 meteringJob.go:106] bookinfo/TrafficIn :  0
+I1215 15:26:00.025425       6 meteringJob.go:107] bookinfo/TrafficOut :  0
+I1215 15:26:00.025468       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.025515       6 meteringJob.go:102] cert-manager/cpu :  0.013228579422629366
+I1215 15:26:00.025559       6 meteringJob.go:103] cert-manager/memory :  1.70160128e+08
+I1215 15:26:00.025599       6 meteringJob.go:104] cert-manager/storage :  0
+I1215 15:26:00.025645       6 meteringJob.go:105] cert-manager/publicIp :  0
+I1215 15:26:00.025688       6 meteringJob.go:106] cert-manager/TrafficIn :  0
+I1215 15:26:00.025732       6 meteringJob.go:107] cert-manager/TrafficOut :  0
+I1215 15:26:00.025774       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.025818       6 meteringJob.go:102] test-pods/cpu :  0
+I1215 15:26:00.025860       6 meteringJob.go:103] test-pods/memory :  1.6330752e+07
+I1215 15:26:00.025908       6 meteringJob.go:104] test-pods/storage :  0
+I1215 15:26:00.025950       6 meteringJob.go:105] test-pods/publicIp :  0
+I1215 15:26:00.025997       6 meteringJob.go:106] test-pods/TrafficIn :  0
+I1215 15:26:00.026041       6 meteringJob.go:107] test-pods/TrafficOut :  0
+I1215 15:26:00.026082       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.026128       6 meteringJob.go:102] ck2-2/cpu :  0.06996866871371665
+I1215 15:26:00.026190       6 meteringJob.go:103] ck2-2/memory :  1.22925056e+08
+I1215 15:26:00.026232       6 meteringJob.go:104] ck2-2/storage :  6.7645734912e+10
+I1215 15:26:00.026283       6 meteringJob.go:105] ck2-2/publicIp :  4
+I1215 15:26:00.026327       6 meteringJob.go:106] ck2-2/TrafficIn :  0
+I1215 15:26:00.026379       6 meteringJob.go:107] ck2-2/TrafficOut :  0
+I1215 15:26:00.026430       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.026478       6 meteringJob.go:102] hypercloud-system/cpu :  0.03238052838336178
+I1215 15:26:00.026528       6 meteringJob.go:103] hypercloud-system/memory :  5.210497024e+09
+I1215 15:26:00.026574       6 meteringJob.go:104] hypercloud-system/storage :  1.073741824e+10
+I1215 15:26:00.026620       6 meteringJob.go:105] hypercloud-system/publicIp :  5
+I1215 15:26:00.026671       6 meteringJob.go:106] hypercloud-system/TrafficIn :  0
+I1215 15:26:00.026719       6 meteringJob.go:107] hypercloud-system/TrafficOut :  0
+I1215 15:26:00.026761       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.026801       6 meteringJob.go:102] hypercloud4-system/cpu :  0.008980387128534342
+I1215 15:26:00.026854       6 meteringJob.go:103] hypercloud4-system/memory :  1.255559168e+09
+I1215 15:26:00.026897       6 meteringJob.go:104] hypercloud4-system/storage :  1.073741824e+10
+I1215 15:26:00.026940       6 meteringJob.go:105] hypercloud4-system/publicIp :  2
+I1215 15:26:00.026989       6 meteringJob.go:106] hypercloud4-system/TrafficIn :  0
+I1215 15:26:00.027032       6 meteringJob.go:107] hypercloud4-system/TrafficOut :  0
+I1215 15:26:00.027078       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.027121       6 meteringJob.go:102] ingress-nginx-shared/cpu :  0.007680838914615137
+I1215 15:26:00.027169       6 meteringJob.go:103] ingress-nginx-shared/memory :  1.73268992e+08
+I1215 15:26:00.027212       6 meteringJob.go:104] ingress-nginx-shared/storage :  0
+I1215 15:26:00.027253       6 meteringJob.go:105] ingress-nginx-shared/publicIp :  1
+I1215 15:26:00.027294       6 meteringJob.go:106] ingress-nginx-shared/TrafficIn :  0
+I1215 15:26:00.027338       6 meteringJob.go:107] ingress-nginx-shared/TrafficOut :  0
+I1215 15:26:00.027381       6 meteringJob.go:108] -----------------------------------------
+I1215 15:26:00.027416       6 meteringJob.go:122] Insert into METERING Start!!
+I1215 15:26:00.027457       6 meteringJob.go:123] Current Time : 2020-12-15 15:26:00
+I1215 15:26:00.196939       6 meteringJob.go:150] Insert into METERING Success!!
+I1215 15:27:00.000346       6 meteringJob.go:77] ============= Metering Time =============
+I1215 15:27:00.000439       6 meteringJob.go:78] Current Time   :  2020-12-15 15:27:00
+I1215 15:27:00.000480       6 meteringJob.go:79] minute of hour :  27
+I1215 15:27:00.000538       6 meteringJob.go:80] hour of day    :  15
+I1215 15:27:00.000564       6 meteringJob.go:81] day of month   :  15
+I1215 15:27:00.000598       6 meteringJob.go:82] day of year    :  350
+I1215 15:27:00.018074       6 meteringJob.go:100] ============= Metering Data =============
+I1215 15:27:00.018159       6 meteringJob.go:102] approval-op/cpu :  6.836855503398922e-07
+I1215 15:27:00.018197       6 meteringJob.go:103] approval-op/memory :  2.002944e+06
+I1215 15:27:00.018226       6 meteringJob.go:104] approval-op/storage :  0
+I1215 15:27:00.018264       6 meteringJob.go:105] approval-op/publicIp :  0
+I1215 15:27:00.018309       6 meteringJob.go:106] approval-op/TrafficIn :  0
+I1215 15:27:00.018340       6 meteringJob.go:107] approval-op/TrafficOut :  0
+I1215 15:27:00.018384       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.018420       6 meteringJob.go:102] default/cpu :  0.03425204779700754
+I1215 15:27:00.018454       6 meteringJob.go:103] default/memory :  3.61537536e+08
+I1215 15:27:00.018494       6 meteringJob.go:104] default/storage :  0
+I1215 15:27:00.018522       6 meteringJob.go:105] default/publicIp :  1
+I1215 15:27:00.018568       6 meteringJob.go:106] default/TrafficIn :  0
+I1215 15:27:00.018635       6 meteringJob.go:107] default/TrafficOut :  0
+I1215 15:27:00.018680       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.018718       6 meteringJob.go:102] metallb-system/cpu :  0.21127368267437974
+I1215 15:27:00.018759       6 meteringJob.go:103] metallb-system/memory :  1.96755456e+08
+I1215 15:27:00.018791       6 meteringJob.go:104] metallb-system/storage :  0
+I1215 15:27:00.018830       6 meteringJob.go:105] metallb-system/publicIp :  0
+I1215 15:27:00.018882       6 meteringJob.go:106] metallb-system/TrafficIn :  0
+I1215 15:27:00.018926       6 meteringJob.go:107] metallb-system/TrafficOut :  0
+I1215 15:27:00.018955       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.018979       6 meteringJob.go:102] test-pods/cpu :  0
+I1215 15:27:00.019014       6 meteringJob.go:103] test-pods/memory :  1.6330752e+07
+I1215 15:27:00.019047       6 meteringJob.go:104] test-pods/storage :  0
+I1215 15:27:00.019073       6 meteringJob.go:105] test-pods/publicIp :  0
+I1215 15:27:00.019109       6 meteringJob.go:106] test-pods/TrafficIn :  0
+I1215 15:27:00.019137       6 meteringJob.go:107] test-pods/TrafficOut :  0
+I1215 15:27:00.019162       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.019196       6 meteringJob.go:102] approval-system/cpu :  0.00013346782361327447
+I1215 15:27:00.019232       6 meteringJob.go:103] approval-system/memory :  1.7358848e+07
+I1215 15:27:00.019263       6 meteringJob.go:104] approval-system/storage :  0
+I1215 15:27:00.019299       6 meteringJob.go:105] approval-system/publicIp :  0
+I1215 15:27:00.019324       6 meteringJob.go:106] approval-system/TrafficIn :  0
+I1215 15:27:00.019358       6 meteringJob.go:107] approval-system/TrafficOut :  0
+I1215 15:27:00.019393       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.019417       6 meteringJob.go:102] gitlab/cpu :  0.18577357761134378
+I1215 15:27:00.019450       6 meteringJob.go:103] gitlab/memory :  5.517033472e+09
+I1215 15:27:00.019491       6 meteringJob.go:104] gitlab/storage :  0
+I1215 15:27:00.019516       6 meteringJob.go:105] gitlab/publicIp :  1
+I1215 15:27:00.019553       6 meteringJob.go:106] gitlab/TrafficIn :  0
+I1215 15:27:00.019582       6 meteringJob.go:107] gitlab/TrafficOut :  0
+I1215 15:27:00.019609       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.019647       6 meteringJob.go:102] hypercloud4-system/cpu :  0.008775756851962198
+I1215 15:27:00.019679       6 meteringJob.go:103] hypercloud4-system/memory :  1.255579648e+09
+I1215 15:27:00.019717       6 meteringJob.go:104] hypercloud4-system/storage :  1.073741824e+10
+I1215 15:27:00.019748       6 meteringJob.go:105] hypercloud4-system/publicIp :  2
+I1215 15:27:00.019773       6 meteringJob.go:106] hypercloud4-system/TrafficIn :  0
+I1215 15:27:00.019808       6 meteringJob.go:107] hypercloud4-system/TrafficOut :  0
+I1215 15:27:00.019839       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.019863       6 meteringJob.go:102] ingress-nginx-shared/cpu :  0.007430256849156356
+I1215 15:27:00.019896       6 meteringJob.go:103] ingress-nginx-shared/memory :  1.73268992e+08
+I1215 15:27:00.019929       6 meteringJob.go:104] ingress-nginx-shared/storage :  0
+I1215 15:27:00.019954       6 meteringJob.go:105] ingress-nginx-shared/publicIp :  1
+I1215 15:27:00.019992       6 meteringJob.go:106] ingress-nginx-shared/TrafficIn :  0
+I1215 15:27:00.020022       6 meteringJob.go:107] ingress-nginx-shared/TrafficOut :  0
+I1215 15:27:00.020053       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.020090       6 meteringJob.go:102] istio-system/cpu :  0.1407501811161327
+I1215 15:27:00.020123       6 meteringJob.go:103] istio-system/memory :  4.829802496e+09
+I1215 15:27:00.020274       6 meteringJob.go:104] istio-system/storage :  0
+I1215 15:27:00.020307       6 meteringJob.go:105] istio-system/publicIp :  1
+I1215 15:27:00.020342       6 meteringJob.go:106] istio-system/TrafficIn :  0
+I1215 15:27:00.020393       6 meteringJob.go:107] istio-system/TrafficOut :  0
+I1215 15:27:00.020429       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.020458       6 meteringJob.go:102] kube-system/cpu :  0.7535671295469755
+I1215 15:27:00.020485       6 meteringJob.go:103] kube-system/memory :  3.03110144e+09
+I1215 15:27:00.020516       6 meteringJob.go:104] kube-system/storage :  0
+I1215 15:27:00.020558       6 meteringJob.go:105] kube-system/publicIp :  0
+I1215 15:27:00.020585       6 meteringJob.go:106] kube-system/TrafficIn :  0
+I1215 15:27:00.020628       6 meteringJob.go:107] kube-system/TrafficOut :  0
+I1215 15:27:00.020657       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.020680       6 meteringJob.go:102] kubesphere-system/cpu :  0.0019535808426307784
+I1215 15:27:00.020716       6 meteringJob.go:103] kubesphere-system/memory :  8.157184e+07
+I1215 15:27:00.020743       6 meteringJob.go:104] kubesphere-system/storage :  4.294967296e+09
+I1215 15:27:00.020768       6 meteringJob.go:105] kubesphere-system/publicIp :  0
+I1215 15:27:00.020803       6 meteringJob.go:106] kubesphere-system/TrafficIn :  0
+I1215 15:27:00.020836       6 meteringJob.go:107] kubesphere-system/TrafficOut :  0
+I1215 15:27:00.020863       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.020897       6 meteringJob.go:102] rook-ceph/cpu :  0.15952925644712038
+I1215 15:27:00.020933       6 meteringJob.go:103] rook-ceph/memory :  1.151557632e+10
+I1215 15:27:00.020963       6 meteringJob.go:104] rook-ceph/storage :  0
+I1215 15:27:00.021005       6 meteringJob.go:105] rook-ceph/publicIp :  0
+I1215 15:27:00.021037       6 meteringJob.go:106] rook-ceph/TrafficIn :  0
+I1215 15:27:00.021074       6 meteringJob.go:107] rook-ceph/TrafficOut :  0
+I1215 15:27:00.021106       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.021130       6 meteringJob.go:102] cert-manager/cpu :  0.01316643722359705
+I1215 15:27:00.021169       6 meteringJob.go:103] cert-manager/memory :  1.70160128e+08
+I1215 15:27:00.021198       6 meteringJob.go:104] cert-manager/storage :  0
+I1215 15:27:00.021235       6 meteringJob.go:105] cert-manager/publicIp :  0
+I1215 15:27:00.021267       6 meteringJob.go:106] cert-manager/TrafficIn :  0
+I1215 15:27:00.021293       6 meteringJob.go:107] cert-manager/TrafficOut :  0
+I1215 15:27:00.021328       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.021361       6 meteringJob.go:102] ck2-2/cpu :  0.0706063814975189
+I1215 15:27:00.021386       6 meteringJob.go:103] ck2-2/memory :  1.22925056e+08
+I1215 15:27:00.021421       6 meteringJob.go:104] ck2-2/storage :  6.7645734912e+10
+I1215 15:27:00.021456       6 meteringJob.go:105] ck2-2/publicIp :  4
+I1215 15:27:00.021500       6 meteringJob.go:106] ck2-2/TrafficIn :  0
+I1215 15:27:00.021541       6 meteringJob.go:107] ck2-2/TrafficOut :  0
+I1215 15:27:00.021581       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.021612       6 meteringJob.go:102] console-system/cpu :  0.0013662219924496114
+I1215 15:27:00.021646       6 meteringJob.go:103] console-system/memory :  1.49999616e+08
+I1215 15:27:00.021684       6 meteringJob.go:104] console-system/storage :  0
+I1215 15:27:00.021711       6 meteringJob.go:105] console-system/publicIp :  1
+I1215 15:27:00.021743       6 meteringJob.go:106] console-system/TrafficIn :  0
+I1215 15:27:00.021783       6 meteringJob.go:107] console-system/TrafficOut :  0
+I1215 15:27:00.021840       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.021878       6 meteringJob.go:102] hyperauth/cpu :  0.0180102064636833
+I1215 15:27:00.021905       6 meteringJob.go:103] hyperauth/memory :  1.274499072e+09
+I1215 15:27:00.021942       6 meteringJob.go:104] hyperauth/storage :  1.073741824e+11
+I1215 15:27:00.021972       6 meteringJob.go:105] hyperauth/publicIp :  1
+I1215 15:27:00.021996       6 meteringJob.go:106] hyperauth/TrafficIn :  0
+I1215 15:27:00.022045       6 meteringJob.go:107] hyperauth/TrafficOut :  0
+I1215 15:27:00.022084       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.022119       6 meteringJob.go:102] uragent-system/cpu :  0.01429459157062102
+I1215 15:27:00.022158       6 meteringJob.go:103] uragent-system/memory :  2.25062912e+08
+I1215 15:27:00.022188       6 meteringJob.go:104] uragent-system/storage :  0
+I1215 15:27:00.022223       6 meteringJob.go:105] uragent-system/publicIp :  0
+I1215 15:27:00.022256       6 meteringJob.go:106] uragent-system/TrafficIn :  0
+I1215 15:27:00.022296       6 meteringJob.go:107] uragent-system/TrafficOut :  0
+I1215 15:27:00.022332       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.022364       6 meteringJob.go:102] jitaeyun-test/cpu :  0.0007590004459922053
+I1215 15:27:00.022390       6 meteringJob.go:103] jitaeyun-test/memory :  8.8567808e+07
+I1215 15:27:00.022428       6 meteringJob.go:104] jitaeyun-test/storage :  0
+I1215 15:27:00.022455       6 meteringJob.go:105] jitaeyun-test/publicIp :  2
+I1215 15:27:00.022480       6 meteringJob.go:106] jitaeyun-test/TrafficIn :  0
+I1215 15:27:00.022516       6 meteringJob.go:107] jitaeyun-test/TrafficOut :  0
+I1215 15:27:00.022550       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.022577       6 meteringJob.go:102] monitoring/cpu :  0.34926735589671026
+I1215 15:27:00.022619       6 meteringJob.go:103] monitoring/memory :  6.222524416e+09
+I1215 15:27:00.022646       6 meteringJob.go:104] monitoring/storage :  2.68435456e+10
+I1215 15:27:00.022683       6 meteringJob.go:105] monitoring/publicIp :  0
+I1215 15:27:00.022720       6 meteringJob.go:106] monitoring/TrafficIn :  0
+I1215 15:27:00.022747       6 meteringJob.go:107] monitoring/TrafficOut :  0
+I1215 15:27:00.022791       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.022835       6 meteringJob.go:102] tekton-pipelines/cpu :  0.005819727276243761
+I1215 15:27:00.022867       6 meteringJob.go:103] tekton-pipelines/memory :  1.6728064e+08
+I1215 15:27:00.022904       6 meteringJob.go:104] tekton-pipelines/storage :  0
+I1215 15:27:00.022936       6 meteringJob.go:105] tekton-pipelines/publicIp :  0
+I1215 15:27:00.022960       6 meteringJob.go:106] tekton-pipelines/TrafficIn :  0
+I1215 15:27:00.022998       6 meteringJob.go:107] tekton-pipelines/TrafficOut :  0
+I1215 15:27:00.023030       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.023055       6 meteringJob.go:102] bookinfo/cpu :  0.06958277463537478
+I1215 15:27:00.023093       6 meteringJob.go:103] bookinfo/memory :  7.20482304e+08
+I1215 15:27:00.023129       6 meteringJob.go:104] bookinfo/storage :  0
+I1215 15:27:00.023163       6 meteringJob.go:105] bookinfo/publicIp :  1
+I1215 15:27:00.023196       6 meteringJob.go:106] bookinfo/TrafficIn :  0
+I1215 15:27:00.023228       6 meteringJob.go:107] bookinfo/TrafficOut :  0
+I1215 15:27:00.023264       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.023303       6 meteringJob.go:102] catalog/cpu :  0.005817311199960051
+I1215 15:27:00.023345       6 meteringJob.go:103] catalog/memory :  4.3204608e+07
+I1215 15:27:00.023384       6 meteringJob.go:104] catalog/storage :  0
+I1215 15:27:00.023409       6 meteringJob.go:105] catalog/publicIp :  0
+I1215 15:27:00.023434       6 meteringJob.go:106] catalog/TrafficIn :  0
+I1215 15:27:00.023459       6 meteringJob.go:107] catalog/TrafficOut :  0
+I1215 15:27:00.023483       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.023511       6 meteringJob.go:102] hypercloud-system/cpu :  0.032710398761680755
+I1215 15:27:00.023537       6 meteringJob.go:103] hypercloud-system/memory :  5.210550272e+09
+I1215 15:27:00.023561       6 meteringJob.go:104] hypercloud-system/storage :  1.073741824e+10
+I1215 15:27:00.023590       6 meteringJob.go:105] hypercloud-system/publicIp :  5
+I1215 15:27:00.023615       6 meteringJob.go:106] hypercloud-system/TrafficIn :  0
+I1215 15:27:00.023657       6 meteringJob.go:107] hypercloud-system/TrafficOut :  0
+I1215 15:27:00.023683       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.023712       6 meteringJob.go:102] ingress-nginx/cpu :  0.007129333223832943
+I1215 15:27:00.023738       6 meteringJob.go:103] ingress-nginx/memory :  2.22396416e+08
+I1215 15:27:00.023765       6 meteringJob.go:104] ingress-nginx/storage :  0
+I1215 15:27:00.023790       6 meteringJob.go:105] ingress-nginx/publicIp :  1
+I1215 15:27:00.023814       6 meteringJob.go:106] ingress-nginx/TrafficIn :  0
+I1215 15:27:00.023842       6 meteringJob.go:107] ingress-nginx/TrafficOut :  0
+I1215 15:27:00.023867       6 meteringJob.go:108] -----------------------------------------
+I1215 15:27:00.023886       6 meteringJob.go:122] Insert into METERING Start!!
+I1215 15:27:00.023912       6 meteringJob.go:123] Current Time : 2020-12-15 15:27:00
+I1215 15:27:00.162317       6 meteringJob.go:150] Insert into METERING Success!!
