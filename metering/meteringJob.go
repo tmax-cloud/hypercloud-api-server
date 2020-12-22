@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -27,7 +28,7 @@ const (
 	METERING_HOUR_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory," +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu," +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " +
-		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out" +
+		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out," +
 		"metering_time, status from metering.metering group by hour(metering_time), namespace"
 	METERING_HOUR_UPDATE_QUERY = "update metering.metering_hour set status = 'Merged' where status = 'Success'"
 	METERING_HOUR_DELETE_QUERY = "delete from metering.metering_hour where status = 'Merged'"
@@ -36,7 +37,7 @@ const (
 	METERING_DAY_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, " +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, " +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip," +
-		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out" +
+		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out," +
 		"metering_time, status from metering.metering_hour where status = 'Success' " +
 		"group by day(metering_time), namespace"
 	METERING_DAY_UPDATE_QUERY = "update metering.metering_day set status = 'Merged' where status = 'Success'"
@@ -46,7 +47,7 @@ const (
 	METERING_MONTH_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, " +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, " +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " +
-		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out" +
+		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out," +
 		"metering_time, status from metering.metering_day where status = 'Success' " +
 		"group by month(metering_time), namespace"
 	METERING_MONTH_UPDATE_QUERY = "update metering.metering_month set status = 'Merged' where status = 'Success'"
@@ -56,7 +57,7 @@ const (
 	METERING_YEAR_SELECT_QUERY = "select id, namespace, truncate(sum(cpu)/count(*),2) as cpu, truncate(sum(memory)/count(*),0) as memory, " +
 		"truncate(sum(storage)/count(*),0) as storage, truncate(sum(gpu)/count(*),2) as gpu, " +
 		"truncate(sum(public_ip)/count(*),0) as public_ip, truncate(sum(private_ip)/count(*),0) as private_ip, " +
-		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out" +
+		"truncate(sum(traffic_in)/count(*),2) as traffic_in, truncate(sum(traffic_out)/count(*),2) as traffic_out," +
 		"date_format(metering_time,'%Y-01-01 %H:00:00') as metering_time, status from metering.metering_month where status = 'Success' " +
 		"group by year(metering_time), namespace"
 
@@ -66,8 +67,8 @@ const (
 	PROMETHEUS_GET_MEMORY_QUERY      = "namespace:container_memory_usage_bytes:sum"
 	PROMETHEUS_GET_STORAGE_QUERY     = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)by(namespace)"
 	PROMETHEUS_GET_PUBLIC_IP_QUERY   = "count(kube_service_spec_type{type=\"LoadBalancer\"})by(namespace)"
-	PROMETHEUS_GET_TRAFFIC_IN_QUERY  = "sum(container_network_receive_bytes_total)by(namespace)"
-	PROMETHEUS_GET_TRAFFIC_OUT_QUERY = "sum(container_network_transmit_bytes_total)by(namespace)"
+	PROMETHEUS_GET_TRAFFIC_IN_QUERY  = "sum(istio_request_bytes_sum)by(destination_service, namespace)"
+	PROMETHEUS_GET_TRAFFIC_OUT_QUERY = "sum(istio_response_bytes_sum)by(destination_service, namespace)"
 )
 
 var t time.Time
@@ -222,13 +223,16 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 		for k := range meteringData {
 			keys = append(keys, k)
 		}
-		if util.Contains(keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].TrafficIn, _ = strconv.ParseFloat(metric.Value[1], 64)
-		} else {
-			metering := new(meteringModel.Metering)
-			metering.Namespace = metric.Metric["namespace"]
-			metering.TrafficIn, _ = strconv.ParseFloat(metric.Value[1], 64)
-			meteringData[metric.Metric["namespace"]] = metering
+		if strings.Contains(metric.Metric["destination_service"], "."+metric.Metric["namespace"]+".") {
+			if util.Contains(keys, metric.Metric["namespace"]) {
+				usage, _ := strconv.ParseFloat(metric.Value[1], 64)
+				meteringData[metric.Metric["namespace"]].TrafficIn += usage
+			} else {
+				metering := new(meteringModel.Metering)
+				metering.Namespace = metric.Metric["namespace"]
+				metering.TrafficIn, _ = strconv.ParseFloat(metric.Value[1], 64)
+				meteringData[metric.Metric["namespace"]] = metering
+			}
 		}
 	}
 
@@ -238,13 +242,16 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 		for k := range meteringData {
 			keys = append(keys, k)
 		}
-		if util.Contains(keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].TrafficOut, _ = strconv.ParseFloat(metric.Value[1], 64)
-		} else {
-			metering := new(meteringModel.Metering)
-			metering.Namespace = metric.Metric["namespace"]
-			metering.TrafficOut, _ = strconv.ParseFloat(metric.Value[1], 64)
-			meteringData[metric.Metric["namespace"]] = metering
+		if strings.Contains(metric.Metric["destination_service"], "."+metric.Metric["namespace"]+".") {
+			if util.Contains(keys, metric.Metric["namespace"]) {
+				usage, _ := strconv.ParseFloat(metric.Value[1], 64)
+				meteringData[metric.Metric["namespace"]].TrafficOut += usage
+			} else {
+				metering := new(meteringModel.Metering)
+				metering.Namespace = metric.Metric["namespace"]
+				metering.TrafficOut, _ = strconv.ParseFloat(metric.Value[1], 64)
+				meteringData[metric.Metric["namespace"]] = metering
+			}
 		}
 	}
 

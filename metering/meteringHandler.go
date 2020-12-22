@@ -96,6 +96,8 @@ func getMeteringDataFromDB(query string) []meteringModel.Metering {
 			&meteringData.Gpu,
 			&meteringData.PublicIp,
 			&meteringData.PrivateIp,
+			&meteringData.TrafficIn,
+			&meteringData.TrafficOut,
 			&meteringData.MeteringTime,
 			&status)
 		if err != nil {
