@@ -13,8 +13,8 @@ import (
 
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 
+	alertModel "github.com/tmax-cloud/hypercloud-api-server/alert/model"
 	claim "github.com/tmax-cloud/hypercloud-go-operator/api/v1alpha1"
-
 	authApi "k8s.io/api/authorization/v1"
 	coreApi "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -404,4 +404,52 @@ func GetPodListByLabel(label string, namespace string) (v1.PodList, bool) {
 	}
 
 	return *podList, true
+}
+func CreateAlert(body alertModel.Alert, ns string) {
+	bodyByte, _ := json.Marshal(body)
+	// data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/namespaceclaims").Param(util.QUERY_PARAMETER_LABEL_SELECTOR, labelSelector).DoRaw(context.TODO())
+
+	data := Clientset.RESTClient().Post().AbsPath("/apis/tmax.io/v1/namespaces/" + ns + "/alerts").Body(bodyByte).Do(context.TODO())
+	klog.Infoln(data)
+	// if err != nil {
+	//    klog.Errorln(err)
+	//    panic(err)
+	// }
+	//return data
+}
+
+func GetAlert(name string, ns string, label string) alertModel.Alert {
+	var u alertModel.Alert
+	// data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/namespaceclaims").Param(util.QUERY_PARAMETER_LABEL_SELECTOR, labelSelector).DoRaw(context.TODO())
+	if name != "" {
+		data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/namespaces/"+ns+"/alerts").Param("name", name).DoRaw(context.TODO())
+		klog.Infoln(data)
+		if err != nil {
+			klog.Errorln(err)
+			panic(err)
+		}
+
+		json.Unmarshal([]byte(data), &u)
+
+	} else if label != "" {
+		data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/namespaces/"+ns+"/alerts").Param("label", label).DoRaw(context.TODO())
+		klog.Infoln(data)
+		if err != nil {
+			klog.Errorln(err)
+			panic(err)
+		}
+		json.Unmarshal([]byte(data), &u)
+
+	} else {
+		data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/namespaces/" + ns + "/alerts").DoRaw(context.TODO())
+		klog.Infoln(data)
+		if err != nil {
+			klog.Errorln(err)
+			panic(err)
+		}
+		json.Unmarshal([]byte(data), &u)
+
+	}
+
+	return u
 }

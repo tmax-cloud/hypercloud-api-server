@@ -139,6 +139,8 @@ func serveAlert(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodPost:
 		alert.Post(res, req)
+	case http.MethodGet:
+		alert.Get(res, req)
 	default:
 		//error
 	}
