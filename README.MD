@@ -46,7 +46,7 @@
   
       x
       
-#### Create
+#### POST
   - **Description** 
   
       
@@ -81,7 +81,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
 #### Get
   - **Description** 
   
-     namespace별 현재 리소스 사용량을 조회하는 API
+     현재 리소스 사용량을 조회하는 API
       
   - **RequestURL** 
   
@@ -105,7 +105,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
       
       endTime : {ENDTIME}  
       
-      sorts : {SORTS}  
+      sort : {SORTS}  
 
   - **PathParam**
 
@@ -124,7 +124,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
 #### Get
   - **Description** 
   
-    접근 가능한 namespace를 조회하는 API
+    접근 가능한 namespace list를 조회하는 API
       
   - **RequestURL** 
   
@@ -154,9 +154,10 @@ schema,secret은 mysql-settings.yaml 에서 관리
   
       x
       
-#### AttributeUpdate
+#### PUT
   - **Description** 
   
+  trial namespace 기간 연장 API
      
   - **RequestURL** 
   
@@ -170,7 +171,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
 
       nsName : {NAMESPACE}  
       
-      addPeriod : {ADDPERIOD}
+      period : {ADDPERIOD}
       
   - **PathParam**
 
@@ -190,7 +191,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
 #### Get
   - **Description** 
   
-     파라미터로 받은 유저의 namespaceClaim 권한을 조회하는 API
+    접근 가능한 namespaceClaim list를 조회하는 API
       
   - **RequestURL** 
   
@@ -220,9 +221,10 @@ schema,secret은 mysql-settings.yaml 에서 관리
   
       x
       
-#### AttributeUpdate
+#### PUT
   - **Description** 
   
+     Namespace 이름 중복 API
      
   - **RequestURL** 
   
@@ -234,7 +236,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
     
   - **QueryParam**
 
-      nsName : {NAMESPACE}  
+      namespace : {NAMESPACE_NAME}  
       
   - **PathParam**
 
@@ -252,10 +254,10 @@ schema,secret은 mysql-settings.yaml 에서 관리
 ## USER
 
 
-#### Create
+#### POST
   - **Description** 
 
-      파라미터로 받은 유저의 클러스터 롤바인딩을 생성하는 API
+      유저 회원가입시 유저에게 필요한 최초 클러스터 롤바인딩을 생성하는 API
       
   - **RequestURL** 
   
@@ -267,7 +269,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
     
   - **QueryParam**
 
-      userId: {USERID}  
+      userId: {USER_ID}  
 
   - **PathParam**
 
@@ -284,7 +286,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
 #### DELETE
   - **Description** 
 
-      파라미터로 받은 유저의 클러스터 롤바인딩을 제거하는 API
+      유저 탈퇴시, 유저의 클러스터 롤바인딩을 제거하는 API
       
   - **RequestURL** 
   
@@ -342,6 +344,4 @@ verison 정보를 가져오기 위한 label정보는 hc-version configmap에 존
       x
       
   - **ResponseBody**
-  
-      x
      
