@@ -1,14 +1,14 @@
 package alert
 
 import (
-	"bytes"
-	"context"
 	"encoding/json"
+
 	//"flag"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+
 	//"path/filepath"
 	"strconv"
 	"time"
@@ -25,6 +25,7 @@ import (
 	"k8s.io/apiserver/pkg/apis/audit"
 	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
+
 	//"k8s.io/client-go/tools/clientcmd"
 	//"k8s.io/client-go/util/homedir"
 	"k8s.io/klog"
@@ -40,7 +41,7 @@ type alertClient struct {
 
 func init() {
 	var err error
-	
+
 	// If api-server on Process, active this code.
 	// var kubeconfig2 *string
 	// if home := homedir.HomeDir(); home != "" {
@@ -81,94 +82,12 @@ func setScheme() {
 	utilruntime.Must(alertModel.AddToScheme(scheme))
 }
 
-func Post2(res http.ResponseWriter, req *http.Request) {
-
-	klog.Infoln("**** POST /alert")
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	klog.Infoln("Get Alert Boday : %s\n", string(body))
-	var v alertModel.Alertaudit
-	json.Unmarshal([]byte(string(body)), &v)
-
-	for i := 0; i < len(v.Alert); i++ {
-		if v.Alert[i] == '_' {
-			fmt.Printf("%s\n", v.Alert)
-			v.Resource = v.Alert[0:i]
-			v.Status = v.Alert[i+1 : len(v.Alert)]
-		}
-	}
-	klog.Infoln("status : %s\nresource : %s\nalert : %s\nnamespace : %s\nmessage : %s\nname : %s\n", v.Status, v.Resource, v.Alert, v.Namespace, v.Message, v.Name)
-
-	pop := &audit.Event{}
-
-	pop.Kind = "Event"
-	pop.APIVersion = "audit.k8s.io/v1"
-	pop.Stage = "ResponseComplete"
-	pop.Verb = "alert"
-
-	pop.ObjectRef = &audit.ObjectReference{
-		Resource:  v.Resource,
-		Namespace: v.Namespace,
-		Name:      v.Name,
-	}
-	// pop.ObjectRef.Resource = v.Resource
-	// pop.ObjectRef.Namespace = v.Namespace
-	// pop.ObjectRef.Name = v.Name
-	pop.ResponseStatus = &metav1.Status{
-		Status:  v.Status,
-		Message: v.Message,
-	}
-	pbytes, _ := json.Marshal(pop)
-	buff := bytes.NewBuffer(pbytes)
-	resp, err := http.Post("172.22.6.21:api/webhook/audit/batch", "application/json", buff)
-	if err != nil {
-		panic(err)
-	}
-
-	//var err error
-	hostclient, err = client.New(config, client.Options{Scheme: scheme})
-	if err != nil {
-		klog.Errorln(err)
-		panic(err)
-	}
-	defer resp.Body.Close()
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err == nil {
-		str := string(respBody)
-		println(str)
-	}
-	alertBody := &alertModel.Alert{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Alert",
-			APIVersion: "tmax.io/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test1",
-			Namespace: "default",
-		},
-		Spec: alertModel.AlertSpec{
-			Name:     "test",
-			Message:  "test",
-			Resource: "test",
-			Kind:     v.Status,
-		},
-	}
-	//var err2 string
-	err2 := hostclient.Create(context.TODO(), alertBody)
-	if err2 != nil {
-		klog.Errorln(err2)
-		panic(err2)
-	}
-}
 func Get(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** GET /metering")
+	klog.Infoln("**** GET /alert")
 	queryParams := req.URL.Query()
 
-	name := queryParams.Get("name")
-	label := queryParams.Get("label")
+	name := queryParams.Get(util.QUERY_PARAMETER_NAME)
+	label := queryParams.Get(util.QUERY_PARAMETER_LABEL_SELECTOR)
 	namespace := queryParams.Get(util.QUERY_PARAMETER_NAMESPACE)
 	var resp alertModel.Alert
 	resp = k8sApiCaller.GetAlert(name, namespace, label)
@@ -195,7 +114,8 @@ func Post(res http.ResponseWriter, req *http.Request) {
 			v.Status = v.Alert[i+1 : len(v.Alert)]
 		}
 	}
-	klog.Infoln("status : %s\nresource : %s\nalert : %s\nnamespace : %s\nmessage : %s\nname : %s\n", v.Status, v.Resource, v.Alert, v.Namespace, v.Message, v.Name+genUlid())
+	name_gen := v.Name + genUlid()
+	klog.Infoln("status : %s\nresource : %s\nalert : %s\nnamespace : %s\nmessage : %s\nname : %s\n", v.Status, v.Resource, v.Alert, v.Namespace, v.Message, name_gen)
 
 	pop := &audit.Event{}
 
@@ -207,7 +127,7 @@ func Post(res http.ResponseWriter, req *http.Request) {
 	pop.ObjectRef = &audit.ObjectReference{
 		Resource:  v.Resource,
 		Namespace: v.Namespace,
-		Name:      v.Name,
+		Name:      name_gen,
 	}
 	// pop.ObjectRef.Resource = v.Resource
 	// pop.ObjectRef.Namespace = v.Namespace
@@ -229,7 +149,7 @@ func Post(res http.ResponseWriter, req *http.Request) {
 			APIVersion: "tmax.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      v.Name,
+			Name:      name_gen,
 			Namespace: v.Namespace,
 		},
 		Spec: alertModel.AlertSpec{

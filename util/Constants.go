@@ -15,6 +15,7 @@ const (
 	QUERY_PARAMETER_CONTINUE       = "continue"
 	QUERY_PARAMETER_LABEL_SELECTOR = "labelSelector"
 	QUERY_PARAMETER_PERIOD         = "period"
+	QUERY_PARAMETER_NAME           = "name"
 
 	//HyperAuth
 	//HYPERAUTH_URL = "http://hyperauth.hyperauth"
