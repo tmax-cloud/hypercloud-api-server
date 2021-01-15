@@ -39,8 +39,8 @@ spec:
         effect: "NoSchedule"
       nodeSelector:
         kubernetes.io/hostname: ck-2 # need to be changed per Env
-      imagePullSecrets:
-        - name : docker-pull-secret
+      #imagePullSecrets:
+      #  - name : docker-pull-secret
       containers:
         - name: hypercloud5-api-server
           image: 192.168.6.197:5000/hc-api-server:v0.0.6 #192.168.6.110:5000/hc-api-server:v0.0.3
@@ -69,4 +69,4 @@ spec:
       - name : config-module
         configMap:
           name : hc-version # configmap shoulde be already made before mount this
-#      serviceAccountName: hypercloud5-system-admin
+      serviceAccountName: hypercloud5-system-admin
