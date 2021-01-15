@@ -69,4 +69,4 @@ spec:
       - name : config-module
         configMap:
           name : hc-version # configmap shoulde be already made before mount this
-      serviceAccountName: default
+#      serviceAccountName: hypercloud5-system-admin
