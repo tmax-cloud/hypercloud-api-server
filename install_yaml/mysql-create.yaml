@@ -2,7 +2,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: mysql-data
-  namespace: hypercloud4-system
+  namespace: hypercloud5-system
 spec:
   storageClassName: csi-cephfs-sc
   accessModes:
@@ -17,18 +17,18 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mysql-deployment
-  namespace: hypercloud4-system
+  namespace: hypercloud5-system
   labels:
-    hypercloud4: metering
+    hypercloud5: metering
 spec:
   replicas: 1
   selector:
     matchLabels:
-      hypercloud4: metering
+      hypercloud5: metering
   template:
     metadata:
       labels:
-        hypercloud4: metering
+        hypercloud5: metering
     spec:
       containers:
       - name: mysql
@@ -58,7 +58,7 @@ spec:
           requests:
             cpu: "1"
             memory: "5Gi"
-      serviceAccountName: hypercloud4-admin
+      serviceAccountName: hypercloud5-admin
       volumes:
       - name: mysql-data
         persistentVolumeClaim:
@@ -73,7 +73,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mysql-service
-  namespace: hypercloud4-system
+  namespace: hypercloud5-system
 spec:
   ports:
   - name: "mysql"
@@ -81,5 +81,5 @@ spec:
     protocol: TCP
     targetPort: 3306
   selector:
-    hypercloud4: metering
+    hypercloud5: metering
   type: NodePort

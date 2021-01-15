@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: mysql-secrets
-  namespace: hypercloud4-system
+  namespace: hypercloud5-system
 type: Opaque
 data:
   ROOT_PASSWORD: dG1heA==
@@ -13,7 +13,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: mysql-initdb-config
-  namespace: hypercloud4-system
+  namespace: hypercloud5-system
 data:
   retention.hour: "90"
   retention.day: "365"

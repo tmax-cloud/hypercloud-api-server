@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hypercloud4-api-server
-  namespace: hypercloud4-system
+  name: hypercloud5-api-server
+  namespace: hypercloud5-system
   labels:
-    hypercloud4: api-server
-    name: hypercloud4-api-server
+    hypercloud5: api-server
+    name: hypercloud5-api-server
 spec:
   replicas: 1
   selector:
     matchLabels:
-      hypercloud4: api-server
+      hypercloud5: api-server
   template:
     metadata:
-      name: hypercloud4-api-server
+      name: hypercloud5-api-server
       labels:
-        hypercloud4: api-server
+        hypercloud5: api-server
     spec:
       tolerations:
       - key: node-role.kubernetes.io/master
@@ -26,7 +26,7 @@ spec:
       #imagePullSecrets:
       #  - name : docker-pull-secret
       containers:
-        - name: hypercloud4-api-server
+        - name: hypercloud5-api-server
           image: 192.168.6.197:5000/hc-api-server:v0.0.6 #192.168.6.110:5000/hc-api-server:v0.0.3
           imagePullPolicy: Always
           env:
@@ -60,8 +60,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: hypercloud4-api-server-service
-  namespace: hypercloud4-system
+  name: hypercloud5-api-server-service
+  namespace: hypercloud5-system
 spec:
   ports:
     - name: "port1"
@@ -69,5 +69,5 @@ spec:
       protocol: TCP
       targetPort: 80
   selector:
-    hypercloud4: api-server
+    hypercloud5: api-server
   type: LoadBalancer

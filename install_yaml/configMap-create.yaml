@@ -11,9 +11,9 @@ data:
       selector:
         matchLabels:
           statusLabel:
-          - hypercloud4=operator
+          - hypercloud5=operator
           versionLabel:
-          - hypercloud4=operator
+          - hypercloud5=operator
       readinessProbe:
 
       versionProbe:
@@ -35,9 +35,9 @@ data:
       selector:
         matchLabels:
           statusLabel:
-          - hypercloud4=webhook
+          - hypercloud5=webhook
           versionLabel:
-          - hypercloud4=webhook
+          - hypercloud5=webhook
       readinessProbe:
 
       versionProbe:
@@ -47,9 +47,9 @@ data:
       selector:
         matchLabels:
           statusLabel:
-          - hypercloud4=secret-watcher
+          - hypercloud5=secret-watcher
           versionLabel:
-          - hypercloud4=secret-watcher
+          - hypercloud5=secret-watcher
       readinessProbe:
 
       versionProbe:
@@ -165,9 +165,9 @@ data:
       selector:
         matchLabels:
           statusLabel:
-          - hypercloud4=template-service-broker
+          - hypercloud5=template-service-broker
           versionLabel:
-          - hypercloud4=template-service-broker
+          - hypercloud5=template-service-broker
       readinessProbe:
 
       versionProbe:
