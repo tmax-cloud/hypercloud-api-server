@@ -16,7 +16,8 @@
 
 #### Get
   - **Description** 
-  
+    생성 된 alert  Get 하는 서비스.
+    필수 파라미터 = namespace
       
   - **RequestURL** 
   
@@ -67,7 +68,8 @@
       
 #### POST
   - **Description** 
-  
+  alert 리소스를 생성하는 service.
+  alertmanager가 직접 호출 한다.
       
   - **RequestURL** 
   
