@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"flag"
+	//"flag"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"path/filepath"
+	//"path/filepath"
 	"strconv"
 	"time"
 
@@ -25,8 +25,8 @@ import (
 	"k8s.io/apiserver/pkg/apis/audit"
 	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
+	//"k8s.io/client-go/tools/clientcmd"
+	//"k8s.io/client-go/util/homedir"
 	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -39,16 +39,24 @@ type alertClient struct {
 }
 
 func init() {
-	var kubeconfig2 *string
 	var err error
+	
+	// If api-server on Process, active this code.
+	// var kubeconfig2 *string
+	// if home := homedir.HomeDir(); home != "" {
+	// 	kubeconfig2 = flag.String("kubeconfig2", filepath.Join(home, ".kube", "config"), "/root/.kube")
+	// } else {
+	// 	kubeconfig2 = flag.String("kubeconfig2", "", "/root/.kube")
+	// }
+	// flag.Parse()
+	// config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig2)
 
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig2 = flag.String("kubeconfig2", filepath.Join(home, ".kube", "config"), "/root/.kube")
-	} else {
-		kubeconfig2 = flag.String("kubeconfig2", "", "/root/.kube")
+	// If api-server on Pod, active this code.
+	config, err = restclient.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
 	}
-	flag.Parse()
-	config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig2)
+
 	if err != nil {
 		klog.Errorln(err)
 		panic(err)
