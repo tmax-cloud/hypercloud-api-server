@@ -87,7 +87,17 @@
 
   - **RequestBody**
   
-      
+      ex)
+      ```json
+      [
+        {
+          "name" : "pod_name",  
+          "alert" : "CPU_noti",
+          "namespace" : "default",
+          "message" : "cpu 20%"
+         }
+      ]
+      ```
       
   - **ResponseBody**
   
