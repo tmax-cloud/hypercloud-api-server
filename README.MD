@@ -9,6 +9,7 @@
 
 # Hypercloud-api-server API Specification
 - Hypercloud-api-server에서 **제공하는 API 목록**
+  - Prefix : http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}
 
 ## ALERT
 
@@ -19,7 +20,7 @@
       
   - **RequestURL** 
   
-    GET http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/alert
+    GET /alert
     
   - **RequestHeader**
       
@@ -29,7 +30,7 @@
 
       name : {NAME}  
       
-      label : {LABEL}  
+      labelSelector  : {LABEL}  
       
       namespace : {NAMESPACE}  
 
@@ -43,15 +44,34 @@
       
   - **ResponseBody**
   
-      x
+      ex)
+      ```json
+      [
+        {
+          "kind": "AlertList",
+          "apiVersion": "tmax.io/v1",   
+          "metadata":{
+            "selfLink": "/apis/tmax.io/v1/namespaces/default/alerts",
+            "resourceVersion": "249653521",
+            "creationTimestamp": null
+           },
+          "spec":{
+            "kind": "warning",
+            "name": "pod-1234",
+            "resource": "podCPU",
+            "message": "pod cpu usage 90%"
+           }
+        }
+      ]
+      ```
       
-#### Create
+#### POST
   - **Description** 
   
       
   - **RequestURL** 
   
-    POST http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/alert
+    POST /alert
     
   - **RequestHeader**
       
@@ -67,7 +87,17 @@
 
   - **RequestBody**
   
-      
+      ex)
+      ```json
+      [
+        {
+          "name" : "pod_name",  
+          "alert" : "CPU_noti",
+          "namespace" : "default",
+          "message" : "cpu 20%"
+         }
+      ]
+      ```
       
   - **ResponseBody**
   
@@ -80,11 +110,11 @@ schema,secret은 mysql-settings.yaml 에서 관리
 #### Get
   - **Description** 
   
-     namespace별 현재 리소스 사용량을 조회하는 API
+     현재 리소스 사용량을 조회하는 API
       
   - **RequestURL** 
   
-    GET http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/metering
+    GET /metering
     
   - **RequestHeader**
       
@@ -104,7 +134,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
       
       endTime : {ENDTIME}  
       
-      sorts : {SORTS}  
+      sort : {SORTS}  
 
   - **PathParam**
 
@@ -116,18 +146,36 @@ schema,secret은 mysql-settings.yaml 에서 관리
       
   - **ResponseBody**
   
-      x
+      ex)
+      ```json
+      [
+        {
+          "id": "56e1c905-530c-4ece-8a00-a9bed2477607",
+          "namespace": "hypercloud4-system",
+          "cpu": 0,
+          "memory": 1158947976,
+          "storage": 10737418240,
+          "gpu": 0,
+          "publicIp": 2,
+          "privateIp": 0,
+          "trafficIn": 0,
+          "trafficOut": 0,
+          "meteringTime": "2021-01-15T00:00:00Z"
+        },
+        ...
+      ]
+      ```
 
 ## NAMESPACE
 
 #### Get
   - **Description** 
   
-    접근 가능한 namespace를 조회하는 API
+    접근 가능한 namespace list를 조회하는 API
       
   - **RequestURL** 
   
-    GET http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/namespace
+    GET /namespace
     
   - **RequestHeader**
       
@@ -153,13 +201,14 @@ schema,secret은 mysql-settings.yaml 에서 관리
   
       x
       
-#### AttributeUpdate
+#### PUT
   - **Description** 
   
+  trial namespace 기간 연장 API
      
   - **RequestURL** 
   
-    PUT http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/namespace
+    PUT /namespace
     
   - **RequestHeader**
       
@@ -169,7 +218,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
 
       nsName : {NAMESPACE}  
       
-      addPeriod : {ADDPERIOD}
+      period : {ADDPERIOD}
       
   - **PathParam**
 
@@ -189,11 +238,11 @@ schema,secret은 mysql-settings.yaml 에서 관리
 #### Get
   - **Description** 
   
-     파라미터로 받은 유저의 namespaceClaim 권한을 조회하는 API
+    접근 가능한 namespaceClaim list를 조회하는 API
       
   - **RequestURL** 
   
-    GET http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/namespaceClaim
+    GET /namespaceClaim
     
   - **RequestHeader**
       
@@ -219,13 +268,14 @@ schema,secret은 mysql-settings.yaml 에서 관리
   
       x
       
-#### AttributeUpdate
+#### PUT
   - **Description** 
   
+     Namespace 이름 중복 API
      
   - **RequestURL** 
   
-    PUT http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/namespaceClaim
+    PUT /namespaceClaim
     
   - **RequestHeader**
       
@@ -233,7 +283,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
     
   - **QueryParam**
 
-      nsName : {NAMESPACE}  
+      namespace : {NAMESPACE_NAME}  
       
   - **PathParam**
 
@@ -251,14 +301,14 @@ schema,secret은 mysql-settings.yaml 에서 관리
 ## USER
 
 
-#### Create
+#### POST
   - **Description** 
 
-      파라미터로 받은 유저의 클러스터 롤바인딩을 생성하는 API
+      유저 회원가입시 유저에게 필요한 최초 클러스터 롤바인딩을 생성하는 API
       
   - **RequestURL** 
   
-      POST http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}
+      POST /user
     
   - **RequestHeader**
       
@@ -266,7 +316,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
     
   - **QueryParam**
 
-      userId: {USERID}  
+      userId: {USER_ID}  
 
   - **PathParam**
 
@@ -283,11 +333,11 @@ schema,secret은 mysql-settings.yaml 에서 관리
 #### DELETE
   - **Description** 
 
-      파라미터로 받은 유저의 클러스터 롤바인딩을 제거하는 API
+      유저 탈퇴시, 유저의 클러스터 롤바인딩을 제거하는 API
       
   - **RequestURL** 
   
-      DELETE http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}
+      DELETE /user
     
   - **RequestHeader**
       
@@ -322,7 +372,7 @@ verison 정보를 가져오기 위한 label정보는 hc-version configmap에 존
       
   - **RequestURL** 
   
-    GET http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/version
+    GET /version
     
   - **RequestHeader**
       
@@ -341,6 +391,20 @@ verison 정보를 가져오기 위한 label정보는 hc-version configmap에 존
       x
       
   - **ResponseBody**
-  
-      x
      
+     eg)     
+     ```json
+      [
+        {
+        "name": "HyperCloud-Operator",
+        "status": "Normal",
+        "version": "b4.1.3"
+        },
+        {
+        "name": "HyperCloud-Console",
+        "status": "Normal",
+        "version": "4.1.4"
+        },
+        ...
+      ]
+     ```

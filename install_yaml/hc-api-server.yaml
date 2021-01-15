@@ -1,3 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hypercloud5-api-server-service
+  namespace: hypercloud5-system
+spec:
+  ports:
+    - name: "port1"
+      port: 28678
+      protocol: TCP
+      targetPort: 80
+  selector:
+    hypercloud5: api-server
+  type: LoadBalancer
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -53,21 +69,4 @@ spec:
       - name : config-module
         configMap:
           name : hc-version # configmap shoulde be already made before mount this
-      serviceAccountName: default
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: hypercloud5-api-server-service
-  namespace: hypercloud5-system
-spec:
-  ports:
-    - name: "port1"
-      port: 28678
-      protocol: TCP
-      targetPort: 80
-  selector:
-    hypercloud5: api-server
-  type: LoadBalancer
+      serviceAccountName: hypercloud5-system-admin
