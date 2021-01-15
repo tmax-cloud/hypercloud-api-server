@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hypercloud5-system
+
+---
+
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: hypercloud5-system-quota
+  namespace: hypercloud5-system
+spec:
+  hard:
+    limits.cpu: "3"
+    limits.memory: "3Gi"
+    requests.storage: "1Gi"
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hypercloud5-system-admin
+  namespace: hypercloud5-system
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: docker-pull-secret
+  namespace: hypercloud5-system

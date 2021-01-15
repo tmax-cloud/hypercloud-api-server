@@ -1,3 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  namespace: hypercloud5-system
+spec:
+  ports:
+  - name: "mysql"
+    port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    hypercloud5: metering
+  type: NodePort
+
+---
+
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -66,20 +83,3 @@ spec:
       - name: mysql-initdb-config
         configMap:
           name: mysql-initdb-config
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: mysql-service
-  namespace: hypercloud5-system
-spec:
-  ports:
-  - name: "mysql"
-    port: 3306
-    protocol: TCP
-    targetPort: 3306
-  selector:
-    hypercloud5: metering
-  type: NodePort

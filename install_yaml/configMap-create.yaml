@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: hc-version
-  namespace: hypercloud4-system
+  namespace: hypercloud5-system
 data:
   module.config: |
     modules:

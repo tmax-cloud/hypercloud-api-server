@@ -1,3 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: hypercloud5-api-server-service
+  namespace: hypercloud5-system
+spec:
+  ports:
+    - name: "port1"
+      port: 28678
+      protocol: TCP
+      targetPort: 80
+  selector:
+    hypercloud5: api-server
+  type: LoadBalancer
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,8 +39,8 @@ spec:
         effect: "NoSchedule"
       nodeSelector:
         kubernetes.io/hostname: ck-2 # need to be changed per Env
-      #imagePullSecrets:
-      #  - name : docker-pull-secret
+      imagePullSecrets:
+        - name : docker-pull-secret
       containers:
         - name: hypercloud5-api-server
           image: 192.168.6.197:5000/hc-api-server:v0.0.6 #192.168.6.110:5000/hc-api-server:v0.0.3
@@ -54,20 +70,3 @@ spec:
         configMap:
           name : hc-version # configmap shoulde be already made before mount this
       serviceAccountName: default
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: hypercloud5-api-server-service
-  namespace: hypercloud5-system
-spec:
-  ports:
-    - name: "port1"
-      port: 28678
-      protocol: TCP
-      targetPort: 80
-  selector:
-    hypercloud5: api-server
-  type: LoadBalancer
