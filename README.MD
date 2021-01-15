@@ -345,3 +345,19 @@ verison 정보를 가져오기 위한 label정보는 hc-version configmap에 존
       
   - **ResponseBody**
      
+     eg)     
+     ```json
+      [
+        {
+        "name": "HyperCloud-Operator",
+        "status": "Normal",
+        "version": "b4.1.3"
+        },
+        {
+        "name": "HyperCloud-Console",
+        "status": "Normal",
+        "version": "4.1.4"
+        },
+        ...
+      ]
+     ```
