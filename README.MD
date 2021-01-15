@@ -44,7 +44,26 @@
       
   - **ResponseBody**
   
-      x
+      ex)
+      ```json
+      [
+        {
+          "kind": "AlertList",
+          "apiVersion": "tmax.io/v1",   
+          "metadata":{
+            "selfLink": "/apis/tmax.io/v1/namespaces/default/alerts",
+            "resourceVersion": "249653521",
+            "creationTimestamp": null
+           },
+          "spec":{
+            "kind": "warning",
+            "name": "pod-1234",
+            "resource": "podCPU",
+            "message": "pod cpu usage 90%"
+           }
+        }
+      ]
+      ```
       
 #### POST
   - **Description** 
