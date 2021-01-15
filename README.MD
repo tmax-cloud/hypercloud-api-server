@@ -117,7 +117,25 @@ schema,secret은 mysql-settings.yaml 에서 관리
       
   - **ResponseBody**
   
-      x
+      ex)
+      ```json
+      [
+        {
+          "id": "56e1c905-530c-4ece-8a00-a9bed2477607",
+          "namespace": "hypercloud4-system",
+          "cpu": 0,
+          "memory": 1158947976,
+          "storage": 10737418240,
+          "gpu": 0,
+          "publicIp": 2,
+          "privateIp": 0,
+          "trafficIn": 0,
+          "trafficOut": 0,
+          "meteringTime": "2021-01-15T00:00:00Z"
+        },
+        ...
+      ]
+      ```
 
 ## NAMESPACE
 
