@@ -9,6 +9,7 @@
 
 # Hypercloud-api-server API Specification
 - Hypercloud-api-server에서 **제공하는 API 목록**
+  - Prefix : http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}
 
 ## ALERT
 
@@ -19,7 +20,7 @@
       
   - **RequestURL** 
   
-    GET http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/alert
+    GET /alert
     
   - **RequestHeader**
       
@@ -51,7 +52,7 @@
       
   - **RequestURL** 
   
-    POST http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/alert
+    POST /alert
     
   - **RequestHeader**
       
@@ -84,7 +85,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
       
   - **RequestURL** 
   
-    GET http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/metering
+    GET /metering
     
   - **RequestHeader**
       
@@ -127,7 +128,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
       
   - **RequestURL** 
   
-    GET http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/namespace
+    GET /namespace
     
   - **RequestHeader**
       
@@ -159,7 +160,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
      
   - **RequestURL** 
   
-    PUT http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/namespace
+    PUT /namespace
     
   - **RequestHeader**
       
@@ -193,7 +194,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
       
   - **RequestURL** 
   
-    GET http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/namespaceClaim
+    GET /namespaceClaim
     
   - **RequestHeader**
       
@@ -225,7 +226,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
      
   - **RequestURL** 
   
-    PUT http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/namespaceClaim
+    PUT /namespaceClaim
     
   - **RequestHeader**
       
@@ -258,7 +259,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
       
   - **RequestURL** 
   
-      POST http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}
+      POST /user
     
   - **RequestHeader**
       
@@ -287,7 +288,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
       
   - **RequestURL** 
   
-      DELETE http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}
+      DELETE /user
     
   - **RequestHeader**
       
@@ -322,7 +323,7 @@ verison 정보를 가져오기 위한 label정보는 hc-version configmap에 존
       
   - **RequestURL** 
   
-    GET http://{HYPERCLOUD5-API-SERVER-SERVICE}:{PORT}/version
+    GET /version
     
   - **RequestHeader**
       
