@@ -30,7 +30,7 @@
 
       name : {NAME}  
       
-      label : {LABEL}  
+      labelSelector  : {LABEL}  
       
       namespace : {NAMESPACE}  
 
