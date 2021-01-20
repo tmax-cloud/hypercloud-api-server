@@ -62,7 +62,7 @@ func main() {
 			return
 		}
 		klog.Info("Log BackUp Success")
-		os.Truncate("./logs/api-server.log", 0)ehlau
+		os.Truncate("./logs/api-server.log", 0)
 		file.Seek(0, os.SEEK_SET)
 	})
 
