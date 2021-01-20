@@ -44,7 +44,7 @@ spec:
       serviceAccount: hypercloud5-admin
       containers:
         - name: hypercloud5-api-server
-          image: 192.168.6.197:5000/hc-api-server:v0.1.1
+          image: 192.168.6.197:5000/hc-api-server:v0.1.2
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
@@ -56,7 +56,7 @@ spec:
           resources:
             limits:
               cpu: "1"
-              memory: "800M"
+              memory: "1G"
             requests:
               cpu: "1"
               memory: "100M"

@@ -72,20 +72,20 @@ func main() {
 
 	// Req multiplexer
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/hypercloud/user", serveUser)
-	mux.HandleFunc("/api/hypercloud/metering", serveMetering)
-	mux.HandleFunc("/api/hypercloud/namespace", serveNamespace)
-	mux.HandleFunc("/api/hypercloud/alert", serveAlert)
-	mux.HandleFunc("/api/hypercloud/namespaceClaim", serveNamespaceClaim)
-	mux.HandleFunc("/api/hypercloud/version", serveVersion)
+	mux.HandleFunc("/user", serveUser)
+	mux.HandleFunc("/metering", serveMetering)
+	mux.HandleFunc("/namespace", serveNamespace)
+	mux.HandleFunc("/alert", serveAlert)
+	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
+	mux.HandleFunc("/version", serveVersion)
 
 	if hcMode != "single" {
 		// for multi mode only
-		mux.HandleFunc("/api/hypercloud/clusterclaim", serveClusterClaim)
-		mux.HandleFunc("/api/hypercloud/cluster", serveCluster)
-		mux.HandleFunc("/api/hypercloud/cluster/owner", serveClusterOwner)
-		mux.HandleFunc("/api/hypercloud/cluster/member", serveClusterMember)
-		mux.HandleFunc("/api/hypercloud/test/", serveTest)
+		mux.HandleFunc("/clusterclaim", serveClusterClaim)
+		mux.HandleFunc("/cluster", serveCluster)
+		mux.HandleFunc("/cluster/owner", serveClusterOwner)
+		mux.HandleFunc("/cluster/member", serveClusterMember)
+		mux.HandleFunc("/test/", serveTest)
 	}
 
 	// HTTP Server Start
