@@ -44,6 +44,7 @@ node {
 		dir(imageBuildHome){
 		    sh "sudo docker build --tag tmaxcloudck/hypercloud-api-server:${imageTag} ."
 			sh "sudo docker push tmaxcloudck/hypercloud-api-server:${imageTag}"
+            sh "sudo docker rmi tmaxcloudck/hypercloud-api-server:${imageTag}"
 		}	
 	}
 	
