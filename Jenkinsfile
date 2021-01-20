@@ -19,7 +19,7 @@ node {
         dir(imageBuildHome){
             git branch: "${params.buildBranch}",
             credentialsId: '${userName}',
-            url: "http://${gitHubBaseAddress}"
+            url: "http://${gitHcAddress}"
 
             // git pull
             sh "git checkout ${params.buildBranch}"
