@@ -40,36 +40,36 @@ type alertClient struct {
 }
 
 func init() {
-	var err error
+	// var err error
 
-	// If api-server on Process, active this code.
-	// var kubeconfig2 *string
-	// if home := homedir.HomeDir(); home != "" {
-	// 	kubeconfig2 = flag.String("kubeconfig2", filepath.Join(home, ".kube", "config"), "/root/.kube")
-	// } else {
-	// 	kubeconfig2 = flag.String("kubeconfig2", "", "/root/.kube")
+	// // If api-server on Process, active this code.
+	// // var kubeconfig2 *string
+	// // if home := homedir.HomeDir(); home != "" {
+	// // 	kubeconfig2 = flag.String("kubeconfig2", filepath.Join(home, ".kube", "config"), "/root/.kube")
+	// // } else {
+	// // 	kubeconfig2 = flag.String("kubeconfig2", "", "/root/.kube")
+	// // }
+	// // flag.Parse()
+	// // config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig2)
+
+	// // If api-server on Pod, active this code.
+	// config, err = restclient.InClusterConfig()
+	// if err != nil {
+	// 	panic(err.Error())
 	// }
-	// flag.Parse()
-	// config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig2)
 
-	// If api-server on Pod, active this code.
-	config, err = restclient.InClusterConfig()
-	if err != nil {
-		panic(err.Error())
-	}
+	// if err != nil {
+	// 	klog.Errorln(err)
+	// 	panic(err)
+	// }
+	// config.Burst = 100
+	// config.QPS = 100
 
-	if err != nil {
-		klog.Errorln(err)
-		panic(err)
-	}
-	config.Burst = 100
-	config.QPS = 100
-
-	if err != nil {
-		klog.Errorln(err)
-		panic(err)
-	}
-	setScheme()
+	// if err != nil {
+	// 	klog.Errorln(err)
+	// 	panic(err)
+	// }
+	// setScheme()
 
 }
 

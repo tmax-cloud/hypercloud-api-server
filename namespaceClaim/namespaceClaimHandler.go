@@ -18,6 +18,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
 	limit := queryParams.Get(util.QUERY_PARAMETER_LIMIT)
 	labelSelector := queryParams.Get(util.QUERY_PARAMETER_LABEL_SELECTOR)
+
 	var status int
 	klog.Infoln("userId : ", userId)
 	if userId == "" {

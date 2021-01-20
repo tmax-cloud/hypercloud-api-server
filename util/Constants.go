@@ -16,6 +16,7 @@ const (
 	QUERY_PARAMETER_LABEL_SELECTOR = "labelSelector"
 	QUERY_PARAMETER_PERIOD         = "period"
 	QUERY_PARAMETER_NAME           = "name"
+	QUERY_PARAMETER_USER_GROUP     = "userGroup"
 
 	//HyperAuth
 	//HYPERAUTH_URL = "http://hyperauth.hyperauth"
@@ -25,4 +26,12 @@ const (
 
 	HYPERCLOUD4_NAMESPACE       = "hypercloud4-system"
 	HYPERCLOUD4_CLAIM_API_GROUP = "claim.tmax.io"
+
+	CLAIM_API_GROUP             = "claims.tmax.io"
+	CLAIM_API_Kind              = "clusterclaims"
+	CLAIM_API_GROUP_VERSION     = "claims.tmax.io/v1alpha1"
+	CLUSTER_API_GROUP           = "cluster.tmax.io"
+	CLUSTER_API_Kind            = "clustermanagers"
+	CLUSTER_API_GROUP_VERSION   = "cluster.tmax.io/v1alpha1"
+	HYPERCLOUD_SYSTEM_NAMESPACE = "hypercloud5-system"
 )

@@ -9,6 +9,8 @@ import (
 	"time"
 
 	alert "github.com/tmax-cloud/hypercloud-api-server/alert"
+	claim "github.com/tmax-cloud/hypercloud-api-server/claim"
+	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
 	metering "github.com/tmax-cloud/hypercloud-api-server/metering"
 	"github.com/tmax-cloud/hypercloud-api-server/namespace"
 	"github.com/tmax-cloud/hypercloud-api-server/namespaceClaim"
@@ -23,6 +25,9 @@ import (
 )
 
 func main() {
+	// Get Hypercloud Operating Mode!!!
+	hcMode := os.Getenv("HC_MODE")
+
 	// For Log file
 	klog.InitFlags(nil)
 	flag.Set("logtostderr", "false")
@@ -67,21 +72,30 @@ func main() {
 
 	// Req multiplexer
 	mux := http.NewServeMux()
-	mux.HandleFunc("/user", serveUser)
-	mux.HandleFunc("/metering", serveMetering)
-	mux.HandleFunc("/namespace", serveNamespace)
-	mux.HandleFunc("/alert", serveAlert)
+	mux.HandleFunc("/api/hypercloud/user", serveUser)
+	mux.HandleFunc("/api/hypercloud/metering", serveMetering)
+	mux.HandleFunc("/api/hypercloud/namespace", serveNamespace)
+	// mux.HandleFunc("/api/hypercloud/alert", serveAlert)
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
 
+	if hcMode != "single" {
+		// for multi mode only
+		mux.HandleFunc("/api/hypercloud/clusterclaim", serveClusterClaim)
+		mux.HandleFunc("/api/hypercloud/cluster", serveCluster)
+		mux.HandleFunc("/api/hypercloud/cluster/owner", serveClusterOwner)
+		mux.HandleFunc("/api/hypercloud/cluster/member", serveClusterMember)
+		mux.HandleFunc("/api/hypercloud/test/", serveTest)
+	}
+
 	// HTTP Server Start
-	klog.Info("Starting Hypercloud-Operator-API server...")
+	klog.Info("Starting Hypercloud5-API server...")
 	klog.Flush()
 
 	if err := http.ListenAndServe(":80", mux); err != nil {
-		klog.Errorf("Failed to listen and serve Hypercloud-Operator-API server: %s", err)
+		klog.Errorf("Failed to listen and serve Hypercloud5-API server: %s", err)
 	}
-	klog.Info("Started Hypercloud-Operator-API server")
+	klog.Info("Started Hypercloud5-API server")
 
 }
 
@@ -151,5 +165,69 @@ func serveVersion(res http.ResponseWriter, req *http.Request) {
 		version.Get(res, req)
 	default:
 		//error
+	}
+}
+
+func serveTest(w http.ResponseWriter, r *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	var body []byte
+	if r.Body != nil {
+		if data, err := ioutil.ReadAll(r.Body); err == nil {
+			body = data
+		}
+	}
+	klog.Info("Request body: \n", string(body))
+}
+
+func serveClusterClaim(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodGet:
+		//curl -XPUT 172.22.6.2:32319/api/master/clusterclaim?userId=sangwon_cho@tmax.co.kr
+		claim.List(res, req)
+	case http.MethodPost:
+	case http.MethodPut:
+		//curl -XPUT 172.22.6.2:32319/api/master/clusterclaim?userId=sangwon_cho@tmax.co.kr\&clusterClaim=test-d5n92\&admit=true
+		claim.Put(res, req)
+	case http.MethodDelete:
+	default:
+	}
+}
+
+func serveCluster(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodGet:
+		cluster.List(res, req)
+	case http.MethodPost:
+	case http.MethodPut:
+		// invite multiple users
+		cluster.Put(res, req)
+	case http.MethodDelete:
+	default:
+	}
+}
+
+func serveClusterOwner(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodGet:
+		cluster.ListOwner(res, req)
+	case http.MethodPost:
+	case http.MethodPut:
+	case http.MethodDelete:
+	default:
+	}
+}
+
+func serveClusterMember(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodGet:
+		cluster.ListMember(res, req)
+	case http.MethodPost:
+	case http.MethodPut:
+	case http.MethodDelete:
+	default:
 	}
 }

@@ -1,66 +1,55 @@
-I0115 10:57:36.537522   18296 main.go:78] Starting Hypercloud-Operator-API server...
-I0115 10:58:00.000138   18296 meteringJob.go:78] ============= Metering Time =============
-I0115 10:58:00.000164   18296 meteringJob.go:79] Current Time   :  2021-01-15 10:58:00
-I0115 10:58:00.000170   18296 meteringJob.go:80] minute of hour :  58
-I0115 10:58:00.000175   18296 meteringJob.go:81] hour of day    :  10
-I0115 10:58:00.000180   18296 meteringJob.go:82] day of month   :  15
-I0115 10:58:00.000184   18296 meteringJob.go:83] day of year    :  15
-I0115 10:58:06.107143   18296 versionHandler.go:26] **** GET /version
-I0115 10:58:06.107619   18296 versionHandler.go:49] Module Name =  TemplateServiceBroker
-I0115 10:58:06.107632   18296 versionHandler.go:49] Module Name =  Calico
-I0115 10:58:06.107642   18296 versionHandler.go:49] Module Name =  Grafana
-I0115 10:58:06.107648   18296 versionHandler.go:49] Module Name =  HyperCloud-WebHook
-I0115 10:58:06.107739   18296 versionHandler.go:49] Module Name =  HyperCloud-Console
-I0115 10:58:06.107712   18296 versionHandler.go:49] Module Name =  Rook-Ceph
-I0115 10:58:06.107833   18296 versionHandler.go:49] Module Name =  HyperCloud-Operator
-I0115 10:58:06.107850   18296 versionHandler.go:49] Module Name =  Prometheus
-I0115 10:58:06.107849   18296 versionHandler.go:49] Module Name =  Tekton-Trigger
-I0115 10:58:06.108123   18296 versionHandler.go:49] Module Name =  HyperCloud-Watcher
-I0115 10:58:06.108138   18296 versionHandler.go:49] Module Name =  Kubernetes
-I0115 10:58:06.108268   18296 versionHandler.go:49] Module Name =  Tekton
-I0115 10:58:06.108813   18296 versionHandler.go:49] Module Name =  Catalog-Controller
-E0115 10:58:06.136579   18296 K8sApiCaller.go:402] hypercloud4=operator  cannot be found
-E0115 10:58:06.136579   18296 K8sApiCaller.go:402] hypercloud4=operator  cannot be found
-E0115 10:58:06.136579   18296 K8sApiCaller.go:402] hypercloud4=operator  cannot be found
-E0115 10:58:06.136613   18296 versionHandler.go:125] HyperCloud-Operator  cannot found pods using given label :  hypercloud4=operator
-E0115 10:58:06.136613   18296 versionHandler.go:125] HyperCloud-Operator  cannot found pods using given label :  hypercloud4=operator
-E0115 10:58:06.136613   18296 versionHandler.go:125] HyperCloud-Operator  cannot found pods using given label :  hypercloud4=operator
-E0115 10:58:06.136634   18296 versionHandler.go:148] HyperCloud-Operator  cannot found pods using given label
-E0115 10:58:06.136634   18296 versionHandler.go:148] HyperCloud-Operator  cannot found pods using given label
-E0115 10:58:06.136634   18296 versionHandler.go:148] HyperCloud-Operator  cannot found pods using given label
-E0115 10:58:06.139811   18296 K8sApiCaller.go:402] hypercloud4=secret-watcher  cannot be found
-E0115 10:58:06.139811   18296 K8sApiCaller.go:402] hypercloud4=secret-watcher  cannot be found
-E0115 10:58:06.139811   18296 K8sApiCaller.go:402] hypercloud4=secret-watcher  cannot be found
-E0115 10:58:06.139838   18296 versionHandler.go:125] HyperCloud-Watcher  cannot found pods using given label :  hypercloud4=secret-watcher
-E0115 10:58:06.139838   18296 versionHandler.go:125] HyperCloud-Watcher  cannot found pods using given label :  hypercloud4=secret-watcher
-E0115 10:58:06.139838   18296 versionHandler.go:125] HyperCloud-Watcher  cannot found pods using given label :  hypercloud4=secret-watcher
-E0115 10:58:06.139852   18296 versionHandler.go:148] HyperCloud-Watcher  cannot found pods using given label
-E0115 10:58:06.139852   18296 versionHandler.go:148] HyperCloud-Watcher  cannot found pods using given label
-E0115 10:58:06.139852   18296 versionHandler.go:148] HyperCloud-Watcher  cannot found pods using given label
-E0115 10:58:06.142072   18296 K8sApiCaller.go:402] hypercloud4=template-service-broker  cannot be found
-E0115 10:58:06.142072   18296 K8sApiCaller.go:402] hypercloud4=template-service-broker  cannot be found
-E0115 10:58:06.142072   18296 K8sApiCaller.go:402] hypercloud4=template-service-broker  cannot be found
-E0115 10:58:06.142099   18296 versionHandler.go:125] TemplateServiceBroker  cannot found pods using given label :  hypercloud4=template-service-broker
-E0115 10:58:06.142099   18296 versionHandler.go:125] TemplateServiceBroker  cannot found pods using given label :  hypercloud4=template-service-broker
-E0115 10:58:06.142099   18296 versionHandler.go:125] TemplateServiceBroker  cannot found pods using given label :  hypercloud4=template-service-broker
-E0115 10:58:06.142118   18296 versionHandler.go:148] TemplateServiceBroker  cannot found pods using given label
-E0115 10:58:06.142118   18296 versionHandler.go:148] TemplateServiceBroker  cannot found pods using given label
-E0115 10:58:06.142118   18296 versionHandler.go:148] TemplateServiceBroker  cannot found pods using given label
-E0115 10:58:06.143446   18296 K8sApiCaller.go:402] app=console  cannot be found
-E0115 10:58:06.143446   18296 K8sApiCaller.go:402] app=console  cannot be found
-E0115 10:58:06.143446   18296 K8sApiCaller.go:402] app=console  cannot be found
-E0115 10:58:06.143499   18296 versionHandler.go:125] HyperCloud-Console  cannot found pods using given label :  app=console
-E0115 10:58:06.143499   18296 versionHandler.go:125] HyperCloud-Console  cannot found pods using given label :  app=console
-E0115 10:58:06.143499   18296 versionHandler.go:125] HyperCloud-Console  cannot found pods using given label :  app=console
-E0115 10:58:06.143536   18296 versionHandler.go:148] HyperCloud-Console  cannot found pods using given label
-E0115 10:58:06.143536   18296 versionHandler.go:148] HyperCloud-Console  cannot found pods using given label
-E0115 10:58:06.143536   18296 versionHandler.go:148] HyperCloud-Console  cannot found pods using given label
-E0115 10:58:06.145218   18296 K8sApiCaller.go:402] hypercloud4=webhook  cannot be found
-E0115 10:58:06.145218   18296 K8sApiCaller.go:402] hypercloud4=webhook  cannot be found
-E0115 10:58:06.145218   18296 K8sApiCaller.go:402] hypercloud4=webhook  cannot be found
-E0115 10:58:06.145268   18296 versionHandler.go:125] HyperCloud-WebHook  cannot found pods using given label :  hypercloud4=webhook
-E0115 10:58:06.145268   18296 versionHandler.go:125] HyperCloud-WebHook  cannot found pods using given label :  hypercloud4=webhook
-E0115 10:58:06.145268   18296 versionHandler.go:125] HyperCloud-WebHook  cannot found pods using given label :  hypercloud4=webhook
-E0115 10:58:06.145314   18296 versionHandler.go:148] HyperCloud-WebHook  cannot found pods using given label
-E0115 10:58:06.145314   18296 versionHandler.go:148] HyperCloud-WebHook  cannot found pods using given label
-E0115 10:58:06.145314   18296 versionHandler.go:148] HyperCloud-WebHook  cannot found pods using given label
+I0120 14:53:35.415067    9115 main.go:88] Starting Hypercloud-Operator-API server...
+I0120 14:53:38.167984    9115 namespaceHandler.go:16] **** GET/namespace
+I0120 14:53:38.168018    9115 namespaceHandler.go:24] userId :  admin@tmax.co.kr
+I0120 14:53:38.168026    9115 namespaceHandler.go:32] limit :  
+I0120 14:53:38.168032    9115 namespaceHandler.go:33] labelSelector :  
+I0120 14:53:38.168036    9115 namespaceHandler.go:36] userGroup :  hypercloud4,tmaxcloud
+I0120 14:53:38.168041    9115 namespaceHandler.go:41] userGroupName :  hypercloud4
+I0120 14:53:38.168046    9115 namespaceHandler.go:41] userGroupName :  tmaxcloud
+I0120 14:53:38.168075    9115 K8sApiCaller.go:129] userId :  admin@tmax.co.kr
+I0120 14:53:38.168080    9115 K8sApiCaller.go:141] userGroupName :  hypercloud4
+I0120 14:53:38.168084    9115 K8sApiCaller.go:141] userGroupName :  tmaxcloud
+I0120 14:53:38.174239    9115 K8sApiCaller.go:162]  User [ admin@tmax.co.kr ] has Namespace List Role, Can Access All Namespace
+I0120 14:53:38.177178    9115 K8sApiCaller.go:225] === [ admin@tmax.co.kr ] Accessible Namespace ===
+I0120 14:53:38.177195    9115 K8sApiCaller.go:227]   argocd
+I0120 14:53:38.177201    9115 K8sApiCaller.go:227]   capa-system
+I0120 14:53:38.177206    9115 K8sApiCaller.go:227]   capi-kubeadm-bootstrap-system
+I0120 14:53:38.177210    9115 K8sApiCaller.go:227]   capi-kubeadm-control-plane-system
+I0120 14:53:38.177215    9115 K8sApiCaller.go:227]   capi-system
+I0120 14:53:38.177220    9115 K8sApiCaller.go:227]   capi-webhook-system
+I0120 14:53:38.177225    9115 K8sApiCaller.go:227]   catalog
+I0120 14:53:38.177229    9115 K8sApiCaller.go:227]   cert-manager
+I0120 14:53:38.177234    9115 K8sApiCaller.go:227]   cicd-system
+I0120 14:53:38.177239    9115 K8sApiCaller.go:227]   ck1-2
+I0120 14:53:38.177243    9115 K8sApiCaller.go:227]   claim-operator-system
+I0120 14:53:38.177248    9115 K8sApiCaller.go:227]   cluster-manager-operator-system
+I0120 14:53:38.177253    9115 K8sApiCaller.go:227]   cluster-tsb-ns
+I0120 14:53:38.177258    9115 K8sApiCaller.go:227]   default
+I0120 14:53:38.177262    9115 K8sApiCaller.go:227]   hyperauth
+I0120 14:53:38.177271    9115 K8sApiCaller.go:227]   hypercloud4-system
+I0120 14:53:38.177276    9115 K8sApiCaller.go:227]   hypercloud5-system
+I0120 14:53:38.177281    9115 K8sApiCaller.go:227]   ingress-nginx
+I0120 14:53:38.177285    9115 K8sApiCaller.go:227]   ingress-nginx-shared
+I0120 14:53:38.177290    9115 K8sApiCaller.go:227]   ingress-test
+I0120 14:53:38.177295    9115 K8sApiCaller.go:227]   istio-system
+I0120 14:53:38.177300    9115 K8sApiCaller.go:227]   keda
+I0120 14:53:38.177304    9115 K8sApiCaller.go:227]   kube-federation-system
+I0120 14:53:38.177309    9115 K8sApiCaller.go:227]   kube-node-lease
+I0120 14:53:38.177314    9115 K8sApiCaller.go:227]   kube-public
+I0120 14:53:38.177319    9115 K8sApiCaller.go:227]   kube-system
+I0120 14:53:38.177323    9115 K8sApiCaller.go:227]   kubevirt
+I0120 14:53:38.177328    9115 K8sApiCaller.go:227]   metallb-system
+I0120 14:53:38.177336    9115 K8sApiCaller.go:227]   monitoring
+I0120 14:53:38.177342    9115 K8sApiCaller.go:227]   olm
+I0120 14:53:38.177347    9115 K8sApiCaller.go:227]   operators
+I0120 14:53:38.177351    9115 K8sApiCaller.go:227]   poc-cicd
+I0120 14:53:38.177356    9115 K8sApiCaller.go:227]   reg-test
+I0120 14:53:38.177361    9115 K8sApiCaller.go:227]   registry-system
+I0120 14:53:38.177365    9115 K8sApiCaller.go:227]   rook-ceph
+I0120 14:53:38.177370    9115 K8sApiCaller.go:227]   tekton-pipelines
+I0120 14:53:38.177375    9115 K8sApiCaller.go:227]   terraform-operator-system
+I0120 14:53:38.177380    9115 K8sApiCaller.go:227]   test
+I0120 14:53:38.177384    9115 K8sApiCaller.go:227]   tsb-ns
+I0120 14:53:38.177389    9115 K8sApiCaller.go:227]   tsb-test
+I0120 14:53:38.177394    9115 K8sApiCaller.go:227]   wef
+I0120 14:53:38.177398    9115 K8sApiCaller.go:227]   wefwef

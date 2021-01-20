@@ -4,16 +4,20 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/http"
 
-	//"flag"
 	"io"
-	//"path/filepath"
 	"reflect"
 	"sync"
 
 	"github.com/tmax-cloud/hypercloud-api-server/util"
+	"k8s.io/client-go/tools/remotecommand"
+	"k8s.io/utils/pointer"
 
+	claimsv1alpha1 "github.com/tmax-cloud/claim-operator/api/v1alpha1"
+	clusterv1alpha1 "github.com/tmax-cloud/cluster-manager-operator/api/v1alpha1"
 	alertModel "github.com/tmax-cloud/hypercloud-api-server/alert/model"
+	client "github.com/tmax-cloud/hypercloud-api-server/client"
 	claim "github.com/tmax-cloud/hypercloud-go-operator/api/v1alpha1"
 	authApi "k8s.io/api/authorization/v1"
 	coreApi "k8s.io/api/core/v1"
@@ -24,40 +28,43 @@ import (
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
 
-	//"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/remotecommand"
-	//"k8s.io/client-go/util/homedir"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/scheme"
 )
 
 var Clientset *kubernetes.Clientset
 var config *restclient.Config
+var customClientset *client.Clientset
 
 func init() {
-/*
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "/root/.kube")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "/root/.kube")
-	}
-	flag.Parse()
 
-	var err error
-	config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		klog.Errorln(err)
-		panic(err)
-	}
-	config.Burst = 100
-	config.QPS = 100
-	Clientset, err = kubernetes.NewForConfig(config)
-	if err != nil {
-		klog.Errorln(err)
-		panic(err)
-	}
-*/
+	// var kubeconfig *string
+	// if home := homedir.HomeDir(); home != "" {
+	// 	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "/root/.kube")
+	// } else {
+	// 	kubeconfig = flag.String("kubeconfig", "", "/root/.kube")
+	// }
+	// flag.Parse()
+
+	// var err error
+	// config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	// if err != nil {
+	// 	klog.Errorln(err)
+	// 	panic(err)
+	// }
+	// config.Burst = 100
+	// config.QPS = 100
+	// Clientset, err = kubernetes.NewForConfig(config)
+	// if err != nil {
+	// 	klog.Errorln(err)
+	// 	panic(err)
+	// }
+
+	// customClientset, err = client.NewForConfig(config)
+	// if err != nil {
+	// 	panic(err.Error())
+	// }
+
 	// If api-server on POD, activate below code and delete above
 	// creates the in-cluster config
 	var err error
@@ -124,17 +131,19 @@ func DeleteClusterRoleBinding(name string) {
 	klog.Info(" Delete ClusterRoleBinding " + name + " Success ")
 }
 
-func GetAccessibleNS(userId string, labelSelector string) coreApi.NamespaceList {
+func GetAccessibleNS(userId string, labelSelector string, userGroups []string) coreApi.NamespaceList {
 	var nsList = &coreApi.NamespaceList{}
-	// 1. Get UserGroup List if Exists
 	klog.Infoln("userId : ", userId)
-	userDetail := getUserDetailWithoutToken(userId)
-	var userGroups []string
-	if userDetail["groups"] != nil {
-		for _, userGroup := range userDetail["groups"].([]interface{}) {
-			userGroups = append(userGroups, userGroup.(string))
-		}
-	}
+
+	// // 1. Get UserGroup List if Exists
+	// userDetail := getUserDetailWithoutToken(userId)
+	// var userGroups []string
+	// if userDetail["groups"] != nil {
+	// 	for _, userGroup := range userDetail["groups"].([]interface{}) {
+	// 		userGroups = append(userGroups, userGroup.(string))
+	// 	}
+	// }
+
 	for _, userGroup := range userGroups {
 		klog.Infoln("userGroupName : ", userGroup)
 	}
@@ -453,4 +462,458 @@ func GetAlert(name string, ns string, label string) alertModel.Alert {
 	}
 
 	return u
+}
+
+func createSubjectAccessReview(userId string, group string, resource string, namespace string, name string, verb string) (*authApi.SubjectAccessReview, error) {
+	sar := &authApi.SubjectAccessReview{
+		Spec: authApi.SubjectAccessReviewSpec{
+			ResourceAttributes: &authApi.ResourceAttributes{
+				Group:     group,
+				Resource:  resource,
+				Namespace: namespace,
+				Name:      name,
+				Verb:      verb,
+			},
+			User: userId,
+		},
+	}
+
+	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), sar, metav1.CreateOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err
+	}
+
+	return sarResult, nil
+}
+
+func AdmitClusterClaim(userId string, clusterClaim *claimsv1alpha1.ClusterClaim, admit bool, reason string) (*claimsv1alpha1.ClusterClaim, string, int) {
+	clusterClaimStatusUpdateRuleReview := authApi.SubjectAccessReview{
+		Spec: authApi.SubjectAccessReviewSpec{
+			ResourceAttributes: &authApi.ResourceAttributes{
+				Resource: "clusterclaims/status",
+				Verb:     "update",
+				Group:    util.CLAIM_API_GROUP,
+			},
+			User: userId,
+		},
+	}
+	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &clusterClaimStatusUpdateRuleReview, metav1.CreateOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+	if sarResult.Status.Allowed {
+		klog.Infoln(" User [ " + userId + " ] has ClusterClaims/status Update Role, Can Update ClusterClaims")
+
+		if admit == true {
+			clusterClaim.Status.Phase = "Admitted"
+			if reason == "" {
+				clusterClaim.Status.Reason = "Administrator approve the claim"
+			} else {
+				clusterClaim.Status.Reason = reason
+			}
+		} else {
+			clusterClaim.Status.Phase = "Rejected"
+			if reason == "" {
+				clusterClaim.Status.Reason = "Administrator approve the claim"
+			} else {
+				clusterClaim.Status.Reason = reason
+			}
+		}
+
+		result, err := customClientset.ClaimsV1alpha1().ClusterClaims(util.HYPERCLOUD_SYSTEM_NAMESPACE).
+			UpdateStatus(context.TODO(), clusterClaim, metav1.UpdateOptions{})
+		if err != nil {
+			klog.Errorln("Update ClusterClaim [ " + clusterClaim.Name + " ] Failed")
+			return nil, err.Error(), http.StatusInternalServerError
+		} else {
+			msg := "Update ClusterClaim [ " + clusterClaim.Name + " ] Success"
+			klog.Infoln(msg)
+			return result, msg, http.StatusOK
+		}
+	} else {
+		msg := " User [ " + userId + " ] has No ClusterClaims/status Update Role, Check If user has ClusterClaims/status Update Role"
+		klog.Infoln(msg)
+		return nil, msg, http.StatusForbidden
+	}
+}
+
+func GetClusterClaim(userId string, clusterClaimName string) (*claimsv1alpha1.ClusterClaim, string, int) {
+
+	var clusterClaim = &claimsv1alpha1.ClusterClaim{}
+
+	clusterClaimGetRuleResult, err := createSubjectAccessReview(userId, util.CLAIM_API_GROUP, "clusterclaims", util.HYPERCLOUD_SYSTEM_NAMESPACE, clusterClaimName, "get")
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+
+	if clusterClaimGetRuleResult.Status.Allowed {
+		clusterClaim, err = customClientset.ClaimsV1alpha1().ClusterClaims(util.HYPERCLOUD_SYSTEM_NAMESPACE).Get(context.TODO(), clusterClaimName, metav1.GetOptions{})
+		if err != nil {
+			klog.Errorln(err)
+			return nil, err.Error(), http.StatusInternalServerError
+		}
+	} else {
+		msg := "User [" + userId + "] authorization is denied for clusterclaims [" + clusterClaimName + "]"
+		klog.Infoln(msg)
+		return nil, msg, http.StatusForbidden
+	}
+
+	return clusterClaim, "Get claim success", http.StatusOK
+}
+
+func ListAccessibleClusterClaims(userId string) (*claimsv1alpha1.ClusterClaimList, string, int) {
+	var clusterClaimList = &claimsv1alpha1.ClusterClaimList{}
+
+	clusterClaimListRuleResult, err := createSubjectAccessReview(userId, util.CLAIM_API_GROUP, "clusterclaims", util.HYPERCLOUD_SYSTEM_NAMESPACE, "", "list")
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+
+	clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims(util.HYPERCLOUD_SYSTEM_NAMESPACE).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+	clusterClaimList.Kind = "ClusterClaimList"
+	clusterClaimList.APIVersion = "claims.tmax.io/v1alpha1"
+
+	if clusterClaimListRuleResult.Status.Allowed {
+		msg := "User [ " + userId + " ] has ClusterClaim List Role, Can Access All ClusterClaim"
+		klog.Infoln(msg)
+		if len(clusterClaimList.Items) == 0 {
+			msg := "No ClusterClaim was Found."
+			klog.Infoln(msg)
+		}
+		return clusterClaimList, msg, http.StatusOK
+	} else {
+		klog.Infoln(" User [ " + userId + " ] has No ClusterClaim List Role, Check If user has ClusterClaim Get Role & has Owner Annotation on certain ClusterClaim")
+		_clusterClaimList := []claimsv1alpha1.ClusterClaim{}
+		// var wg sync.WaitGroup
+		// wg.Add(len(clusterClaimList.Items))
+		for _, clusterClaim := range clusterClaimList.Items {
+			// go func(clusterClaim claimsv1alpha1.ClusterClaim, userId string, _clusterClaimList []claimsv1alpha1.ClusterClaim) {
+			// defer wg.Done()
+			if clusterClaim.Annotations["creator"] == userId {
+				klog.Infoln(" User [ " + userId + " ] has owner annotation in ClusterClaim [ " + clusterClaim.Name + " ]")
+				_clusterClaimList = append(_clusterClaimList, clusterClaim)
+			}
+			// }(clusterClaim, userId, _clusterClaimList)
+		}
+		// wg.Wait()
+
+		clusterClaimList.Items = _clusterClaimList
+
+		if len(clusterClaimList.Items) == 0 {
+			msg := " User [ " + userId + " ] has No ClusterClaim"
+			klog.Infoln(msg)
+			return clusterClaimList, msg, http.StatusOK
+		}
+	}
+	msg := "Success to get ClusterClaim for User [ " + userId + " ]"
+	klog.Infoln(msg)
+	return clusterClaimList, msg, http.StatusOK
+}
+
+func ListCluster(userId string) (*clusterv1alpha1.ClusterManagerList, string, int) {
+
+	var clmList = &clusterv1alpha1.ClusterManagerList{}
+
+	clmListRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clusterclaims", util.HYPERCLOUD_SYSTEM_NAMESPACE, "", "list")
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+
+	clmList, err = customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+	clmList.Kind = "ClusterManagerList"
+	clmList.APIVersion = "cluster.tmax.io/v1alpha1"
+
+	if clmListRuleResult.Status.Allowed {
+		msg := "User [ " + userId + " ] has ClusterManager List Role, Can Access All ClusterManager"
+		klog.Infoln(msg)
+		if len(clmList.Items) == 0 {
+			msg := "No cluster was Found."
+			klog.Infoln(msg)
+		}
+		return clmList, msg, http.StatusOK
+	} else {
+		klog.Infoln("User [ " + userId + " ] has No ClusterManager List Role")
+		_clmList := []clusterv1alpha1.ClusterManager{}
+		for _, clm := range clmList.Items {
+			if clm.Status.Owner == userId {
+				_clmList = append(_clmList, clm)
+			}
+			if util.Contains(clm.Status.Members, userId) {
+				_clmList = append(_clmList, clm)
+			}
+		}
+		clmList.Items = _clmList
+
+		if len(clmList.Items) == 0 {
+			msg := " User [ " + userId + " ] has No Clusters"
+			klog.Infoln(msg)
+			return clmList, msg, http.StatusOK
+		}
+		msg := " User [ " + userId + " ] has Clusters"
+		klog.Infoln(msg)
+		return clmList, msg, http.StatusOK
+	}
+}
+
+func ListOwnerCluster(userId string) (*clusterv1alpha1.ClusterManagerList, string, int) {
+
+	var clmList = &clusterv1alpha1.ClusterManagerList{}
+
+	clmList, err := customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+	clmList.Kind = "ClusterManagerList"
+	clmList.APIVersion = "cluster.tmax.io/v1alpha1"
+
+	_clmList := []clusterv1alpha1.ClusterManager{}
+	for _, clm := range clmList.Items {
+		if clm.Status.Owner == userId {
+			_clmList = append(_clmList, clm)
+		}
+	}
+	clmList.Items = _clmList
+
+	if len(clmList.Items) == 0 {
+		msg := " User [ " + userId + " ] has No own Cluster"
+		klog.Infoln(msg)
+		return nil, msg, http.StatusOK
+	}
+	msg := " User [ " + userId + " ] has own Cluster"
+	klog.Infoln(msg)
+	return clmList, msg, http.StatusOK
+}
+
+func ListMemberCluster(userId string) (*clusterv1alpha1.ClusterManagerList, string, int) {
+
+	var clmList = &clusterv1alpha1.ClusterManagerList{}
+
+	clmList, err := customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+	clmList.Kind = "ClusterManagerList"
+	clmList.APIVersion = "cluster.tmax.io/v1alpha1"
+
+	_clmList := []clusterv1alpha1.ClusterManager{}
+	for _, clm := range clmList.Items {
+		if util.Contains(clm.Status.Members, userId) {
+			_clmList = append(_clmList, clm)
+		}
+	}
+	clmList.Items = _clmList
+
+	if len(clmList.Items) == 0 {
+		msg := " User [ " + userId + " ] has No belonging Cluster"
+		klog.Infoln(msg)
+		return nil, msg, http.StatusOK
+	}
+
+	msg := " User [ " + userId + " ] has belonging Clusters"
+	klog.Infoln(msg)
+	return clmList, msg, http.StatusOK
+}
+
+func GetCluster(userId string, clusterName string) (*clusterv1alpha1.ClusterManager, string, int) {
+
+	var clm = &clusterv1alpha1.ClusterManager{}
+	clusterGetRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", util.HYPERCLOUD_SYSTEM_NAMESPACE, clusterName, "get")
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+
+	if clusterGetRuleResult.Status.Allowed {
+		clm, err = customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).Get(context.TODO(), clusterName, metav1.GetOptions{})
+		if err != nil {
+			klog.Errorln(err)
+			return nil, err.Error(), http.StatusInternalServerError
+		}
+	} else {
+		msg := "User [" + userId + "] authorization is denied for cluster [" + clusterName + "]"
+		klog.Infoln(msg)
+		return nil, msg, http.StatusForbidden
+	}
+	return clm, "Get cluster success", http.StatusOK
+}
+
+func AddMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberList []string) (*clusterv1alpha1.ClusterManager, string, int) {
+
+	clmUpdateRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", util.HYPERCLOUD_SYSTEM_NAMESPACE, clm.Name, "update")
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+
+	if clmUpdateRuleResult.Status.Allowed {
+		for _, member := range memberList {
+			clm.Status.Members = append(clm.Status.Members, member)
+		}
+		result, err := customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).UpdateStatus(context.TODO(), clm, metav1.UpdateOptions{})
+		if err != nil {
+			klog.Errorln("Update member list in cluster [ " + clm.Name + " ] Failed")
+			return nil, err.Error(), http.StatusInternalServerError
+		} else {
+			msg := "Update member list in cluster [ " + clm.Name + " ] Success"
+			klog.Infoln(msg)
+			return result, msg, http.StatusOK
+		}
+	} else {
+		msg := " User [ " + userId + " ] is not a cluster admin, Cannot invite members"
+		klog.Infoln(msg)
+		return nil, msg, http.StatusForbidden
+	}
+}
+
+func DeleteMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberList []string) (*clusterv1alpha1.ClusterManager, string, int) {
+
+	hcrUpdateRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", util.HYPERCLOUD_SYSTEM_NAMESPACE, clm.Name, "update")
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+
+	if hcrUpdateRuleResult.Status.Allowed {
+		clm.Status.Members = util.Remove(clm.Status.Members, memberList)
+		result, err := customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).UpdateStatus(context.TODO(), clm, metav1.UpdateOptions{})
+		if err != nil {
+			klog.Errorln("Update member list in cluster [ " + clm.Name + " ] Failed")
+			return nil, err.Error(), http.StatusInternalServerError
+		} else {
+			msg := "Update member list in cluster [ " + clm.Name + " ] Success"
+			klog.Infoln(msg)
+			return result, msg, http.StatusOK
+		}
+	} else {
+		msg := " User [ " + userId + " ] is not a cluster admin, Cannot invite members"
+		klog.Infoln(msg)
+		return nil, msg, http.StatusForbidden
+	}
+}
+
+func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, members []string) (string, int) {
+
+	for _, member := range members {
+		roleName := member + "-" + clusterManager.Name + "-clm-role"
+		role := &rbacApi.Role{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      roleName,
+				Namespace: util.HYPERCLOUD_SYSTEM_NAMESPACE,
+				OwnerReferences: []metav1.OwnerReference{
+					metav1.OwnerReference{
+						APIVersion:         util.CLUSTER_API_GROUP_VERSION,
+						Kind:               util.CLUSTER_API_Kind,
+						Name:               clusterManager.GetName(),
+						UID:                clusterManager.GetUID(),
+						BlockOwnerDeletion: pointer.BoolPtr(true),
+						Controller:         pointer.BoolPtr(true),
+					},
+				},
+			},
+			Rules: []rbacApi.PolicyRule{
+				{APIGroups: []string{util.CLAIM_API_GROUP}, Resources: []string{"clustermanagers"},
+					ResourceNames: []string{clusterManager.Name}, Verbs: []string{"get"}},
+				{APIGroups: []string{util.CLAIM_API_GROUP}, Resources: []string{"clustermanagers/status"},
+					ResourceNames: []string{clusterManager.Name}, Verbs: []string{"get"}},
+			},
+		}
+
+		if _, err := Clientset.RbacV1().Roles(util.HYPERCLOUD_SYSTEM_NAMESPACE).Create(context.TODO(), role, metav1.CreateOptions{}); err != nil {
+			klog.Errorln(err)
+			return err.Error(), http.StatusInternalServerError
+		}
+
+		roleBindingName := member + "-" + clusterManager.Name + "-clm-rolebinding"
+		roleBinding := &rbacApi.RoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      roleBindingName,
+				Namespace: util.HYPERCLOUD_SYSTEM_NAMESPACE,
+				OwnerReferences: []metav1.OwnerReference{
+					metav1.OwnerReference{
+						APIVersion:         util.CLAIM_API_GROUP_VERSION,
+						Kind:               util.CLAIM_API_Kind,
+						Name:               clusterManager.GetName(),
+						UID:                clusterManager.GetUID(),
+						BlockOwnerDeletion: pointer.BoolPtr(true),
+						Controller:         pointer.BoolPtr(true),
+					},
+				},
+			},
+			RoleRef: rbacApi.RoleRef{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "Role",
+				Name:     roleName,
+			},
+			Subjects: []rbacApi.Subject{
+				{
+					APIGroup: "rbac.authorization.k8s.io",
+					Kind:     "User",
+					Name:     member,
+					// Namespace: HYPERCLOUD_SYSTEM_NAMESPACE,
+				},
+			},
+		}
+
+		if _, err := Clientset.RbacV1().RoleBindings(util.HYPERCLOUD_SYSTEM_NAMESPACE).Create(context.TODO(), roleBinding, metav1.CreateOptions{}); err != nil {
+			klog.Errorln(err)
+			return err.Error(), http.StatusInternalServerError
+		}
+		msg := "ClusterMnager role [" + roleName + "] and rolebinding [ " + roleBindingName + "]  is created"
+		klog.Infoln(msg)
+	}
+	msg := "ClusterMnager roles and rolebindings are created for all new members"
+	klog.Infoln(msg)
+	return msg, http.StatusOK
+}
+
+func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, members []string) (string, int) {
+	for _, member := range members {
+		roleName := member + "-" + clusterManager.Name + "-clm-role"
+		roleBindingName := member + "-" + clusterManager.Name + "-clm-rolebinding"
+
+		_, err := Clientset.RbacV1().Roles(util.HYPERCLOUD_SYSTEM_NAMESPACE).Get(context.TODO(), roleName, metav1.GetOptions{})
+		if err == nil {
+			if err := Clientset.RbacV1().Roles(util.HYPERCLOUD_SYSTEM_NAMESPACE).Delete(context.TODO(), roleName, metav1.DeleteOptions{}); err != nil {
+				klog.Errorln(err)
+				return err.Error(), http.StatusInternalServerError
+			}
+		} else if errors.IsNotFound(err) {
+			klog.Infoln("Role [" + roleName + "] is already deleted. pass")
+		} else {
+			return err.Error(), http.StatusInternalServerError
+		}
+
+		_, err = Clientset.RbacV1().RoleBindings(util.HYPERCLOUD_SYSTEM_NAMESPACE).Get(context.TODO(), roleBindingName, metav1.GetOptions{})
+		if err == nil {
+			if err := Clientset.RbacV1().RoleBindings(util.HYPERCLOUD_SYSTEM_NAMESPACE).Delete(context.TODO(), roleBindingName, metav1.DeleteOptions{}); err != nil {
+				klog.Errorln(err)
+				return err.Error(), http.StatusInternalServerError
+			}
+		} else if errors.IsNotFound(err) {
+			klog.Infoln("Rolebinding [" + roleBindingName + "] is already deleted. pass")
+		} else {
+			return err.Error(), http.StatusInternalServerError
+		}
+		msg := "ClusterMnager role [" + roleName + "] and rolebinding [ " + roleBindingName + "]  is deleted"
+		klog.Infoln(msg)
+
+	}
+	msg := "ClusterMnager roles and rolebindings are deleted for all deleted members"
+	klog.Infoln(msg)
+	return msg, http.StatusOK
 }
