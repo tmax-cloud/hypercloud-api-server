@@ -37,8 +37,8 @@ spec:
       - key: node-role.kubernetes.io/master
         operator: Equal
         effect: "NoSchedule"
-      nodeSelector:
-        kubernetes.io/hostname: ck-2 # need to be changed per Env
+      # nodeSelector:
+      #   kubernetes.io/hostname: ck-2 # need to be changed per Env
       #imagePullSecrets:
       #  - name : docker-pull-secret
       serviceAccount: hypercloud5-admin
