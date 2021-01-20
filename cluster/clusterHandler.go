@@ -3,7 +3,9 @@ package cluster
 import (
 	"net/http"
 
-	"github.com/tmax-cloud/hypercloud-multi-api-server/util"
+	util "github.com/tmax-cloud/hypercloud-api-server/util"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
+
 	"k8s.io/klog"
 	// "encoding/json"
 )
@@ -40,7 +42,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	clm, msg, status := util.GetCluster(userId, clusterName)
+	clm, msg, status := k8sApiCaller.GetCluster(userId, clusterName)
 	if clm == nil {
 		util.SetResponse(res, msg, nil, status)
 		return
@@ -53,14 +55,14 @@ func Put(res http.ResponseWriter, req *http.Request) {
 				newMembers = append(newMembers, newUser)
 			}
 		}
-		updatedClm, msg, status := util.AddMembers(userId, clm, newMembers)
-		msg, status = util.CreateCLMRole(updatedClm, newMembers)
+		updatedClm, msg, status := k8sApiCaller.AddMembers(userId, clm, newMembers)
+		msg, status = k8sApiCaller.CreateCLMRole(updatedClm, newMembers)
 		util.SetResponse(res, msg, updatedClm, status)
 		return
 	} else if len(deletedUsers) != 0 && len(newUsers) == 0 {
 		// var deletedMembers []string
-		updatedClm, msg, status := util.DeleteMembers(userId, clm, deletedUsers)
-		msg, status = util.DeleteCLMRole(updatedClm, deletedUsers)
+		updatedClm, msg, status := k8sApiCaller.DeleteMembers(userId, clm, deletedUsers)
+		msg, status = k8sApiCaller.DeleteCLMRole(updatedClm, deletedUsers)
 		util.SetResponse(res, msg, updatedClm, status)
 		return
 	} else if len(deletedUsers) == 0 && len(newUsers) == 0 {
@@ -87,7 +89,7 @@ func List(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	clmList, msg, status := util.ListCluster(userId)
+	clmList, msg, status := k8sApiCaller.ListCluster(userId)
 
 	util.SetResponse(res, msg, clmList, status)
 	return
@@ -104,7 +106,7 @@ func ListOwner(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	clmList, msg, status := util.ListOwnerCluster(userId)
+	clmList, msg, status := k8sApiCaller.ListOwnerCluster(userId)
 	util.SetResponse(res, msg, clmList, status)
 	return
 }
@@ -120,7 +122,7 @@ func ListMember(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	clmList, msg, status := util.ListMemberCluster(userId)
+	clmList, msg, status := k8sApiCaller.ListMemberCluster(userId)
 	util.SetResponse(res, msg, clmList, status)
 	return
 }

@@ -3,9 +3,9 @@ package client
 import (
 	"fmt"
 
-	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-api-server/client/typed/claims/v1alpha1"
-	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-api-server/client/typed/cluster/v1alpha1"
-	configv1alpha1 "github.com/tmax-cloud/hypercloud-multi-api-server/client/typed/config/v1alpha1"
+	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-api-server/client/typed/claims/v1alpha1"
+	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-api-server/client/typed/cluster/v1alpha1"
+	configv1alpha1 "github.com/tmax-cloud/hypercloud-api-server/client/typed/config/v1alpha1"
 
 	discovery "k8s.io/client-go/discovery"
 	"k8s.io/client-go/rest"

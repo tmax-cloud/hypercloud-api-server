@@ -1,4 +1,4 @@
-package claim
+package clusterClaim
 
 import (
 	// _ "github.com/go-sql-driver/mysql"
@@ -7,7 +7,9 @@ import (
 	"strconv"
 
 	// "encoding/json"
-	util "github.com/tmax-cloud/hypercloud-multi-api-server/util"
+	util "github.com/tmax-cloud/hypercloud-api-server/util"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
+
 	"k8s.io/klog"
 )
 
@@ -42,7 +44,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	clusterClaim, msg, status := util.GetClusterClaim(userId, clusterClaimName)
+	clusterClaim, msg, status := k8sApiCaller.GetClusterClaim(userId, clusterClaimName)
 	if clusterClaim == nil {
 		util.SetResponse(res, msg, nil, status)
 		return
@@ -55,7 +57,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	updatedClusterClaim, msg, status := util.AdmitClusterClaim(userId, clusterClaim, admit, reason)
+	updatedClusterClaim, msg, status := k8sApiCaller.AdmitClusterClaim(userId, clusterClaim, admit, reason)
 	if updatedClusterClaim == nil {
 		util.SetResponse(res, msg, nil, status)
 		return
@@ -82,7 +84,7 @@ func List(res http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// // var statusCode int
-	clusterClaimList, msg, status := util.ListAccessibleClusterClaims(userId)
+	clusterClaimList, msg, status := k8sApiCaller.ListAccessibleClusterClaims(userId)
 
 	// if clusterClaimList.ResourceVersion != "" {
 	// 	status = http.StatusOK

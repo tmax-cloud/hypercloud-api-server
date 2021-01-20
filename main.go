@@ -9,8 +9,8 @@ import (
 	"time"
 
 	alert "github.com/tmax-cloud/hypercloud-api-server/alert"
-	claim "github.com/tmax-cloud/hypercloud-api-server/claim"
 	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
+	claim "github.com/tmax-cloud/hypercloud-api-server/clusterClaim"
 	metering "github.com/tmax-cloud/hypercloud-api-server/metering"
 	"github.com/tmax-cloud/hypercloud-api-server/namespace"
 	"github.com/tmax-cloud/hypercloud-api-server/namespaceClaim"
