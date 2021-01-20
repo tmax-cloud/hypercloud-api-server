@@ -3,13 +3,11 @@ package alert
 import (
 	"encoding/json"
 
-	//"flag"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 
-	//"path/filepath"
 	"strconv"
 	"time"
 
@@ -26,8 +24,6 @@ import (
 	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
 
-	//"k8s.io/client-go/tools/clientcmd"
-	//"k8s.io/client-go/util/homedir"
 	"k8s.io/klog"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -40,7 +36,7 @@ type alertClient struct {
 }
 
 func init() {
-	// var err error
+	var err error
 
 	// // If api-server on Process, active this code.
 	// // var kubeconfig2 *string
@@ -52,24 +48,24 @@ func init() {
 	// // flag.Parse()
 	// // config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig2)
 
-	// // If api-server on Pod, active this code.
-	// config, err = restclient.InClusterConfig()
-	// if err != nil {
-	// 	panic(err.Error())
-	// }
+	// If api-server on Pod, active this code.
+	config, err = restclient.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
 
-	// if err != nil {
-	// 	klog.Errorln(err)
-	// 	panic(err)
-	// }
-	// config.Burst = 100
-	// config.QPS = 100
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
+	config.Burst = 100
+	config.QPS = 100
 
-	// if err != nil {
-	// 	klog.Errorln(err)
-	// 	panic(err)
-	// }
-	// setScheme()
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
+	setScheme()
 
 }
 

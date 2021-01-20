@@ -75,9 +75,9 @@ func main() {
 	mux.HandleFunc("/api/hypercloud/user", serveUser)
 	mux.HandleFunc("/api/hypercloud/metering", serveMetering)
 	mux.HandleFunc("/api/hypercloud/namespace", serveNamespace)
-	// mux.HandleFunc("/api/hypercloud/alert", serveAlert)
-	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
-	mux.HandleFunc("/version", serveVersion)
+	mux.HandleFunc("/api/hypercloud/alert", serveAlert)
+	mux.HandleFunc("/api/hypercloud/namespaceClaim", serveNamespaceClaim)
+	mux.HandleFunc("/api/hypercloud/version", serveVersion)
 
 	if hcMode != "single" {
 		// for multi mode only

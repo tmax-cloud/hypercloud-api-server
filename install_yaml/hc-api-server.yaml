@@ -44,8 +44,8 @@ spec:
       serviceAccount: hypercloud5-admin
       containers:
         - name: hypercloud5-api-server
-          image: 192.168.6.197:5000/hc-api-server:v0.1.0 #192.168.6.110:5000/hc-api-server:v0.0.3
-          imagePullPolicy: Always
+          image: 192.168.6.197:5000/hc-api-server:v0.1.1
+          imagePullPolicy: IfNotPresent
           env:
             - name: TZ
               value: Asia/Seoul
@@ -54,10 +54,10 @@ spec:
           resources:
             limits:
               cpu: "1"
-              memory: "1Gi"
+              memory: "800M"
             requests:
               cpu: "1"
-              memory: "1Gi"
+              memory: "100M"
           volumeMounts:
           - name: api-server-log-mnt
             mountPath: /logs
@@ -70,4 +70,3 @@ spec:
       - name : config-module
         configMap:
           name : hc-version # configmap shoulde be already made before mount this
-      #serviceAccountName: hypercloud5-system-admin
