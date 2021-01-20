@@ -48,7 +48,9 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
-              value: Asia/Seoul
+              value: "Asia/Seoul"
+            - name: HC_MODE
+              value: "multi"  # multi / single 
           ports:
             - containerPort: 28678
           resources:
