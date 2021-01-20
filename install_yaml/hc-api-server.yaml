@@ -43,7 +43,7 @@ spec:
       #  - name : docker-pull-secret
       containers:
         - name: hypercloud5-api-server
-          image: 192.168.6.197:5000/hc-api-server:v0.1.0 #192.168.6.110:5000/hc-api-server:v0.0.3
+          image: 192.168.6.197:5000/hc-api-server:v0.1.1 #192.168.6.110:5000/hc-api-server:v0.0.3
           imagePullPolicy: Always
           env:
             - name: TZ
