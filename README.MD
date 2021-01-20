@@ -191,6 +191,8 @@ schema,secret은 mysql-settings.yaml 에서 관리
       
       labelSelector : {LABELSELECTOR}  
       
+      userGroup : {USER_GROUP} ex) hypercloud4,tmaxcloud,...
+      
   - **PathParam**
 
       x
