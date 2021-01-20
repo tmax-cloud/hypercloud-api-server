@@ -17,8 +17,8 @@ type ClaimsV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *ClaimsV1alpha1Client) ClusterClaims(namespace string) ClusterClaimInterface {
-	return newClusterClaims(c, namespace)
+func (c *ClaimsV1alpha1Client) ClusterClaims() ClusterClaimInterface {
+	return newClusterClaims(c)
 }
 
 // NewForConfig creates a new ClaimsV1alpha1Client for the given config.

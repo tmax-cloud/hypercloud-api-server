@@ -30,7 +30,7 @@ import (
 // ClusterClaimGetter has a method to return a ClusterClaimInterface.
 // A group's client should implement this interface.
 type ClusterClaimGetter interface {
-	ClusterClaims(namespace string) ClusterClaimInterface
+	ClusterClaims() ClusterClaimInterface
 }
 
 // ClusterClaimInterface has methods to work with clusterClaim resources.
@@ -50,14 +50,12 @@ type ClusterClaimInterface interface {
 // clusterClaims implements ClusterClaimInterface
 type clusterClaims struct {
 	client rest.Interface
-	ns     string
 }
 
 // newclusterClaims returns a clusterClaims
-func newClusterClaims(c *ClaimsV1alpha1Client, namespace string) *clusterClaims {
+func newClusterClaims(c *ClaimsV1alpha1Client) *clusterClaims {
 	return &clusterClaims{
 		client: c.RESTClient(),
-		ns:     namespace,
 	}
 }
 
@@ -65,7 +63,6 @@ func newClusterClaims(c *ClaimsV1alpha1Client, namespace string) *clusterClaims 
 func (c *clusterClaims) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1alpha1.ClusterClaim, err error) {
 	result = &v1alpha1.ClusterClaim{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("clusterClaims").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
@@ -82,7 +79,6 @@ func (c *clusterClaims) List(ctx context.Context, opts metav1.ListOptions) (resu
 	}
 	result = &v1alpha1.ClusterClaimList{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("clusterClaims").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -99,7 +95,6 @@ func (c *clusterClaims) Watch(ctx context.Context, opts metav1.ListOptions) (wat
 	}
 	opts.Watch = true
 	return c.client.Get().
-		Namespace(c.ns).
 		Resource("clusterClaims").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -110,7 +105,6 @@ func (c *clusterClaims) Watch(ctx context.Context, opts metav1.ListOptions) (wat
 func (c *clusterClaims) Create(ctx context.Context, clusterClaim *v1alpha1.ClusterClaim, opts metav1.CreateOptions) (result *v1alpha1.ClusterClaim, err error) {
 	result = &v1alpha1.ClusterClaim{}
 	err = c.client.Post().
-		Namespace(c.ns).
 		Resource("clusterClaims").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(clusterClaim).
@@ -123,7 +117,6 @@ func (c *clusterClaims) Create(ctx context.Context, clusterClaim *v1alpha1.Clust
 func (c *clusterClaims) Update(ctx context.Context, clusterClaim *v1alpha1.ClusterClaim, opts metav1.UpdateOptions) (result *v1alpha1.ClusterClaim, err error) {
 	result = &v1alpha1.ClusterClaim{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("clusterClaims").
 		Name(clusterClaim.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
@@ -138,7 +131,6 @@ func (c *clusterClaims) Update(ctx context.Context, clusterClaim *v1alpha1.Clust
 func (c *clusterClaims) UpdateStatus(ctx context.Context, clusterClaim *v1alpha1.ClusterClaim, opts metav1.UpdateOptions) (result *v1alpha1.ClusterClaim, err error) {
 	result = &v1alpha1.ClusterClaim{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("clusterClaims").
 		Name(clusterClaim.Name).
 		SubResource("status").
@@ -152,7 +144,6 @@ func (c *clusterClaims) UpdateStatus(ctx context.Context, clusterClaim *v1alpha1
 // Delete takes name of the clusterClaim and deletes it. Returns an error if one occurs.
 func (c *clusterClaims) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("clusterClaims").
 		Name(name).
 		Body(&opts).
@@ -167,7 +158,6 @@ func (c *clusterClaims) DeleteCollection(ctx context.Context, opts metav1.Delete
 		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("clusterClaims").
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -180,7 +170,6 @@ func (c *clusterClaims) DeleteCollection(ctx context.Context, opts metav1.Delete
 func (c *clusterClaims) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterClaim, err error) {
 	result = &v1alpha1.ClusterClaim{}
 	err = c.client.Patch(pt).
-		Namespace(c.ns).
 		Resource("clusterClaims").
 		Name(name).
 		SubResource(subresources...).

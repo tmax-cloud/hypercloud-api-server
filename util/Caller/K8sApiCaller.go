@@ -59,12 +59,6 @@ func init() {
 	// 	klog.Errorln(err)
 	// 	panic(err)
 	// }
-
-	// customClientset, err = client.NewForConfig(config)
-	// if err != nil {
-	// 	panic(err.Error())
-	// }
-
 	// If api-server on POD, activate below code and delete above
 	// creates the in-cluster config
 	var err error
@@ -76,6 +70,10 @@ func init() {
 	config.Burst = 100
 	config.QPS = 100
 	Clientset, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+	customClientset, err = client.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -522,7 +520,7 @@ func AdmitClusterClaim(userId string, clusterClaim *claimsv1alpha1.ClusterClaim,
 			}
 		}
 
-		result, err := customClientset.ClaimsV1alpha1().ClusterClaims(util.HYPERCLOUD_SYSTEM_NAMESPACE).
+		result, err := customClientset.ClaimsV1alpha1().ClusterClaims().
 			UpdateStatus(context.TODO(), clusterClaim, metav1.UpdateOptions{})
 		if err != nil {
 			klog.Errorln("Update ClusterClaim [ " + clusterClaim.Name + " ] Failed")
@@ -543,14 +541,14 @@ func GetClusterClaim(userId string, clusterClaimName string) (*claimsv1alpha1.Cl
 
 	var clusterClaim = &claimsv1alpha1.ClusterClaim{}
 
-	clusterClaimGetRuleResult, err := createSubjectAccessReview(userId, util.CLAIM_API_GROUP, "clusterclaims", util.HYPERCLOUD_SYSTEM_NAMESPACE, clusterClaimName, "get")
+	clusterClaimGetRuleResult, err := createSubjectAccessReview(userId, util.CLAIM_API_GROUP, "clusterclaims", "", clusterClaimName, "get")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
 	if clusterClaimGetRuleResult.Status.Allowed {
-		clusterClaim, err = customClientset.ClaimsV1alpha1().ClusterClaims(util.HYPERCLOUD_SYSTEM_NAMESPACE).Get(context.TODO(), clusterClaimName, metav1.GetOptions{})
+		clusterClaim, err = customClientset.ClaimsV1alpha1().ClusterClaims().Get(context.TODO(), clusterClaimName, metav1.GetOptions{})
 		if err != nil {
 			klog.Errorln(err)
 			return nil, err.Error(), http.StatusInternalServerError
@@ -567,13 +565,13 @@ func GetClusterClaim(userId string, clusterClaimName string) (*claimsv1alpha1.Cl
 func ListAccessibleClusterClaims(userId string) (*claimsv1alpha1.ClusterClaimList, string, int) {
 	var clusterClaimList = &claimsv1alpha1.ClusterClaimList{}
 
-	clusterClaimListRuleResult, err := createSubjectAccessReview(userId, util.CLAIM_API_GROUP, "clusterclaims", util.HYPERCLOUD_SYSTEM_NAMESPACE, "", "list")
+	clusterClaimListRuleResult, err := createSubjectAccessReview(userId, util.CLAIM_API_GROUP, "clusterclaims", "", "", "list")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
-	clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims(util.HYPERCLOUD_SYSTEM_NAMESPACE).List(context.TODO(), metav1.ListOptions{})
+	clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -622,13 +620,13 @@ func ListCluster(userId string) (*clusterv1alpha1.ClusterManagerList, string, in
 
 	var clmList = &clusterv1alpha1.ClusterManagerList{}
 
-	clmListRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clusterclaims", util.HYPERCLOUD_SYSTEM_NAMESPACE, "", "list")
+	clmListRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clusterclaims", "", "", "list")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
-	clmList, err = customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).List(context.TODO(), metav1.ListOptions{})
+	clmList, err = customClientset.ClusterV1alpha1().ClusterManagers().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -672,7 +670,7 @@ func ListOwnerCluster(userId string) (*clusterv1alpha1.ClusterManagerList, strin
 
 	var clmList = &clusterv1alpha1.ClusterManagerList{}
 
-	clmList, err := customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).List(context.TODO(), metav1.ListOptions{})
+	clmList, err := customClientset.ClusterV1alpha1().ClusterManagers().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -702,7 +700,7 @@ func ListMemberCluster(userId string) (*clusterv1alpha1.ClusterManagerList, stri
 
 	var clmList = &clusterv1alpha1.ClusterManagerList{}
 
-	clmList, err := customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).List(context.TODO(), metav1.ListOptions{})
+	clmList, err := customClientset.ClusterV1alpha1().ClusterManagers().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -732,14 +730,14 @@ func ListMemberCluster(userId string) (*clusterv1alpha1.ClusterManagerList, stri
 func GetCluster(userId string, clusterName string) (*clusterv1alpha1.ClusterManager, string, int) {
 
 	var clm = &clusterv1alpha1.ClusterManager{}
-	clusterGetRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", util.HYPERCLOUD_SYSTEM_NAMESPACE, clusterName, "get")
+	clusterGetRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", "", clusterName, "get")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
 	if clusterGetRuleResult.Status.Allowed {
-		clm, err = customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).Get(context.TODO(), clusterName, metav1.GetOptions{})
+		clm, err = customClientset.ClusterV1alpha1().ClusterManagers().Get(context.TODO(), clusterName, metav1.GetOptions{})
 		if err != nil {
 			klog.Errorln(err)
 			return nil, err.Error(), http.StatusInternalServerError
@@ -754,7 +752,7 @@ func GetCluster(userId string, clusterName string) (*clusterv1alpha1.ClusterMana
 
 func AddMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberList []string) (*clusterv1alpha1.ClusterManager, string, int) {
 
-	clmUpdateRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", util.HYPERCLOUD_SYSTEM_NAMESPACE, clm.Name, "update")
+	clmUpdateRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", "", clm.Name, "update")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -764,7 +762,7 @@ func AddMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberList [
 		for _, member := range memberList {
 			clm.Status.Members = append(clm.Status.Members, member)
 		}
-		result, err := customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).UpdateStatus(context.TODO(), clm, metav1.UpdateOptions{})
+		result, err := customClientset.ClusterV1alpha1().ClusterManagers().UpdateStatus(context.TODO(), clm, metav1.UpdateOptions{})
 		if err != nil {
 			klog.Errorln("Update member list in cluster [ " + clm.Name + " ] Failed")
 			return nil, err.Error(), http.StatusInternalServerError
@@ -782,7 +780,7 @@ func AddMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberList [
 
 func DeleteMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberList []string) (*clusterv1alpha1.ClusterManager, string, int) {
 
-	hcrUpdateRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", util.HYPERCLOUD_SYSTEM_NAMESPACE, clm.Name, "update")
+	hcrUpdateRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", "", clm.Name, "update")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -790,7 +788,7 @@ func DeleteMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberLis
 
 	if hcrUpdateRuleResult.Status.Allowed {
 		clm.Status.Members = util.Remove(clm.Status.Members, memberList)
-		result, err := customClientset.ClusterV1alpha1().ClusterManagers(util.HYPERCLOUD_SYSTEM_NAMESPACE).UpdateStatus(context.TODO(), clm, metav1.UpdateOptions{})
+		result, err := customClientset.ClusterV1alpha1().ClusterManagers().UpdateStatus(context.TODO(), clm, metav1.UpdateOptions{})
 		if err != nil {
 			klog.Errorln("Update member list in cluster [ " + clm.Name + " ] Failed")
 			return nil, err.Error(), http.StatusInternalServerError
@@ -809,11 +807,10 @@ func DeleteMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberLis
 func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, members []string) (string, int) {
 
 	for _, member := range members {
-		roleName := member + "-" + clusterManager.Name + "-clm-role"
-		role := &rbacApi.Role{
+		clusterRoleName := member + "-" + clusterManager.Name + "-clm-role"
+		clusterRole := &rbacApi.ClusterRole{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      roleName,
-				Namespace: util.HYPERCLOUD_SYSTEM_NAMESPACE,
+				Name: clusterRoleName,
 				OwnerReferences: []metav1.OwnerReference{
 					metav1.OwnerReference{
 						APIVersion:         util.CLUSTER_API_GROUP_VERSION,
@@ -833,16 +830,15 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, members []str
 			},
 		}
 
-		if _, err := Clientset.RbacV1().Roles(util.HYPERCLOUD_SYSTEM_NAMESPACE).Create(context.TODO(), role, metav1.CreateOptions{}); err != nil {
+		if _, err := Clientset.RbacV1().ClusterRoles().Create(context.TODO(), clusterRole, metav1.CreateOptions{}); err != nil {
 			klog.Errorln(err)
 			return err.Error(), http.StatusInternalServerError
 		}
 
-		roleBindingName := member + "-" + clusterManager.Name + "-clm-rolebinding"
-		roleBinding := &rbacApi.RoleBinding{
+		clusterRoleBindingName := member + "-" + clusterManager.Name + "-clm-rolebinding"
+		clusterRoleBinding := &rbacApi.ClusterRoleBinding{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      roleBindingName,
-				Namespace: util.HYPERCLOUD_SYSTEM_NAMESPACE,
+				Name: clusterRoleBindingName,
 				OwnerReferences: []metav1.OwnerReference{
 					metav1.OwnerReference{
 						APIVersion:         util.CLAIM_API_GROUP_VERSION,
@@ -856,24 +852,23 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, members []str
 			},
 			RoleRef: rbacApi.RoleRef{
 				APIGroup: "rbac.authorization.k8s.io",
-				Kind:     "Role",
-				Name:     roleName,
+				Kind:     "ClusterRole",
+				Name:     clusterRoleName,
 			},
 			Subjects: []rbacApi.Subject{
 				{
 					APIGroup: "rbac.authorization.k8s.io",
 					Kind:     "User",
 					Name:     member,
-					// Namespace: HYPERCLOUD_SYSTEM_NAMESPACE,
 				},
 			},
 		}
 
-		if _, err := Clientset.RbacV1().RoleBindings(util.HYPERCLOUD_SYSTEM_NAMESPACE).Create(context.TODO(), roleBinding, metav1.CreateOptions{}); err != nil {
+		if _, err := Clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding, metav1.CreateOptions{}); err != nil {
 			klog.Errorln(err)
 			return err.Error(), http.StatusInternalServerError
 		}
-		msg := "ClusterMnager role [" + roleName + "] and rolebinding [ " + roleBindingName + "]  is created"
+		msg := "ClusterMnager role [" + clusterRoleName + "] and rolebinding [ " + clusterRoleBindingName + "]  is created"
 		klog.Infoln(msg)
 	}
 	msg := "ClusterMnager roles and rolebindings are created for all new members"
@@ -883,33 +878,33 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, members []str
 
 func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, members []string) (string, int) {
 	for _, member := range members {
-		roleName := member + "-" + clusterManager.Name + "-clm-role"
-		roleBindingName := member + "-" + clusterManager.Name + "-clm-rolebinding"
+		clusterRoleName := member + "-" + clusterManager.Name + "-clm-role"
+		clusterRoleBindingName := member + "-" + clusterManager.Name + "-clm-rolebinding"
 
-		_, err := Clientset.RbacV1().Roles(util.HYPERCLOUD_SYSTEM_NAMESPACE).Get(context.TODO(), roleName, metav1.GetOptions{})
+		_, err := Clientset.RbacV1().ClusterRoles().Get(context.TODO(), clusterRoleName, metav1.GetOptions{})
 		if err == nil {
-			if err := Clientset.RbacV1().Roles(util.HYPERCLOUD_SYSTEM_NAMESPACE).Delete(context.TODO(), roleName, metav1.DeleteOptions{}); err != nil {
+			if err := Clientset.RbacV1().ClusterRoles().Delete(context.TODO(), clusterRoleName, metav1.DeleteOptions{}); err != nil {
 				klog.Errorln(err)
 				return err.Error(), http.StatusInternalServerError
 			}
 		} else if errors.IsNotFound(err) {
-			klog.Infoln("Role [" + roleName + "] is already deleted. pass")
+			klog.Infoln("Role [" + clusterRoleName + "] is already deleted. pass")
 		} else {
 			return err.Error(), http.StatusInternalServerError
 		}
 
-		_, err = Clientset.RbacV1().RoleBindings(util.HYPERCLOUD_SYSTEM_NAMESPACE).Get(context.TODO(), roleBindingName, metav1.GetOptions{})
+		_, err = Clientset.RbacV1().ClusterRoleBindings().Get(context.TODO(), clusterRoleBindingName, metav1.GetOptions{})
 		if err == nil {
-			if err := Clientset.RbacV1().RoleBindings(util.HYPERCLOUD_SYSTEM_NAMESPACE).Delete(context.TODO(), roleBindingName, metav1.DeleteOptions{}); err != nil {
+			if err := Clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), clusterRoleBindingName, metav1.DeleteOptions{}); err != nil {
 				klog.Errorln(err)
 				return err.Error(), http.StatusInternalServerError
 			}
 		} else if errors.IsNotFound(err) {
-			klog.Infoln("Rolebinding [" + roleBindingName + "] is already deleted. pass")
+			klog.Infoln("Rolebinding [" + clusterRoleBindingName + "] is already deleted. pass")
 		} else {
 			return err.Error(), http.StatusInternalServerError
 		}
-		msg := "ClusterMnager role [" + roleName + "] and rolebinding [ " + roleBindingName + "]  is deleted"
+		msg := "ClusterMnager role [" + clusterRoleName + "] and rolebinding [ " + clusterRoleBindingName + "]  is deleted"
 		klog.Infoln(msg)
 
 	}

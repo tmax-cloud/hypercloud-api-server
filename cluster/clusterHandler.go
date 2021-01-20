@@ -11,8 +11,7 @@ import (
 )
 
 const (
-	QUERY_PARAMETER_USER_ID = "userId"
-	// QUERY_PARAMETER_LABEL_SELECTOR = "labelSelector"
+	QUERY_PARAMETER_USER_ID     = "userId"
 	QUERY_PARAMETER_LIMIT       = "limit"
 	QUERY_PARAMETER_OFFSET      = "offset"
 	QUERY_PARAMETER_CLUSTER     = "cluster"
@@ -21,7 +20,6 @@ const (
 )
 
 func Put(res http.ResponseWriter, req *http.Request) {
-
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
 	clusterName := queryParams.Get(QUERY_PARAMETER_CLUSTER)

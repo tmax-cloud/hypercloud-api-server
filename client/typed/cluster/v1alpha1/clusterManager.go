@@ -30,7 +30,7 @@ import (
 // ClusterManagerGetter has a method to return a ClusterManagerInterface.
 // A group's client should implement this interface.
 type ClusterManagerGetter interface {
-	ClusterManagers(namespace string) ClusterManagerInterface
+	ClusterManagers() ClusterManagerInterface
 }
 
 // ClusterManagerInterface has methods to work with clusterManager resources.
@@ -50,14 +50,12 @@ type ClusterManagerInterface interface {
 // clusterManagers implements ClusterManagerInterface
 type clusterManagers struct {
 	client rest.Interface
-	ns     string
 }
 
 // newClusterManagers returns a clusterManagers
-func newClusterManagers(c *ClusterV1alpha1Client, namespace string) *clusterManagers {
+func newClusterManagers(c *ClusterV1alpha1Client) *clusterManagers {
 	return &clusterManagers{
 		client: c.RESTClient(),
-		ns:     namespace,
 	}
 }
 
@@ -65,7 +63,6 @@ func newClusterManagers(c *ClusterV1alpha1Client, namespace string) *clusterMana
 func (c *clusterManagers) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1alpha1.ClusterManager, err error) {
 	result = &v1alpha1.ClusterManager{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("clusterManagers").
 		Name(name).
 		VersionedParams(&options, scheme.ParameterCodec).
@@ -82,7 +79,6 @@ func (c *clusterManagers) List(ctx context.Context, opts metav1.ListOptions) (re
 	}
 	result = &v1alpha1.ClusterManagerList{}
 	err = c.client.Get().
-		Namespace(c.ns).
 		Resource("clusterManagers").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -99,7 +95,6 @@ func (c *clusterManagers) Watch(ctx context.Context, opts metav1.ListOptions) (w
 	}
 	opts.Watch = true
 	return c.client.Get().
-		Namespace(c.ns).
 		Resource("clusterManagers").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -110,7 +105,6 @@ func (c *clusterManagers) Watch(ctx context.Context, opts metav1.ListOptions) (w
 func (c *clusterManagers) Create(ctx context.Context, clusterManager *v1alpha1.ClusterManager, opts metav1.CreateOptions) (result *v1alpha1.ClusterManager, err error) {
 	result = &v1alpha1.ClusterManager{}
 	err = c.client.Post().
-		Namespace(c.ns).
 		Resource("clusterManagers").
 		VersionedParams(&opts, scheme.ParameterCodec).
 		Body(clusterManager).
@@ -123,7 +117,6 @@ func (c *clusterManagers) Create(ctx context.Context, clusterManager *v1alpha1.C
 func (c *clusterManagers) Update(ctx context.Context, clusterManager *v1alpha1.ClusterManager, opts metav1.UpdateOptions) (result *v1alpha1.ClusterManager, err error) {
 	result = &v1alpha1.ClusterManager{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("clusterManagers").
 		Name(clusterManager.Name).
 		VersionedParams(&opts, scheme.ParameterCodec).
@@ -138,7 +131,6 @@ func (c *clusterManagers) Update(ctx context.Context, clusterManager *v1alpha1.C
 func (c *clusterManagers) UpdateStatus(ctx context.Context, clusterManager *v1alpha1.ClusterManager, opts metav1.UpdateOptions) (result *v1alpha1.ClusterManager, err error) {
 	result = &v1alpha1.ClusterManager{}
 	err = c.client.Put().
-		Namespace(c.ns).
 		Resource("clusterManagers").
 		Name(clusterManager.Name).
 		SubResource("status").
@@ -152,7 +144,6 @@ func (c *clusterManagers) UpdateStatus(ctx context.Context, clusterManager *v1al
 // Delete takes name of the clusterManager and deletes it. Returns an error if one occurs.
 func (c *clusterManagers) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("clusterManagers").
 		Name(name).
 		Body(&opts).
@@ -167,7 +158,6 @@ func (c *clusterManagers) DeleteCollection(ctx context.Context, opts metav1.Dele
 		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
 	}
 	return c.client.Delete().
-		Namespace(c.ns).
 		Resource("clusterManagers").
 		VersionedParams(&listOpts, scheme.ParameterCodec).
 		Timeout(timeout).
@@ -180,7 +170,6 @@ func (c *clusterManagers) DeleteCollection(ctx context.Context, opts metav1.Dele
 func (c *clusterManagers) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1alpha1.ClusterManager, err error) {
 	result = &v1alpha1.ClusterManager{}
 	err = c.client.Patch(pt).
-		Namespace(c.ns).
 		Resource("clusterManagers").
 		Name(name).
 		SubResource(subresources...).
