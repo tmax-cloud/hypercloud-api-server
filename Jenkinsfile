@@ -17,6 +17,10 @@ node {
     
     stage('git pull & Go build') {
         dir(imageBuildHome){
+            git branch: "${params.buildBranch}",
+            credentialsId: '${userName}',
+            url: "http://${gitHubBaseAddress}"
+
             // git pull
             sh "git checkout ${params.buildBranch}"
             sh "git config --global user.name ${userName}"
