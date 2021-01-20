@@ -32,7 +32,11 @@ node {
             sh "git pull origin ${params.buildBranch}"
 
             //go build
-            sh "go build main.go"
+            sh '''#!/bin/bash
+                export PATH=$PATH:/usr/local/go/bin
+                export GO111MODULE=on
+                go build main.go
+            '''
         }
     }
     
