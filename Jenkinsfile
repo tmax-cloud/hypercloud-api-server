@@ -12,7 +12,7 @@ node {
 	
 	def imageTag = "b${version}"
 				
-	def userName = "taegeon_woo"
+	def userName = "dnxorjs1"
 	def userEmail = "taegeon_woo@tmax.co.kr"
     
     stage('git pull & Go build') {
