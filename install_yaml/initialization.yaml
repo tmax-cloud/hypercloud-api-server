@@ -21,9 +21,24 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: hypercloud5-system-admin
+  name: hypercloud5-admin
   namespace: hypercloud5-system
 
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: hypercloud5-admin
+subjects:
+- kind: ServiceAccount
+  name: hypercloud5-admin 
+  namespace: hypercloud5-system
+roleRef:
+  kind: ClusterRole  #this must be Role or ClusterRole
+  name: cluster-admin  # this must match the name of the Role or ClusterRole you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+  
 ---
 
 #apiVersion: v1
