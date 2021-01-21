@@ -61,8 +61,8 @@ const (
 		"date_format(metering_time,'%Y-01-01 %H:00:00') as metering_time, status from metering.metering_month where status = 'Success' " +
 		"group by year(metering_time), namespace"
 
-	//PROMETHEUS_URI                   = "http://prometheus-k8s.monitoring:9090/api/v1/query" // use this when running on pod
-	PROMETHEUS_URI                   = "http://10.101.168.154:9090:/api/v1/query" // use this when running on process
+	PROMETHEUS_URI = "http://prometheus-k8s.monitoring:9090/api/v1/query" // use this when running on pod
+	//PROMETHEUS_URI                   = "http://10.101.168.154:9090:/api/v1/query" // use this when running on process
 	PROMETHEUS_GET_CPU_QUERY         = "namespace:container_cpu_usage_seconds_total:sum_rate"
 	PROMETHEUS_GET_MEMORY_QUERY      = "namespace:container_memory_usage_bytes:sum"
 	PROMETHEUS_GET_STORAGE_QUERY     = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)by(namespace)"
@@ -276,8 +276,8 @@ func getMeteringData(query string) meteringModel.MetricDataList {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		klog.Errorln("Prometheus Connection Failed.")
 		for i := 0; i < 10; i++ {
-			klog.Errorln("Connection Failed. Retry in 5 seconds.")
 			time.Sleep(time.Second * 5)
 			resp, err = client.Do(req)
 			if err == nil {

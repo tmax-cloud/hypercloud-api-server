@@ -28,7 +28,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 
 	// 1. READ CONFIG FILE
 	// File path should be same with what declared on volume mount in yaml file.
-	yamlFile, err := ioutil.ReadFile("version/module.config")
+	yamlFile, err := ioutil.ReadFile("/version/module.config")
 	if err != nil {
 		klog.Errorln(err)
 	}

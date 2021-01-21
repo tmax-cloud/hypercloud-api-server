@@ -37,8 +37,6 @@ spec:
       - key: node-role.kubernetes.io/master
         operator: Equal
         effect: "NoSchedule"
-      # nodeSelector:
-      #   kubernetes.io/hostname: ck-2 # need to be changed per Env
       #imagePullSecrets:
       #  - name : docker-pull-secret
       serviceAccount: hypercloud5-admin
@@ -61,14 +59,9 @@ spec:
               cpu: "1"
               memory: "100M"
           volumeMounts:
-          - name: api-server-log-mnt
-            mountPath: /logs
           - name: config-module
             mountPath: /version 
       volumes:
-      - name: api-server-log-mnt
-        hostPath:
-          path: /root/swlee/hypercloud-api-server/logs/ # need to be changed per Env
       - name : config-module
         configMap:
           name : hc-version # configmap shoulde be already made before mount this
