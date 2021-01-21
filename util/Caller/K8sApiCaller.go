@@ -798,7 +798,7 @@ func DeleteMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberLis
 			return result, msg, http.StatusOK
 		}
 	} else {
-		msg := " User [ " + userId + " ] is not a cluster admin, Cannot invite members"
+		msg := " User [ " + userId + " ] is not a cluster admin, Cannot add or delete members"
 		klog.Infoln(msg)
 		return nil, msg, http.StatusForbidden
 	}
@@ -823,9 +823,9 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, members []str
 				},
 			},
 			Rules: []rbacApi.PolicyRule{
-				{APIGroups: []string{util.CLAIM_API_GROUP}, Resources: []string{"clustermanagers"},
+				{APIGroups: []string{util.CLUSTER_API_GROUP}, Resources: []string{"clustermanagers"},
 					ResourceNames: []string{clusterManager.Name}, Verbs: []string{"get"}},
-				{APIGroups: []string{util.CLAIM_API_GROUP}, Resources: []string{"clustermanagers/status"},
+				{APIGroups: []string{util.CLUSTER_API_GROUP}, Resources: []string{"clustermanagers/status"},
 					ResourceNames: []string{clusterManager.Name}, Verbs: []string{"get"}},
 			},
 		}
@@ -841,8 +841,8 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, members []str
 				Name: clusterRoleBindingName,
 				OwnerReferences: []metav1.OwnerReference{
 					metav1.OwnerReference{
-						APIVersion:         util.CLAIM_API_GROUP_VERSION,
-						Kind:               util.CLAIM_API_Kind,
+						APIVersion:         util.CLUSTER_API_GROUP_VERSION,
+						Kind:               util.CLUSTER_API_Kind,
 						Name:               clusterManager.GetName(),
 						UID:                clusterManager.GetUID(),
 						BlockOwnerDeletion: pointer.BoolPtr(true),

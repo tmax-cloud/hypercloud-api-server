@@ -54,13 +54,17 @@ func Put(res http.ResponseWriter, req *http.Request) {
 			}
 		}
 		updatedClm, msg, status := k8sApiCaller.AddMembers(userId, clm, newMembers)
-		msg, status = k8sApiCaller.CreateCLMRole(updatedClm, newMembers)
+		if updatedClm != nil {
+			msg, status = k8sApiCaller.CreateCLMRole(updatedClm, newMembers)
+		}
 		util.SetResponse(res, msg, updatedClm, status)
 		return
 	} else if len(deletedUsers) != 0 && len(newUsers) == 0 {
 		// var deletedMembers []string
 		updatedClm, msg, status := k8sApiCaller.DeleteMembers(userId, clm, deletedUsers)
-		msg, status = k8sApiCaller.DeleteCLMRole(updatedClm, deletedUsers)
+		if updatedClm != nil {
+			msg, status = k8sApiCaller.DeleteCLMRole(updatedClm, deletedUsers)
+		}
 		util.SetResponse(res, msg, updatedClm, status)
 		return
 	} else if len(deletedUsers) == 0 && len(newUsers) == 0 {
