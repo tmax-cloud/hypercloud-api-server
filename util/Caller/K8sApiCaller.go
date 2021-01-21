@@ -40,9 +40,9 @@ func init() {
 
 	// var kubeconfig *string
 	// if home := homedir.HomeDir(); home != "" {
-	// 	kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "/root/.kube")
+	// 	kubeconfig = flag.String("kubeconfig2", filepath.Join(home, ".kube", "config"), "/root/.kube")
 	// } else {
-	// 	kubeconfig = flag.String("kubeconfig", "", "/root/.kube")
+	// 	kubeconfig = flag.String("kubeconfig2", "", "/root/.kube")
 	// }
 	// flag.Parse()
 

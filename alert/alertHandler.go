@@ -39,14 +39,14 @@ func init() {
 	var err error
 
 	// // If api-server on Process, active this code.
-	// // var kubeconfig2 *string
+	// // var kubeconfig *string
 	// // if home := homedir.HomeDir(); home != "" {
-	// // 	kubeconfig2 = flag.String("kubeconfig2", filepath.Join(home, ".kube", "config"), "/root/.kube")
+	// // 	kubeconfig = flag.String("kubeconfig3", filepath.Join(home, ".kube", "config"), "/root/.kube")
 	// // } else {
-	// // 	kubeconfig2 = flag.String("kubeconfig2", "", "/root/.kube")
+	// // 	kubeconfig = flag.String("kubeconfig3", "", "/root/.kube")
 	// // }
 	// // flag.Parse()
-	// // config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig2)
+	// // config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
 
 	// If api-server on Pod, active this code.
 	config, err = restclient.InClusterConfig()
