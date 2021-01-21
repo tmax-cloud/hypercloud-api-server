@@ -124,28 +124,28 @@ func insertMeteringData(meteringData map[string]*meteringModel.Metering) {
 	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"))
 
 	db, err := sql.Open(DB_DRIVER, DB_URI)
+	defer db.Close()
 	if err != nil {
 		klog.Error(err)
-	}
-	defer db.Close()
+	} else {
+		for key, data := range meteringData {
+			_, err = db.Exec(METERING_INSERT_QUERY,
+				uuid.New(),
+				key,
+				data.Cpu,
+				data.Memory,
+				data.Storage,
+				data.Gpu,
+				data.PublicIp,
+				data.PrivateIp,
+				data.TrafficIn,
+				data.TrafficOut,
+				t.Format("2006-01-02 15:04:00"), "Success")
 
-	for key, data := range meteringData {
-		_, err := db.Exec(METERING_INSERT_QUERY,
-			uuid.New(),
-			key,
-			data.Cpu,
-			data.Memory,
-			data.Storage,
-			data.Gpu,
-			data.PublicIp,
-			data.PrivateIp,
-			data.TrafficIn,
-			data.TrafficOut,
-			t.Format("2006-01-02 15:04:00"), "Success")
-
-		if err != nil {
-			klog.Errorln(err)
-			break
+			if err != nil {
+				klog.Errorln(err)
+				break
+			}
 		}
 	}
 
