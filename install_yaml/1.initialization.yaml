@@ -12,8 +12,8 @@ metadata:
   namespace: hypercloud5-system
 spec:
   hard:
-    limits.cpu: "3"
-    limits.memory: "3Gi"
+    limits.cpu: "5"
+    limits.memory: "10Gi"
     requests.storage: "10Gi"
 
 ---

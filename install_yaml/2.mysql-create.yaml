@@ -106,10 +106,10 @@ spec:
         resources:
           limits:
             cpu: "1"
-            memory: "5Gi"
+            memory: "3Gi"
           requests:
             cpu: "1"
-            memory: "5Gi"
+            memory: "300m"
       serviceAccountName: hypercloud5-admin
       volumes:
       - name: mysql-data
