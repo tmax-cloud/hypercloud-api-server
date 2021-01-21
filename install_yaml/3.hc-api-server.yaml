@@ -6,12 +6,13 @@ metadata:
 spec:
   ports:
     - name: "port1"
-      port: 28678
+      port: 80
       protocol: TCP
       targetPort: 80
   selector:
     hypercloud5: api-server
   type: LoadBalancer
+  
 ---
 
 apiVersion: apps/v1
@@ -50,7 +51,7 @@ spec:
             - name: HC_MODE
               value: "multi"  # multi / single 
           ports:
-            - containerPort: 28678
+            - containerPort: 80
           resources:
             limits:
               cpu: "1"

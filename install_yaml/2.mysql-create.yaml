@@ -31,3 +31,90 @@ data:
     alter table metering.metering_year add constraint unique_metering_year unique (namespace, metering_time);
     create table metering.audit (id varchar(40) not null, username varchar(255), useragent varchar(255), namespace varchar(255), apigroup varchar(255), apiversion varchar(32), resource varchar(64), name varchar(255), stage varchar(32), stagetimestamp timestamp not null, verb varchar(32), code int, status varchar(255), reason varchar(255), message varchar(255));
     
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  namespace: hypercloud5-system
+spec:
+  ports:
+  - name: "mysql"
+    port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    hypercloud5: metering
+  type: NodePort
+
+---
+
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mysql-data
+  namespace: hypercloud5-system
+spec:
+  storageClassName: csi-cephfs-sc
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-deployment
+  namespace: hypercloud5-system
+  labels:
+    hypercloud5: metering
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      hypercloud5: metering
+  template:
+    metadata:
+      labels:
+        hypercloud5: metering
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.6
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          subPath: mysql
+          name: mysql-data
+        - mountPath: /docker-entrypoint-initdb.d
+          name: mysql-initdb-config
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secrets
+              key: ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          value: metering
+        - name: TZ
+          value: Asia/Seoul
+        resources:
+          limits:
+            cpu: "1"
+            memory: "5Gi"
+          requests:
+            cpu: "1"
+            memory: "5Gi"
+      serviceAccountName: hypercloud5-admin
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql-data
+      - name: mysql-initdb-config
+        configMap:
+          name: mysql-initdb-config
