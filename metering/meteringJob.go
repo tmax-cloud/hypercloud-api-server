@@ -144,11 +144,16 @@ func insertMeteringData(meteringData map[string]*meteringModel.Metering) {
 			t.Format("2006-01-02 15:04:00"), "Success")
 
 		if err != nil {
-			klog.Error(err)
+			klog.Errorln(err)
+			break
 		}
 	}
 
-	klog.Infoln("Insert into METERING Success!!")
+	if err != nil {
+		klog.Errorln("Insert into METERING failed..")
+	} else {
+		klog.Infoln("Insert into METERING Success!!")
+	}
 }
 
 func makeMeteringMap() map[string]*meteringModel.Metering {

@@ -71,6 +71,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 
 						if err != nil {
 							klog.Errorln(mod.Name, " exec command error : ", err)
+							break
 						} else {
 							ps.Data[output]++
 						}
@@ -93,6 +94,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 						response, err := client.Get(url)
 						if err != nil {
 							klog.Errorln(mod.Name, " HTTP Error : ", err)
+							break
 						} else if response.StatusCode >= 200 && response.StatusCode < 400 {
 							ps.Data["Running"]++
 						}
@@ -107,6 +109,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 						defer conn.Close()
 						if err != nil {
 							klog.Errorln(mod.Name, " TCP Error : ", err)
+							break
 						} else {
 							ps.Data["Running"]++
 						}
