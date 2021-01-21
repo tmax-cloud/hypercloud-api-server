@@ -107,12 +107,12 @@
 
 
 ## METERING
-schema,secret은 mysql-settings.yaml 에서 관리
+schema,secret은 mysql-create.yaml에서 관리
 
 #### Get
   - **Description** 
   
-     현재 리소스 사용량을 조회하는 API
+     현재까지의 리소스 사용량을 조회하는 API
       
   - **RequestURL** 
   
@@ -366,7 +366,7 @@ schema,secret은 mysql-settings.yaml 에서 관리
 
 ## VERSION
 모듈의 version 정보에 관한 API  
-verison 정보를 가져오기 위한 label정보는 hc-version configmap에 존재
+label정보는 1.initialization.yaml의 ConfigMap에서 관리
 
 #### Get
   - **Description** 
