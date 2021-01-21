@@ -18,8 +18,8 @@ import (
 
 const (
 	DB_DRIVER = "mysql"
-	//DB_URI = "root:tmax@tcp(mysql-service.hypercloud4-system.svc:3306)/metering?parseTime=true"
-	DB_URI                = "tmax:tmax@tcp(192.168.6.116:3306)/metering?parseTime=true" // temporary database, should be changed
+	DB_URI    = "root:tmax@tcp(mysql-service.hypercloud5-system.svc:3306)/metering?parseTime=true" // If running on Pod, use this URI.
+	//DB_URI                = "tmax:tmax@tcp(192.168.6.116:3306)/metering?parseTime=true" // If running on Process, use this URI.
 	METERING_INSERT_QUERY = "insert into metering.metering (id,namespace,cpu,memory,storage,gpu,public_ip,private_ip, traffic_in, traffic_out, metering_time, status) " +
 		"values (?,?,truncate(?,2),?,?,truncate(?,2),?,?,?,?,?,?)"
 	METERING_DELETE_QUERY = "truncate metering.metering"

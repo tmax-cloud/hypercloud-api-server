@@ -42,7 +42,7 @@ spec:
       serviceAccount: hypercloud5-admin
       containers:
         - name: hypercloud5-api-server
-          image: 192.168.6.197:5000/hc-api-server:v0.1.2
+          image: 192.168.6.197:5000/hc-test:v0.0.0
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
