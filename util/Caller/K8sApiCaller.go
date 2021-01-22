@@ -689,7 +689,7 @@ func ListOwnerCluster(userId string) (*clusterv1alpha1.ClusterManagerList, strin
 	if len(clmList.Items) == 0 {
 		msg := " User [ " + userId + " ] has No own Cluster"
 		klog.Infoln(msg)
-		return nil, msg, http.StatusOK
+		return clmList, msg, http.StatusOK
 	}
 	msg := " User [ " + userId + " ] has own Cluster"
 	klog.Infoln(msg)
