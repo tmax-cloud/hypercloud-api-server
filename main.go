@@ -121,7 +121,7 @@ func hyperauthConsumer() {
 	consumerConfig.Net.TLS.Enable = true
 	consumerConfig.Net.TLS.Config = tlsConfig
 
-	client, err := sarama.NewClient([]string{"kafka-1.hyperauth:9092,kafka-2.hyperauth:9092"}, consumerConfig)
+	client, err := sarama.NewClient([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerConfig)
 	if err != nil {
 		log.Fatalf("unable to create kafka client: %q", err)
 	}
