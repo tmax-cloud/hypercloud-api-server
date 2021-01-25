@@ -1,6 +1,20 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.0.4 start -------------------->
+
+## Hypercloud-api-server 5.0.0.4 (Mon Jan 25 14:20:36 KST 2021)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.0.3 start -------------------->
 
 ## Hypercloud-api-server 5.0.0.3 (Mon Jan 25 14:14:11 KST 2021)
