@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.0.8 start -------------------->
+
+## Hypercloud-api-server 5.0.0.8 (Tue Jan 26 05:35:16 KST 2021)
+
+### Added
+  - [feat] kafka consumer 구현완료2 by dnxorjs1
+  - [feat] kafka consumer 구현완료 by dnxorjs1
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.0.7 start -------------------->
 
 ## Hypercloud-api-server 5.0.0.7 (Tue Jan 26 02:56:04 KST 2021)
