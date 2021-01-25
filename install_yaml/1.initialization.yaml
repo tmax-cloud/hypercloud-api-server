@@ -41,11 +41,11 @@ roleRef:
   
 ---
 
-#apiVersion: v1
-#kind: Secret
-#metadata:
-#  name: docker-pull-secret
-#  namespace: hypercloud5-system
+apiVersion: v1
+kind: Secret
+metadata:
+  name: docker-pull-secret
+  namespace: hypercloud5-system
 
 ---
 

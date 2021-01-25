@@ -1,55 +1,66 @@
-I0120 14:53:35.415067    9115 main.go:88] Starting Hypercloud-Operator-API server...
-I0120 14:53:38.167984    9115 namespaceHandler.go:16] **** GET/namespace
-I0120 14:53:38.168018    9115 namespaceHandler.go:24] userId :  admin@tmax.co.kr
-I0120 14:53:38.168026    9115 namespaceHandler.go:32] limit :  
-I0120 14:53:38.168032    9115 namespaceHandler.go:33] labelSelector :  
-I0120 14:53:38.168036    9115 namespaceHandler.go:36] userGroup :  hypercloud4,tmaxcloud
-I0120 14:53:38.168041    9115 namespaceHandler.go:41] userGroupName :  hypercloud4
-I0120 14:53:38.168046    9115 namespaceHandler.go:41] userGroupName :  tmaxcloud
-I0120 14:53:38.168075    9115 K8sApiCaller.go:129] userId :  admin@tmax.co.kr
-I0120 14:53:38.168080    9115 K8sApiCaller.go:141] userGroupName :  hypercloud4
-I0120 14:53:38.168084    9115 K8sApiCaller.go:141] userGroupName :  tmaxcloud
-I0120 14:53:38.174239    9115 K8sApiCaller.go:162]  User [ admin@tmax.co.kr ] has Namespace List Role, Can Access All Namespace
-I0120 14:53:38.177178    9115 K8sApiCaller.go:225] === [ admin@tmax.co.kr ] Accessible Namespace ===
-I0120 14:53:38.177195    9115 K8sApiCaller.go:227]   argocd
-I0120 14:53:38.177201    9115 K8sApiCaller.go:227]   capa-system
-I0120 14:53:38.177206    9115 K8sApiCaller.go:227]   capi-kubeadm-bootstrap-system
-I0120 14:53:38.177210    9115 K8sApiCaller.go:227]   capi-kubeadm-control-plane-system
-I0120 14:53:38.177215    9115 K8sApiCaller.go:227]   capi-system
-I0120 14:53:38.177220    9115 K8sApiCaller.go:227]   capi-webhook-system
-I0120 14:53:38.177225    9115 K8sApiCaller.go:227]   catalog
-I0120 14:53:38.177229    9115 K8sApiCaller.go:227]   cert-manager
-I0120 14:53:38.177234    9115 K8sApiCaller.go:227]   cicd-system
-I0120 14:53:38.177239    9115 K8sApiCaller.go:227]   ck1-2
-I0120 14:53:38.177243    9115 K8sApiCaller.go:227]   claim-operator-system
-I0120 14:53:38.177248    9115 K8sApiCaller.go:227]   cluster-manager-operator-system
-I0120 14:53:38.177253    9115 K8sApiCaller.go:227]   cluster-tsb-ns
-I0120 14:53:38.177258    9115 K8sApiCaller.go:227]   default
-I0120 14:53:38.177262    9115 K8sApiCaller.go:227]   hyperauth
-I0120 14:53:38.177271    9115 K8sApiCaller.go:227]   hypercloud4-system
-I0120 14:53:38.177276    9115 K8sApiCaller.go:227]   hypercloud5-system
-I0120 14:53:38.177281    9115 K8sApiCaller.go:227]   ingress-nginx
-I0120 14:53:38.177285    9115 K8sApiCaller.go:227]   ingress-nginx-shared
-I0120 14:53:38.177290    9115 K8sApiCaller.go:227]   ingress-test
-I0120 14:53:38.177295    9115 K8sApiCaller.go:227]   istio-system
-I0120 14:53:38.177300    9115 K8sApiCaller.go:227]   keda
-I0120 14:53:38.177304    9115 K8sApiCaller.go:227]   kube-federation-system
-I0120 14:53:38.177309    9115 K8sApiCaller.go:227]   kube-node-lease
-I0120 14:53:38.177314    9115 K8sApiCaller.go:227]   kube-public
-I0120 14:53:38.177319    9115 K8sApiCaller.go:227]   kube-system
-I0120 14:53:38.177323    9115 K8sApiCaller.go:227]   kubevirt
-I0120 14:53:38.177328    9115 K8sApiCaller.go:227]   metallb-system
-I0120 14:53:38.177336    9115 K8sApiCaller.go:227]   monitoring
-I0120 14:53:38.177342    9115 K8sApiCaller.go:227]   olm
-I0120 14:53:38.177347    9115 K8sApiCaller.go:227]   operators
-I0120 14:53:38.177351    9115 K8sApiCaller.go:227]   poc-cicd
-I0120 14:53:38.177356    9115 K8sApiCaller.go:227]   reg-test
-I0120 14:53:38.177361    9115 K8sApiCaller.go:227]   registry-system
-I0120 14:53:38.177365    9115 K8sApiCaller.go:227]   rook-ceph
-I0120 14:53:38.177370    9115 K8sApiCaller.go:227]   tekton-pipelines
-I0120 14:53:38.177375    9115 K8sApiCaller.go:227]   terraform-operator-system
-I0120 14:53:38.177380    9115 K8sApiCaller.go:227]   test
-I0120 14:53:38.177384    9115 K8sApiCaller.go:227]   tsb-ns
-I0120 14:53:38.177389    9115 K8sApiCaller.go:227]   tsb-test
-I0120 14:53:38.177394    9115 K8sApiCaller.go:227]   wef
-I0120 14:53:38.177398    9115 K8sApiCaller.go:227]   wefwef
+I0125 13:59:04.826143   17506 main.go:99] Starting Hypercloud5-API server...
+I0125 14:00:00.000359   17506 meteringJob.go:78] ============= Metering Time =============
+I0125 14:00:00.000445   17506 meteringJob.go:79] Current Time   :  2021-01-25 14:00:00
+I0125 14:00:00.000470   17506 meteringJob.go:80] minute of hour :  0
+I0125 14:00:00.000499   17506 meteringJob.go:81] hour of day    :  14
+I0125 14:00:00.000523   17506 meteringJob.go:82] day of month   :  25
+I0125 14:00:00.000545   17506 meteringJob.go:83] day of year    :  25
+I0125 14:00:00.000565   17506 meteringJob.go:551] Insert into METERING_HOUR Start!!
+I0125 14:00:00.000593   17506 meteringJob.go:552] Current Time : 2021-01-25 14:00:00
+E0125 14:00:00.074083   17506 meteringJob.go:565] dial tcp: lookup mysql-service.hypercloud5-system.svc: no such host
+E0125 14:00:00.074083   17506 meteringJob.go:565] dial tcp: lookup mysql-service.hypercloud5-system.svc: no such host
+E0125 14:00:00.074083   17506 meteringJob.go:565] dial tcp: lookup mysql-service.hypercloud5-system.svc: no such host
+I0125 14:01:00.000154   17506 meteringJob.go:78] ============= Metering Time =============
+I0125 14:01:00.000180   17506 meteringJob.go:79] Current Time   :  2021-01-25 14:01:00
+I0125 14:01:00.000187   17506 meteringJob.go:80] minute of hour :  1
+I0125 14:01:00.000194   17506 meteringJob.go:81] hour of day    :  14
+I0125 14:01:00.000201   17506 meteringJob.go:82] day of month   :  25
+I0125 14:01:00.000207   17506 meteringJob.go:83] day of year    :  25
+E0125 14:01:00.090305   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:01:00.090305   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:01:00.090305   17506 meteringJob.go:284] Prometheus Connection Failed.
+I0125 14:02:00.000290   17506 meteringJob.go:78] ============= Metering Time =============
+I0125 14:02:00.000375   17506 meteringJob.go:79] Current Time   :  2021-01-25 14:02:00
+I0125 14:02:00.000404   17506 meteringJob.go:80] minute of hour :  2
+I0125 14:02:00.000433   17506 meteringJob.go:81] hour of day    :  14
+I0125 14:02:00.000455   17506 meteringJob.go:82] day of month   :  25
+I0125 14:02:00.000489   17506 meteringJob.go:83] day of year    :  25
+E0125 14:02:00.001793   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:02:00.001793   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:02:00.001793   17506 meteringJob.go:284] Prometheus Connection Failed.
+I0125 14:03:00.000343   17506 meteringJob.go:78] ============= Metering Time =============
+I0125 14:03:00.000434   17506 meteringJob.go:79] Current Time   :  2021-01-25 14:03:00
+I0125 14:03:00.000463   17506 meteringJob.go:80] minute of hour :  3
+I0125 14:03:00.000489   17506 meteringJob.go:81] hour of day    :  14
+I0125 14:03:00.000513   17506 meteringJob.go:82] day of month   :  25
+I0125 14:03:00.000539   17506 meteringJob.go:83] day of year    :  25
+E0125 14:03:00.001906   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:03:00.001906   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:03:00.001906   17506 meteringJob.go:284] Prometheus Connection Failed.
+I0125 14:04:00.000328   17506 meteringJob.go:78] ============= Metering Time =============
+I0125 14:04:00.000410   17506 meteringJob.go:79] Current Time   :  2021-01-25 14:04:00
+I0125 14:04:00.000439   17506 meteringJob.go:80] minute of hour :  4
+I0125 14:04:00.000466   17506 meteringJob.go:81] hour of day    :  14
+I0125 14:04:00.000491   17506 meteringJob.go:82] day of month   :  25
+I0125 14:04:00.000515   17506 meteringJob.go:83] day of year    :  25
+E0125 14:04:00.001753   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:04:00.001753   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:04:00.001753   17506 meteringJob.go:284] Prometheus Connection Failed.
+I0125 14:05:00.000336   17506 meteringJob.go:78] ============= Metering Time =============
+I0125 14:05:00.000424   17506 meteringJob.go:79] Current Time   :  2021-01-25 14:05:00
+I0125 14:05:00.000449   17506 meteringJob.go:80] minute of hour :  5
+I0125 14:05:00.000479   17506 meteringJob.go:81] hour of day    :  14
+I0125 14:05:00.000528   17506 meteringJob.go:82] day of month   :  25
+I0125 14:05:00.000553   17506 meteringJob.go:83] day of year    :  25
+E0125 14:05:00.001873   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:05:00.001873   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:05:00.001873   17506 meteringJob.go:284] Prometheus Connection Failed.
+I0125 14:06:00.000236   17506 meteringJob.go:78] ============= Metering Time =============
+I0125 14:06:00.000325   17506 meteringJob.go:79] Current Time   :  2021-01-25 14:06:00
+I0125 14:06:00.000350   17506 meteringJob.go:80] minute of hour :  6
+I0125 14:06:00.000379   17506 meteringJob.go:81] hour of day    :  14
+I0125 14:06:00.000403   17506 meteringJob.go:82] day of month   :  25
+I0125 14:06:00.000428   17506 meteringJob.go:83] day of year    :  25
+E0125 14:06:00.001695   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:06:00.001695   17506 meteringJob.go:284] Prometheus Connection Failed.
+E0125 14:06:00.001695   17506 meteringJob.go:284] Prometheus Connection Failed.

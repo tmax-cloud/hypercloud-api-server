@@ -1,14 +1,19 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
-	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
+	"os/signal"
+	"sync"
 	"time"
 
-	alert "github.com/tmax-cloud/hypercloud-api-server/alert"
+	sarama "github.com/Shopify/sarama"
+	"github.com/tmax-cloud/hypercloud-api-server/alert"
 	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
 	claim "github.com/tmax-cloud/hypercloud-api-server/clusterClaim"
 	metering "github.com/tmax-cloud/hypercloud-api-server/metering"
@@ -16,7 +21,6 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/namespaceClaim"
 	user "github.com/tmax-cloud/hypercloud-api-server/user"
 	version "github.com/tmax-cloud/hypercloud-api-server/version"
-
 	"k8s.io/klog"
 
 	"net/http"
@@ -25,6 +29,8 @@ import (
 )
 
 func main() {
+	sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags)
+
 	// Get Hypercloud Operating Mode!!!
 	hcMode := os.Getenv("HC_MODE")
 
@@ -40,7 +46,7 @@ func main() {
 		os.FileMode(0644),
 	)
 	if err != nil {
-		fmt.Println(err)
+		klog.Error(err, "Error Open", "./logs/api-server")
 		return
 	}
 	defer file.Close()
@@ -58,7 +64,6 @@ func main() {
 		err = ioutil.WriteFile("./logs/api-server"+time.Now().AddDate(0, 0, -1).Format("2006-01-02")+".log", input, 0644)
 		if err != nil {
 			klog.Error(err, "Error creating", "./logs/api-server")
-			fmt.Println(err)
 			return
 		}
 		klog.Info("Log BackUp Success")
@@ -69,6 +74,9 @@ func main() {
 	// Metering Cron Job
 	cronJob.AddFunc("0 */1 * ? * *", metering.MeteringJob)
 	cronJob.Start()
+
+	// Hyperauth Event Consumer
+	go hyperauthConsumer()
 
 	// Req multiplexer
 	mux := http.NewServeMux()
@@ -97,6 +105,105 @@ func main() {
 	}
 	klog.Info("Started Hypercloud5-API server")
 
+}
+
+func hyperauthConsumer() {
+	tlsConfig, err := NewTLSConfig("./etc/ssl/hypercloud-api-server.crt",
+		"./etc/ssl/hypercloud-api-server.key",
+		"./etc/ssl/hypercloud-root-ca.crt")
+	if err != nil {
+		klog.Fatal(err)
+	}
+	// This can be used on test server if domain does not match cert:
+	tlsConfig.InsecureSkipVerify = true
+
+	consumerConfig := sarama.NewConfig()
+	consumerConfig.Net.TLS.Enable = true
+	consumerConfig.Net.TLS.Config = tlsConfig
+
+	client, err := sarama.NewClient([]string{"kafka-1.hyperauth:9092,kafka-2.hyperauth:9092"}, consumerConfig)
+	if err != nil {
+		log.Fatalf("unable to create kafka client: %q", err)
+	}
+
+	consumer, err := sarama.NewConsumerFromClient(client)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer consumer.Close()
+	consumerLoop(consumer, "tmax")
+}
+
+func consumerLoop(consumer sarama.Consumer, topic string) {
+	partitions, err := consumer.Partitions(topic)
+	if err != nil {
+		log.Println("unable to fetch partition IDs for the topic", topic, err)
+		return
+	}
+
+	// Trap SIGINT to trigger a shutdown.
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+
+	var wg sync.WaitGroup
+	for partition := range partitions {
+		wg.Add(1)
+		go func() {
+			consumePartition(consumer, int32(partition), signals, topic)
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+}
+
+func consumePartition(consumer sarama.Consumer, partition int32, signals chan os.Signal, topic string) {
+	log.Println("Receving on partition", partition)
+	partitionConsumer, err := consumer.ConsumePartition(topic, partition, sarama.OffsetNewest)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer func() {
+		if err := partitionConsumer.Close(); err != nil {
+			log.Println(err)
+		}
+	}()
+
+	consumed := 0
+ConsumerLoop:
+	for {
+		select {
+		case msg := <-partitionConsumer.Messages():
+			log.Printf("Consumed message offset %d\nData: %s\n", msg.Offset, msg.Value)
+			consumed++
+		case <-signals:
+			break ConsumerLoop
+		}
+	}
+	log.Printf("Consumed: %d\n", consumed)
+}
+
+func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string) (*tls.Config, error) {
+	tlsConfig := tls.Config{}
+
+	// Load client cert
+	cert, err := tls.LoadX509KeyPair(clientCertFile, clientKeyFile)
+	if err != nil {
+		return &tlsConfig, err
+	}
+	tlsConfig.Certificates = []tls.Certificate{cert}
+
+	// Load CA cert
+	caCert, err := ioutil.ReadFile(caCertFile)
+	if err != nil {
+		return &tlsConfig, err
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+	tlsConfig.RootCAs = caCertPool
+
+	tlsConfig.BuildNameToCertificate()
+	return &tlsConfig, err
 }
 
 func serveNamespace(res http.ResponseWriter, req *http.Request) {
