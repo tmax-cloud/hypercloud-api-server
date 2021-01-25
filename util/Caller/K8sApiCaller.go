@@ -4,18 +4,14 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"flag"
 	"net/http"
-	"path/filepath"
 
 	"io"
 	"reflect"
 	"sync"
 
 	"github.com/tmax-cloud/hypercloud-api-server/util"
-	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/tools/remotecommand"
-	"k8s.io/client-go/util/homedir"
 	"k8s.io/utils/pointer"
 
 	claimsv1alpha1 "github.com/tmax-cloud/claim-operator/api/v1alpha1"
@@ -42,45 +38,45 @@ var customClientset *client.Clientset
 
 func init() {
 
-	var kubeconfig *string
-	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig2", filepath.Join(home, ".kube", "config"), "/root/.kube")
-	} else {
-		kubeconfig = flag.String("kubeconfig2", "", "/root/.kube")
-	}
-	flag.Parse()
-
-	var err error
-	config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
-	if err != nil {
-		klog.Errorln(err)
-		panic(err)
-	}
-	config.Burst = 100
-	config.QPS = 100
-	Clientset, err = kubernetes.NewForConfig(config)
-	if err != nil {
-		klog.Errorln(err)
-		panic(err)
-	}
-	// If api-server on POD, activate below code and delete above
-	// creates the in-cluster config
-	// var err error
-	// config, err = restclient.InClusterConfig()
-	// if err != nil {
-	// 	panic(err.Error())
+	// var kubeconfig *string
+	// if home := homedir.HomeDir(); home != "" {
+	// 	kubeconfig = flag.String("kubeconfig2", filepath.Join(home, ".kube", "config"), "/root/.kube")
+	// } else {
+	// 	kubeconfig = flag.String("kubeconfig2", "", "/root/.kube")
 	// }
-	// // creates the clientset
+	// flag.Parse()
+
+	// var err error
+	// config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	// if err != nil {
+	// 	klog.Errorln(err)
+	// 	panic(err)
+	// }
 	// config.Burst = 100
 	// config.QPS = 100
 	// Clientset, err = kubernetes.NewForConfig(config)
 	// if err != nil {
-	// 	panic(err.Error())
+	// 	klog.Errorln(err)
+	// 	panic(err)
 	// }
-	// customClientset, err = client.NewForConfig(config)
-	// if err != nil {
-	// 	panic(err.Error())
-	// }
+	// If api-server on POD, activate below code and delete above
+	// creates the in-cluster config
+	var err error
+	config, err = restclient.InClusterConfig()
+	if err != nil {
+		panic(err.Error())
+	}
+	// creates the clientset
+	config.Burst = 100
+	config.QPS = 100
+	Clientset, err = kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+	customClientset, err = client.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
 
 }
 
