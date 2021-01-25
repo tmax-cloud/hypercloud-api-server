@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.0.9 start -------------------->
+
+## Hypercloud-api-server 5.0.0.9 (Tue Jan 26 05:50:50 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] 빌드시스템 수정 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.0.8 start -------------------->
 
 ## Hypercloud-api-server 5.0.0.8 (Tue Jan 26 05:35:16 KST 2021)
