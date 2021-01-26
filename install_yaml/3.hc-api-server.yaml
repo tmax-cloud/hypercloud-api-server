@@ -43,13 +43,15 @@ spec:
       serviceAccount: hypercloud5-admin
       containers:
         - name: hypercloud5-api-server
-          image: tmaxcloudck/hypercloud-api-server:b5.0.0.7
+          image: tmaxcloudck/hypercloud-api-server:b5.0.0.6
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
               value: "Asia/Seoul"
             - name: HC_MODE
               value: "multi"  # multi / single 
+            - name: GODEBUG
+              value: "x509ignoreCN=0"  
           ports:
             - containerPort: 80
           resources:
@@ -70,6 +72,6 @@ spec:
           name : hc-version # configmap shoulde be already made before mount this
       - name: kafka
         secret: 
-          secretName: hypercloud-kafka-secret3
+          secretName: hypercloud-kafka-secret2
           
               

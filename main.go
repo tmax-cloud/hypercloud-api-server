@@ -108,9 +108,13 @@ func main() {
 }
 
 func hyperauthConsumer() {
-	tlsConfig, err := NewTLSConfig("./etc/ssl/go-consumer-client.cer.pem",
-		"./etc/ssl/go-consumer-client.key.pem",
-		"./etc/ssl/go-consumer-server.cer.pem")
+	/*
+		kubectl create secret tls hypercloud-kafka-secret2 --cert=./hypercloud-api-server.crt,hypercloud-root-ca.crt --key=./hypercloud-api-server.key -n hypercloud5-system
+		kubectl create secret generic hypercloud-kafka-secret2 --from-file=./hypercloud-api-server.crt --from-file=./hypercloud-root-ca.crt --from-file=./hypercloud-api-server.key -n hypercloud5-system
+	*/
+	tlsConfig, err := NewTLSConfig("./etc/ssl/hypercloud-api-server.crt",
+		"./etc/ssl/hypercloud-api-server.key",
+		"./etc/ssl/hypercloud-root-ca.crt")
 	if err != nil {
 		klog.Fatal(err)
 	}
@@ -121,8 +125,11 @@ func hyperauthConsumer() {
 	consumerConfig.ClientID = "hypercloud-api-server" //FIXME
 	consumerConfig.Net.TLS.Enable = true
 	consumerConfig.Net.TLS.Config = tlsConfig
+	consumerGroup := "hypercloud-api-server"
 
-	client, err := sarama.NewClient([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerConfig)
+	// client, err := sarama.NewClient([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerConfig)
+	client, err := sarama.NewConsumerGroup([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerGroup, consumerConfig)
+
 	if err != nil {
 		log.Fatalf("unable to create kafka client: %q", err)
 	}
