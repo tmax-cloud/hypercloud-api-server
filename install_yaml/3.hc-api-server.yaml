@@ -43,7 +43,7 @@ spec:
       serviceAccount: hypercloud5-admin
       containers:
         - name: hypercloud5-api-server
-          image: tmaxcloudck/hypercloud-api-server:b5.0.0.6
+          image: tmaxcloudck/hypercloud-api-server:b5.0.0.8
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ

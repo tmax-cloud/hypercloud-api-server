@@ -31,12 +31,12 @@ node {
             sh "git reset --hard origin/${params.buildBranch}"
             sh "git pull origin ${params.buildBranch}"
 
-            //go build
-            sh '''#!/bin/bash
-                export PATH=$PATH:/usr/local/go/bin
-                export GO111MODULE=on
-                go build main.go
-            '''
+            // //go build
+            // sh '''#!/bin/bash
+            //     export PATH=$PATH:/usr/local/go/bin
+            //     export GO111MODULE=on
+            //     go build main.go
+            // '''
         }
     }
     

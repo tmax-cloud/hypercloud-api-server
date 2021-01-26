@@ -129,7 +129,6 @@ func hyperauthConsumer() {
 	consumerConfig.Net.TLS.Config = tlsConfig
 	consumerConfig.ClientID = "hypercloud-api-server" //FIXME
 	consumerGroupId := "hypercloud-api-server"
-	topic := "tmax"
 	//
 
 	consumer := Consumer{
@@ -145,6 +144,7 @@ func hyperauthConsumer() {
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {
+		topic := "tmax"
 		defer wg.Done()
 		for {
 			// `Consume` should be called inside an infinite loop, when a
