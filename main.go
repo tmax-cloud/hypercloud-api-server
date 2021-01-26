@@ -125,10 +125,10 @@ func hyperauthConsumer() {
 	consumerConfig.ClientID = "hypercloud-api-server" //FIXME
 	consumerConfig.Net.TLS.Enable = true
 	consumerConfig.Net.TLS.Config = tlsConfig
-	consumerGroup := "hypercloud-api-server"
+	// consumerGroup := "hypercloud-api-server"
 
-	// client, err := sarama.NewClient([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerConfig)
-	client, err := sarama.NewConsumerGroup([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerGroup, consumerConfig)
+	client, err := sarama.NewClient([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerConfig)
+	// client, err := sarama.NewConsumerGroup([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerGroup, consumerConfig)
 
 	if err != nil {
 		log.Fatalf("unable to create kafka client: %q", err)
