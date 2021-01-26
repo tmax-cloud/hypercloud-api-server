@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
@@ -10,6 +11,7 @@ import (
 	"os"
 	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	sarama "github.com/Shopify/sarama"
@@ -121,77 +123,60 @@ func hyperauthConsumer() {
 	// This can be used on test server if domain does not match cert:
 	// tlsConfig.InsecureSkipVerify = true
 
+	// Consumer Config!!!
 	consumerConfig := sarama.NewConfig()
-	consumerConfig.ClientID = "hypercloud-api-server" //FIXME
 	consumerConfig.Net.TLS.Enable = true
 	consumerConfig.Net.TLS.Config = tlsConfig
-	// consumerGroup := "hypercloud-api-server"
+	consumerConfig.ClientID = "hypercloud-api-server" //FIXME
+	consumerGroupId := "hypercloud-api-server"
+	topic := "tmax"
+	//
 
-	client, err := sarama.NewClient([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerConfig)
-	// client, err := sarama.NewConsumerGroup([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerGroup, consumerConfig)
+	consumer := Consumer{
+		ready: make(chan bool),
+	}
 
+	ctx, cancel := context.WithCancel(context.Background())
+	client, err := sarama.NewConsumerGroup([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerGroupId, consumerConfig)
 	if err != nil {
-		log.Fatalf("unable to create kafka client: %q", err)
+		klog.Error("Error creating consumer group client: %v", err)
 	}
 
-	consumer, err := sarama.NewConsumerFromClient(client)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer consumer.Close()
-	consumerLoop(consumer, "tmax")
-}
-
-func consumerLoop(consumer sarama.Consumer, topic string) {
-	partitions, err := consumer.Partitions(topic)
-	if err != nil {
-		log.Println("unable to fetch partition IDs for the topic", topic, err)
-		return
-	}
-
-	// Trap SIGINT to trigger a shutdown.
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-
-	var wg sync.WaitGroup
-	for partition := range partitions {
-		wg.Add(1)
-		go func() {
-			consumePartition(consumer, int32(partition), signals, topic)
-			wg.Done()
-		}()
-	}
-	wg.Wait()
-}
-
-func consumePartition(consumer sarama.Consumer, partition int32, signals chan os.Signal, topic string) {
-	log.Println("Receving on partition", partition)
-	partitionConsumer, err := consumer.ConsumePartition(topic, partition, sarama.OffsetNewest)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer func() {
-		if err := partitionConsumer.Close(); err != nil {
-			log.Println(err)
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			// `Consume` should be called inside an infinite loop, when a
+			// server-side rebalance happens, the consumer session will need to be
+			// recreated to get the new claims
+			if err := client.Consume(ctx, []string{topic}, &consumer); err != nil {
+				klog.Error("Error from consumer: %v", err)
+			}
+			// check if context was cancelled, signaling that the consumer should stop
+			if ctx.Err() != nil {
+				return
+			}
+			consumer.ready = make(chan bool)
 		}
 	}()
 
-	consumed := 0
-ConsumerLoop:
-	for {
-		select {
-		case msg := <-partitionConsumer.Messages():
-			log.Printf("Consumed message offset %d\nData: %s\n", msg.Offset, msg.Value)
-			consumed++
-			//TODO
-			//LOGIC HERE!!!!!
+	<-consumer.ready // Await till the consumer has been set up
+	klog.Info("hypercloud-api-server consumer up and running!...")
 
-		case <-signals:
-			break ConsumerLoop
-		}
+	sigterm := make(chan os.Signal, 1)
+	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
+	select {
+	case <-ctx.Done():
+		klog.Info("terminating: context cancelled")
+	case <-sigterm:
+		klog.Info("terminating: via signal")
 	}
-	log.Printf("Consumed: %d\n", consumed)
+	cancel()
+	wg.Wait()
+	if err = client.Close(); err != nil {
+		klog.Error("Error closing client: %v", err)
+	}
 }
 
 func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string) (*tls.Config, error) {
@@ -215,6 +200,38 @@ func NewTLSConfig(clientCertFile, clientKeyFile, caCertFile string) (*tls.Config
 
 	tlsConfig.BuildNameToCertificate()
 	return &tlsConfig, err
+}
+
+// Consumer represents a Sarama consumer group consumer
+type Consumer struct {
+	ready chan bool
+}
+
+// Setup is run at the beginning of a new session, before ConsumeClaim
+func (consumer *Consumer) Setup(sarama.ConsumerGroupSession) error {
+	// Mark the consumer as ready
+	close(consumer.ready)
+	return nil
+}
+
+// Cleanup is run at the end of a session, once all ConsumeClaim goroutines have exited
+func (consumer *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
+	return nil
+}
+
+// ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
+func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+
+	// NOTE:
+	// Do not move the code below to a goroutine.
+	// The `ConsumeClaim` itself is called within a goroutine, see:
+	// https://github.com/Shopify/sarama/blob/master/consumer_group.go#L27-L29
+	for message := range claim.Messages() {
+		klog.Info("Message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic)
+		session.MarkMessage(message, "")
+	}
+
+	return nil
 }
 
 func serveNamespace(res http.ResponseWriter, req *http.Request) {
