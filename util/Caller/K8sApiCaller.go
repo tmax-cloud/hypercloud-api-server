@@ -235,8 +235,8 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) c
 	return *nsList
 }
 
+// var nsList = &coreApi.NamespaceList{}
 func GetAccessibleNSC(userId string, labelSelector string) claim.NamespaceClaimList {
-	// var nsList = &coreApi.NamespaceList{}
 	var nscList = &claim.NamespaceClaimList{}
 
 	// 1. Check If User has NSC List Role
@@ -334,6 +334,18 @@ func GetAccessibleNSC(userId string, labelSelector string) claim.NamespaceClaimL
 		}
 	}
 	return *nscList
+}
+
+func DeleteNSWithUser(userId string) {
+	//TODO
+}
+
+func DeleteNSCWithUser(userId string) {
+	//TODO
+}
+
+func DeleteRBCWithUser(userId string) {
+	//TODO
 }
 
 // ExecCommand sends a 'exec' command to specific pod.

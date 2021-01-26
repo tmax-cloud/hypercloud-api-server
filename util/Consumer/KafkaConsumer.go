@@ -4,17 +4,35 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 
 	"github.com/Shopify/sarama"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
 	"k8s.io/klog"
 )
 
+type TopicEvent struct {
+	Type      string            `json:"id"`
+	UserName  string            `json:"userName"`
+	UserId    string            `json:"userId"`
+	Time      float32           `json:"time"`
+	RealmId   string            `json:"realmId"`
+	ClientId  string            `json:"clientId"`
+	SessionId string            `json:"sessionId"`
+	IpAddress string            `json:"ipAddress"`
+	Error     string            `json:"error"`
+	Details   map[string]string `json:"details"`
+}
+
 func HyperauthConsumer() {
+	sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags)
+
 	/*
 		kubectl create secret tls hypercloud-kafka-secret2 --cert=./hypercloud-api-server.crt,hypercloud-root-ca.crt --key=./hypercloud-api-server.key -n hypercloud5-system
 		kubectl create secret generic hypercloud-kafka-secret2 --from-file=./hypercloud-api-server.crt --from-file=./hypercloud-root-ca.crt --from-file=./hypercloud-api-server.key -n hypercloud5-system
@@ -83,7 +101,7 @@ func HyperauthConsumer() {
 	cancel()
 	wg.Wait()
 	if err = client.Close(); err != nil {
-		klog.Error("Error closing client: %v", err)
+		klog.Errorf("Error closing client: %v", err)
 	}
 }
 
@@ -134,7 +152,27 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		klog.Infof("Message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic)
 		session.MarkMessage(message, "")
 
-		//LOGIC HERE MR.CHO!!!!!!!!!!!!!!!!!!
+		var topicEvent TopicEvent
+		if err := json.Unmarshal(message.Value, &topicEvent); err != nil {
+			klog.Error("make topicEvent Struct failed : ", err)
+		}
+		//LOGIC HERE!!
+		switch topicEvent.Type {
+		case "USER_DELETE":
+			klog.Info("User [ " + topicEvent.UserName + " ] Deleted !")
+			// Delete NamespaceClaim with user's Owner Annotation if Exists
+			k8sApiCaller.DeleteNSCWithUser(topicEvent.UserName)
+
+			// Delete Namespace with user's Owner Annotation & fromClaim Label if Exists
+			k8sApiCaller.DeleteNSWithUser(topicEvent.UserName)
+
+			// Delete ClusterRoleBinding with UserId If Exists
+			k8sApiCaller.DeleteRBCWithUser(topicEvent.UserName)
+			break
+		default:
+			klog.Info("Unknown Event Published from Hyperauth, Do nothing!")
+
+		}
 
 	}
 

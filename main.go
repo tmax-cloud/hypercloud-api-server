@@ -4,11 +4,9 @@ import (
 	"flag"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"time"
 
-	sarama "github.com/Shopify/sarama"
 	"github.com/tmax-cloud/hypercloud-api-server/alert"
 	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
 	claim "github.com/tmax-cloud/hypercloud-api-server/clusterClaim"
@@ -26,7 +24,6 @@ import (
 )
 
 func main() {
-	sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags)
 
 	// Get Hypercloud Operating Mode!!!
 	hcMode := os.Getenv("HC_MODE")
