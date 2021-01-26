@@ -43,7 +43,7 @@ spec:
       serviceAccount: hypercloud5-admin
       containers:
         - name: hypercloud5-api-server
-          image: tmaxcloudck/hypercloud-api-server:b5.0.0.8
+          image: tmaxcloudck/hypercloud-api-server:b5.0.0.9
           imagePullPolicy: IfNotPresent
           env:
             - name: TZ
@@ -65,7 +65,9 @@ spec:
           - name: config-module
             mountPath: /version 
           - name: kafka
-            mountPath: /go/src/etc/ssl      
+            mountPath: /go/src/etc/ssl
+          - name: build
+            mountPath: /go/src/build      
       volumes:
       - name : config-module
         configMap:
@@ -73,5 +75,8 @@ spec:
       - name: kafka
         secret: 
           secretName: hypercloud-kafka-secret2
+      - name: build
+        hostPath:
+          path: /root/keycloak/hypercloud-api-server/build    
           
               
