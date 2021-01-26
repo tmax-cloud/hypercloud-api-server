@@ -108,9 +108,9 @@ func main() {
 }
 
 func hyperauthConsumer() {
-	tlsConfig, err := NewTLSConfig("./etc/ssl/hypercloud-api-server.crt",
-		"./etc/ssl/hypercloud-api-server.key",
-		"./etc/ssl/hypercloud-root-ca.crt")
+	tlsConfig, err := NewTLSConfig("./etc/ssl/go-consumer-client.cer.pem",
+		"./etc/ssl/go-consumer-client.key.pem",
+		"./etc/ssl/go-consumer-server.cer.pem")
 	if err != nil {
 		klog.Fatal(err)
 	}
@@ -118,6 +118,7 @@ func hyperauthConsumer() {
 	// tlsConfig.InsecureSkipVerify = true
 
 	consumerConfig := sarama.NewConfig()
+	consumerConfig.ClientID = "hypercloud-api-server" //FIXME
 	consumerConfig.Net.TLS.Enable = true
 	consumerConfig.Net.TLS.Config = tlsConfig
 
