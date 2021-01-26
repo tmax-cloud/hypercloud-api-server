@@ -115,7 +115,7 @@ func hyperauthConsumer() {
 		klog.Fatal(err)
 	}
 	// This can be used on test server if domain does not match cert:
-	tlsConfig.InsecureSkipVerify = true
+	// tlsConfig.InsecureSkipVerify = true
 
 	consumerConfig := sarama.NewConfig()
 	consumerConfig.Net.TLS.Enable = true
@@ -176,6 +176,9 @@ ConsumerLoop:
 		case msg := <-partitionConsumer.Messages():
 			log.Printf("Consumed message offset %d\nData: %s\n", msg.Offset, msg.Value)
 			consumed++
+			//TODO
+			//LOGIC HERE!!!!!
+
 		case <-signals:
 			break ConsumerLoop
 		}
