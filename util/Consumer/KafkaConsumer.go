@@ -153,18 +153,11 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		session.MarkMessage(message, "")
 
 		var topicEvent TopicEvent
-
-		// var resultJson map[string]interface{}
-
 		if err := json.Unmarshal(message.Value, &topicEvent); err != nil {
 			klog.Error("make topicEvent Struct failed : ", err)
 		}
 
 		//LOGIC HERE!!
-		klog.Infof("topicEvent.Type : " + topicEvent.Type)
-
-		// klog.Infof("topicEvent.Type : " + resultJson["type"].(string))
-
 		switch topicEvent.Type {
 		case "USER_DELETE":
 			klog.Info("User [ " + topicEvent.UserName + " ] Deleted !")
