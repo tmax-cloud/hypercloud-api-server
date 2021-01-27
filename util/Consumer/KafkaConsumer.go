@@ -18,7 +18,7 @@ import (
 )
 
 type TopicEvent struct {
-	Type      string            `json:"id"`
+	Type      string            `json:"type"`
 	UserName  string            `json:"userName"`
 	UserId    string            `json:"userId"`
 	Time      float32           `json:"time"`
@@ -153,10 +153,18 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		session.MarkMessage(message, "")
 
 		var topicEvent TopicEvent
+
+		// var resultJson map[string]interface{}
+
 		if err := json.Unmarshal(message.Value, &topicEvent); err != nil {
 			klog.Error("make topicEvent Struct failed : ", err)
 		}
+
 		//LOGIC HERE!!
+		klog.Infof("topicEvent.Type : " + topicEvent.Type)
+
+		// klog.Infof("topicEvent.Type : " + resultJson["type"].(string))
+
 		switch topicEvent.Type {
 		case "USER_DELETE":
 			klog.Info("User [ " + topicEvent.UserName + " ] Deleted !")
