@@ -1,6 +1,24 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.0.10 start -------------------->
+
+## Hypercloud-api-server 5.0.0.10 (Wed Jan 27 09:25:49 KST 2021)
+
+### Added
+  - [feat] topicEvent struct 생성 by dnxorjs1
+
+### Changed
+  - [mod] topicEvent struct 오류 수정 by dnxorjs1
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] delete kafaka consumer by cho
+  - [etc] add default user role by cho
+
 <!-------------------- v5.0.0.9 start -------------------->
 
 ## Hypercloud-api-server 5.0.0.9 (Tue Jan 26 05:50:50 KST 2021)

@@ -20,7 +20,7 @@ import (
 	"net/http"
 
 	"github.com/robfig/cron"
-	kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/Consumer"
+	// kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/Consumer"
 )
 
 func main() {
@@ -69,8 +69,8 @@ func main() {
 	cronJob.AddFunc("0 */1 * ? * *", metering.MeteringJob)
 	cronJob.Start()
 
-	// Hyperauth Event Consumer
-	go kafkaConsumer.HyperauthConsumer()
+	// // Hyperauth Event Consumer
+	// go kafkaConsumer.HyperauthConsumer()
 
 	// Req multiplexer
 	mux := http.NewServeMux()
