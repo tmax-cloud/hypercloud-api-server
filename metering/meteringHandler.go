@@ -34,7 +34,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if len(sorts) > 0 {
-		query += "order by"
+		query += " order by "
 		for _, sort := range sorts {
 			order := " asc, "
 			if sort[0] == '-' {
