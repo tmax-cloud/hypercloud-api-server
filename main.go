@@ -34,6 +34,10 @@ func main() {
 	flag.Set("alsologtostderr", "false")
 	flag.Parse()
 
+	if _, err := os.Stat("./logs"); os.IsNotExist(err) {
+		os.Mkdir("./logs", os.ModeDir)
+	}
+
 	file, err := os.OpenFile(
 		"./logs/api-server.log",
 		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
