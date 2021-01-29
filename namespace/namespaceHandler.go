@@ -47,6 +47,9 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		if len(nsList.Items) > 0 {
 			if limit != "" {
 				limitInt, _ := strconv.Atoi(limit)
+				if len(nsList.Items) < limitInt {
+					limitInt = len(nsList.Items)
+				}
 				nsList.Items = nsList.Items[:limitInt]
 			}
 		}

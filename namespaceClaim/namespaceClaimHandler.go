@@ -40,6 +40,9 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		if len(nscList.Items) > 0 {
 			if limit != "" {
 				limitInt, _ := strconv.Atoi(limit)
+				if len(nscList.Items) < limitInt {
+					limitInt = len(nscList.Items)
+				}
 				nscList.Items = nscList.Items[:limitInt]
 			}
 		}
