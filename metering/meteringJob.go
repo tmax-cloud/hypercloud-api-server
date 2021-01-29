@@ -62,9 +62,10 @@ const (
 		"group by year(metering_time), namespace"
 
 	PROMETHEUS_URI = "http://prometheus-k8s.monitoring:9090/api/v1/query" // use this when running on pod
-	//PROMETHEUS_URI                   = "http://10.101.168.154:9090:/api/v1/query" // use this when running on process
-	PROMETHEUS_GET_CPU_QUERY         = "namespace:container_cpu_usage_seconds_total:sum_rate"
-	PROMETHEUS_GET_MEMORY_QUERY      = "namespace:container_memory_usage_bytes:sum"
+	//PROMETHEUS_GET_CPU_QUERY         = "namespace:container_cpu_usage_seconds_total:sum_rate"
+	//PROMETHEUS_GET_MEMORY_QUERY      = "namespace:container_memory_usage_bytes:sum"
+	PROMETHEUS_GET_CPU_QUERY         = "sum(kube_pod_container_resource_requests{resource=\"cpu\"})by(namespace)"
+	PROMETHEUS_GET_MEMORY_QUERY      = "sum(kube_pod_container_resource_requests{resource=\"memory\"})by(namespace)"
 	PROMETHEUS_GET_STORAGE_QUERY     = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)by(namespace)"
 	PROMETHEUS_GET_PUBLIC_IP_QUERY   = "count(kube_service_spec_type{type=\"LoadBalancer\"})by(namespace)"
 	PROMETHEUS_GET_TRAFFIC_IN_QUERY  = "sum(istio_request_bytes_sum)by(destination_service, namespace)"
