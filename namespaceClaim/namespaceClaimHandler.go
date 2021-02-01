@@ -18,6 +18,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
 	limit := queryParams.Get(util.QUERY_PARAMETER_LIMIT)
 	labelSelector := queryParams.Get(util.QUERY_PARAMETER_LABEL_SELECTOR)
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 
 	var status int
 	klog.Infoln("userId : ", userId)
@@ -32,7 +33,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("labelSelector : ", labelSelector)
 
 	var nscList claim.NamespaceClaimList
-	nscList = k8sApiCaller.GetAccessibleNSC(userId, labelSelector)
+	nscList = k8sApiCaller.GetAccessibleNSC(userId, userGroups, labelSelector)
 
 	//make OutDO
 	if nscList.ResourceVersion != "" {

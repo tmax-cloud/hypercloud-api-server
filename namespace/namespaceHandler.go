@@ -3,7 +3,6 @@ package namespace
 import (
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
@@ -18,7 +17,8 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
 	limit := queryParams.Get(util.QUERY_PARAMETER_LIMIT)
 	labelSelector := queryParams.Get(util.QUERY_PARAMETER_LABEL_SELECTOR)
-	userGroup := queryParams.Get(util.QUERY_PARAMETER_USER_GROUP) //ex) hypercloud4,tmaxcloud,.....
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
+	// userGroups := queryParams.Get(util.QUERY_PARAMETER_USER_GROUP) //ex) hypercloud4,tmaxcloud,.....
 	var status int
 
 	klog.Infoln("userId : ", userId)
@@ -32,11 +32,11 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("limit : ", limit)
 	klog.Infoln("labelSelector : ", labelSelector)
 
-	var userGroups []string
+	// var userGroups []string
 
-	if userGroup != "" {
-		userGroups = strings.Split(userGroup, ",")
-	}
+	// if userGroup != "" {
+	// 	userGroups = strings.Split(userGroup, ",")
+	// }
 
 	var nsList v1.NamespaceList
 	nsList = k8sApiCaller.GetAccessibleNS(userId, labelSelector, userGroups)

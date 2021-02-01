@@ -237,7 +237,7 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) c
 }
 
 // var nsList = &coreApi.NamespaceList{}
-func GetAccessibleNSC(userId string, labelSelector string) claim.NamespaceClaimList {
+func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) claim.NamespaceClaimList {
 	var nscList = &claim.NamespaceClaimList{}
 
 	// 1. Check If User has NSC List Role
@@ -248,7 +248,8 @@ func GetAccessibleNSC(userId string, labelSelector string) claim.NamespaceClaimL
 				Verb:     "list",
 				Group:    util.HYPERCLOUD4_CLAIM_API_GROUP,
 			},
-			User: userId,
+			User:   userId,
+			Groups: userGroups,
 		},
 	}
 
@@ -284,7 +285,8 @@ func GetAccessibleNSC(userId string, labelSelector string) claim.NamespaceClaimL
 					Verb:     "get",
 					Group:    util.HYPERCLOUD4_CLAIM_API_GROUP,
 				},
-				User: userId,
+				User:   userId,
+				Groups: userGroups,
 			},
 		}
 
@@ -475,7 +477,7 @@ func GetAlert(name string, ns string, label string) alertModel.Alert {
 	return u
 }
 
-func createSubjectAccessReview(userId string, group string, resource string, namespace string, name string, verb string) (*authApi.SubjectAccessReview, error) {
+func createSubjectAccessReview(userId string, userGroups []string, group string, resource string, namespace string, name string, verb string) (*authApi.SubjectAccessReview, error) {
 	sar := &authApi.SubjectAccessReview{
 		Spec: authApi.SubjectAccessReviewSpec{
 			ResourceAttributes: &authApi.ResourceAttributes{
@@ -485,7 +487,8 @@ func createSubjectAccessReview(userId string, group string, resource string, nam
 				Name:      name,
 				Verb:      verb,
 			},
-			User: userId,
+			User:   userId,
+			Groups: userGroups,
 		},
 	}
 
@@ -498,23 +501,30 @@ func createSubjectAccessReview(userId string, group string, resource string, nam
 	return sarResult, nil
 }
 
-func AdmitClusterClaim(userId string, clusterClaim *claimsv1alpha1.ClusterClaim, admit bool, reason string) (*claimsv1alpha1.ClusterClaim, string, int) {
-	clusterClaimStatusUpdateRuleReview := authApi.SubjectAccessReview{
-		Spec: authApi.SubjectAccessReviewSpec{
-			ResourceAttributes: &authApi.ResourceAttributes{
-				Resource: "clusterclaims/status",
-				Verb:     "update",
-				Group:    util.CLAIM_API_GROUP,
-			},
-			User: userId,
-		},
-	}
-	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &clusterClaimStatusUpdateRuleReview, metav1.CreateOptions{})
+func AdmitClusterClaim(userId string, userGroups []string, clusterClaim *claimsv1alpha1.ClusterClaim, admit bool, reason string) (*claimsv1alpha1.ClusterClaim, string, int) {
+
+	clusterClaimStatusUpdateRuleResult, err := createSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims/status", "", "", "update")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
-	if sarResult.Status.Allowed {
+
+	// clusterClaimStatusUpdateRuleReview := authApi.SubjectAccessReview{
+	// 	Spec: authApi.SubjectAccessReviewSpec{
+	// 		ResourceAttributes: &authApi.ResourceAttributes{
+	// 			Resource: "clusterclaims/status",
+	// 			Verb:     "update",
+	// 			Group:    util.CLAIM_API_GROUP,
+	// 		},
+	// 		User: userId,
+	// 	},
+	// }
+	// sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &clusterClaimStatusUpdateRuleReview, metav1.CreateOptions{})
+	// if err != nil {
+	// 	klog.Errorln(err)
+	// 	return nil, err.Error(), http.StatusInternalServerError
+	// }
+	if clusterClaimStatusUpdateRuleResult.Status.Allowed {
 		klog.Infoln(" User [ " + userId + " ] has ClusterClaims/status Update Role, Can Update ClusterClaims")
 
 		if admit == true {
@@ -550,11 +560,11 @@ func AdmitClusterClaim(userId string, clusterClaim *claimsv1alpha1.ClusterClaim,
 	}
 }
 
-func GetClusterClaim(userId string, clusterClaimName string) (*claimsv1alpha1.ClusterClaim, string, int) {
+func GetClusterClaim(userId string, userGroups []string, clusterClaimName string) (*claimsv1alpha1.ClusterClaim, string, int) {
 
 	var clusterClaim = &claimsv1alpha1.ClusterClaim{}
 
-	clusterClaimGetRuleResult, err := createSubjectAccessReview(userId, util.CLAIM_API_GROUP, "clusterclaims", "", clusterClaimName, "get")
+	clusterClaimGetRuleResult, err := createSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", "", clusterClaimName, "get")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -575,10 +585,10 @@ func GetClusterClaim(userId string, clusterClaimName string) (*claimsv1alpha1.Cl
 	return clusterClaim, "Get claim success", http.StatusOK
 }
 
-func ListAccessibleClusterClaims(userId string) (*claimsv1alpha1.ClusterClaimList, string, int) {
+func ListAccessibleClusterClaims(userId string, userGroups []string) (*claimsv1alpha1.ClusterClaimList, string, int) {
 	var clusterClaimList = &claimsv1alpha1.ClusterClaimList{}
 
-	clusterClaimListRuleResult, err := createSubjectAccessReview(userId, util.CLAIM_API_GROUP, "clusterclaims", "", "", "list")
+	clusterClaimListRuleResult, err := createSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", "", "", "list")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -629,11 +639,11 @@ func ListAccessibleClusterClaims(userId string) (*claimsv1alpha1.ClusterClaimLis
 	return clusterClaimList, msg, http.StatusOK
 }
 
-func ListCluster(userId string) (*clusterv1alpha1.ClusterManagerList, string, int) {
+func ListCluster(userId string, userGroups []string) (*clusterv1alpha1.ClusterManagerList, string, int) {
 
 	var clmList = &clusterv1alpha1.ClusterManagerList{}
 
-	clmListRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clusterclaims", "", "", "list")
+	clmListRuleResult, err := createSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clusterclaims", "", "", "list")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -740,10 +750,10 @@ func ListMemberCluster(userId string) (*clusterv1alpha1.ClusterManagerList, stri
 	return clmList, msg, http.StatusOK
 }
 
-func GetCluster(userId string, clusterName string) (*clusterv1alpha1.ClusterManager, string, int) {
+func GetCluster(userId string, userGroups []string, clusterName string) (*clusterv1alpha1.ClusterManager, string, int) {
 
 	var clm = &clusterv1alpha1.ClusterManager{}
-	clusterGetRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", "", clusterName, "get")
+	clusterGetRuleResult, err := createSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", "", clusterName, "get")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -763,9 +773,9 @@ func GetCluster(userId string, clusterName string) (*clusterv1alpha1.ClusterMana
 	return clm, "Get cluster success", http.StatusOK
 }
 
-func AddMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberList []string) (*clusterv1alpha1.ClusterManager, string, int) {
+func AddMembers(userId string, userGroups []string, clm *clusterv1alpha1.ClusterManager, memberList []string) (*clusterv1alpha1.ClusterManager, string, int) {
 
-	clmUpdateRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", "", clm.Name, "update")
+	clmUpdateRuleResult, err := createSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", "", clm.Name, "update")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -791,9 +801,9 @@ func AddMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberList [
 	}
 }
 
-func DeleteMembers(userId string, clm *clusterv1alpha1.ClusterManager, memberList []string) (*clusterv1alpha1.ClusterManager, string, int) {
+func DeleteMembers(userId string, userGroups []string, clm *clusterv1alpha1.ClusterManager, memberList []string) (*clusterv1alpha1.ClusterManager, string, int) {
 
-	hcrUpdateRuleResult, err := createSubjectAccessReview(userId, util.CLUSTER_API_GROUP, "clustermanagers", "", clm.Name, "update")
+	hcrUpdateRuleResult, err := createSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", "", clm.Name, "update")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError

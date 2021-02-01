@@ -29,6 +29,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	clusterClaimName := queryParams.Get(QUERY_PARAMETER_CLUSTER_CLAIM)
 	admit, err := strconv.ParseBool(queryParams.Get(QUERY_PARAMETER_CLUSTER_CLAIM_ADMIT))
 	reason := queryParams.Get(QUERY_PARAMETER_CLUSTER_CLAIM_ADMIT_REASON)
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 
 	if err != nil {
 		msg := "Admit parameter has invalid syntax."
@@ -44,7 +45,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	clusterClaim, msg, status := k8sApiCaller.GetClusterClaim(userId, clusterClaimName)
+	clusterClaim, msg, status := k8sApiCaller.GetClusterClaim(userId, userGroups, clusterClaimName)
 	if clusterClaim == nil {
 		util.SetResponse(res, msg, nil, status)
 		return
@@ -57,7 +58,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	updatedClusterClaim, msg, status := k8sApiCaller.AdmitClusterClaim(userId, clusterClaim, admit, reason)
+	updatedClusterClaim, msg, status := k8sApiCaller.AdmitClusterClaim(userId, userGroups, clusterClaim, admit, reason)
 	if updatedClusterClaim == nil {
 		util.SetResponse(res, msg, nil, status)
 		return
@@ -70,6 +71,10 @@ func Put(res http.ResponseWriter, req *http.Request) {
 func List(res http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
+	klog.Infoln("userGroups = == ", userGroups)
+	klog.Infoln("userGroups = == ", len(userGroups))
+
 	// limit, err := strconv.Atoi(queryParams.Get(QUERY_PARAMETER_LIMIT))
 
 	// if err != nil {
@@ -84,7 +89,7 @@ func List(res http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// // var statusCode int
-	clusterClaimList, msg, status := k8sApiCaller.ListAccessibleClusterClaims(userId)
+	clusterClaimList, msg, status := k8sApiCaller.ListAccessibleClusterClaims(userId, userGroups)
 
 	// if clusterClaimList.ResourceVersion != "" {
 	// 	status = http.StatusOK

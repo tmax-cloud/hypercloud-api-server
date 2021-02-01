@@ -25,6 +25,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	clusterName := queryParams.Get(QUERY_PARAMETER_CLUSTER)
 	newUsers := queryParams[QUERY_PARAMETER_NEW_USER]
 	deletedUsers := queryParams[QUERY_PARAMETER_DELETE_USER]
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 
 	if userId == "" {
 		msg := "UserId is empty."
@@ -40,7 +41,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	clm, msg, status := k8sApiCaller.GetCluster(userId, clusterName)
+	clm, msg, status := k8sApiCaller.GetCluster(userId, userGroups, clusterName)
 	if clm == nil {
 		util.SetResponse(res, msg, nil, status)
 		return
@@ -53,7 +54,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 				newMembers = append(newMembers, newUser)
 			}
 		}
-		updatedClm, msg, status := k8sApiCaller.AddMembers(userId, clm, newMembers)
+		updatedClm, msg, status := k8sApiCaller.AddMembers(userId, userGroups, clm, newMembers)
 		if updatedClm != nil {
 			msg, status = k8sApiCaller.CreateCLMRole(updatedClm, newMembers)
 		}
@@ -61,7 +62,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	} else if len(deletedUsers) != 0 && len(newUsers) == 0 {
 		// var deletedMembers []string
-		updatedClm, msg, status := k8sApiCaller.DeleteMembers(userId, clm, deletedUsers)
+		updatedClm, msg, status := k8sApiCaller.DeleteMembers(userId, userGroups, clm, deletedUsers)
 		if updatedClm != nil {
 			msg, status = k8sApiCaller.DeleteCLMRole(updatedClm, deletedUsers)
 		}
@@ -83,6 +84,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 func List(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 
 	if userId == "" {
 		msg := "UserId is empty."
@@ -91,7 +93,7 @@ func List(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	clmList, msg, status := k8sApiCaller.ListCluster(userId)
+	clmList, msg, status := k8sApiCaller.ListCluster(userId, userGroups)
 
 	util.SetResponse(res, msg, clmList, status)
 	return
@@ -100,6 +102,7 @@ func List(res http.ResponseWriter, req *http.Request) {
 func ListOwner(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
+	// userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 
 	if userId == "" {
 		msg := "UserId is empty."
@@ -116,6 +119,7 @@ func ListOwner(res http.ResponseWriter, req *http.Request) {
 func ListMember(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
+	// userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 
 	if userId == "" {
 		msg := "UserId is empty."
