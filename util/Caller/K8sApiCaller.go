@@ -16,6 +16,7 @@ import (
 
 	claimsv1alpha1 "github.com/tmax-cloud/claim-operator/api/v1alpha1"
 	clusterv1alpha1 "github.com/tmax-cloud/cluster-manager-operator/api/v1alpha1"
+	configv1alpha1 "github.com/tmax-cloud/efk-operator/api/v1alpha1"
 	alertModel "github.com/tmax-cloud/hypercloud-api-server/alert/model"
 	client "github.com/tmax-cloud/hypercloud-api-server/client"
 	claim "github.com/tmax-cloud/hypercloud-go-operator/api/v1alpha1"
@@ -923,4 +924,9 @@ func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, members []str
 	msg := "ClusterMnager roles and rolebindings are deleted for all deleted members"
 	klog.Infoln(msg)
 	return msg, http.StatusOK
+}
+
+func GetFbc(namespace string, name string) (*configv1alpha1.FluentBitConfiguration, error) {
+	result, err := customClientset.ConfigV1alpha1().FluentBitConfigurations(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	return result, err
 }

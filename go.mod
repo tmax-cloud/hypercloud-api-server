@@ -4,8 +4,11 @@ go 1.15
 
 require (
 	github.com/Shopify/sarama v1.19.0
+	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/google/uuid v1.1.1
+	github.com/gorilla/websocket v1.4.2
+	github.com/lib/pq v1.9.0
 	github.com/oklog/ulid v1.3.1
 	github.com/robfig/cron v1.2.0
 	github.com/tmax-cloud/claim-operator v0.0.0-20210114141758-083187ba4fc3
