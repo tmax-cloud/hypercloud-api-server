@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./build/main
+./build/main -sidecarImage=$SIDECAR_IMAGE
