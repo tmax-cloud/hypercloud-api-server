@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.0.16 start -------------------->
+
+## Hypercloud-api-server 5.0.0.16 (Thu Feb  4 05:04:21 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] metering log 출력방식 변경 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.0.15 start -------------------->
 
 ## Hypercloud-api-server 5.0.0.15 (Thu Feb  4 04:37:01 KST 2021)
