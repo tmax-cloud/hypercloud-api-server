@@ -291,6 +291,7 @@ func getMeteringData(query string) meteringModel.MetricDataList {
 	// Make Request Object
 	req, err := http.NewRequest("GET", PROMETHEUS_URI, nil)
 	if err != nil {
+		fmt.Fprintf(file, "%v\n", err)
 		panic(err)
 	}
 
@@ -312,6 +313,7 @@ func getMeteringData(query string) meteringModel.MetricDataList {
 			}
 		}
 		if err != nil {
+			fmt.Fprintf(file, "%v\n", err)
 			panic(err)
 		}
 	}
