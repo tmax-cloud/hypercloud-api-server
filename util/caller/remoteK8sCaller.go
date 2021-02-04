@@ -72,7 +72,7 @@ func RemoveSubjectRolebinding(clusterManager *clusterv1alpha1.ClusterManager, su
 	clusterRoleBindingName := subject + "-rolebinding"
 	_, err = remoteClientset.RbacV1().ClusterRoleBindings().Get(context.TODO(), clusterRoleBindingName, metav1.GetOptions{})
 	if err == nil {
-		if err := Clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), clusterRoleBindingName, metav1.DeleteOptions{}); err != nil {
+		if err := remoteClientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), clusterRoleBindingName, metav1.DeleteOptions{}); err != nil {
 			klog.Errorln(err)
 			return err.Error(), http.StatusInternalServerError
 		}
