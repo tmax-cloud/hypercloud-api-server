@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	"k8s.io/api/admission/v1beta1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"

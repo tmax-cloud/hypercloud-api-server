@@ -1,4 +1,4 @@
-package Consumer
+package consumer
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"syscall"
 
 	"github.com/Shopify/sarama"
-	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	"k8s.io/klog"
 )
 

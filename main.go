@@ -113,7 +113,7 @@ func main() {
 		// for multi mode only
 		mux.HandleFunc("/clusterclaim", serveClusterClaim)
 		mux.HandleFunc("/cluster", serveCluster)
-		mux.HandleFunc("/cluster/owner", serveClusterOwner)
+		mux.HandleFunc("/cluster/remove_member", serveClusterRemoveMember)
 		mux.HandleFunc("/cluster/member", serveClusterMember)
 	}
 
@@ -220,10 +220,8 @@ func serveClusterClaim(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		claim.List(res, req)
-	case http.MethodPost:
 	case http.MethodPut:
 		claim.Put(res, req)
-	case http.MethodDelete:
 	default:
 	}
 }
@@ -233,23 +231,17 @@ func serveCluster(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		cluster.List(res, req)
-	case http.MethodPost:
 	case http.MethodPut:
 		// invite multiple users
-		cluster.Put(res, req)
-	case http.MethodDelete:
+		// cluster.Put(res, req)
 	default:
 	}
 }
-
-func serveClusterOwner(res http.ResponseWriter, req *http.Request) {
+func serveClusterRemoveMember(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {
-	case http.MethodGet:
-		cluster.ListOwner(res, req)
 	case http.MethodPost:
-	case http.MethodPut:
-	case http.MethodDelete:
+		cluster.RemoveMember(res, req)
 	default:
 	}
 }
@@ -257,11 +249,8 @@ func serveClusterOwner(res http.ResponseWriter, req *http.Request) {
 func serveClusterMember(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {
-	case http.MethodGet:
-		cluster.ListMember(res, req)
 	case http.MethodPost:
-	case http.MethodPut:
-	case http.MethodDelete:
+		cluster.InviteMember(res, req)
 	default:
 	}
 }
