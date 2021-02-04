@@ -3,8 +3,10 @@ package metering
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -73,15 +75,32 @@ const (
 )
 
 var t time.Time
+var file *os.File
+var err error
 
 func MeteringJob() {
+
+	fileName := "./logs/api-server-metering" + time.Now().AddDate(0, 0, -1).Format("2006-01-02") + ".log"
+	file, err = os.OpenFile(
+		fileName,
+		os.O_APPEND|os.O_WRONLY|os.O_CREATE,
+		os.FileMode(0600),
+	)
+	defer file.Close()
+	if err != nil {
+		klog.Errorln("Cannot open metering log file error : ", err)
+		return
+	}
+
 	t = time.Now()
-	klog.Infoln("============= Metering Time =============")
-	klog.Infoln("Current Time   : ", t.Format("2006-01-02 15:04:05"))
-	klog.Infoln("minute of hour : ", t.Minute())
-	klog.Infoln("hour of day    : ", t.Hour())
-	klog.Infoln("day of month   : ", t.Day())
-	klog.Infoln("day of year    : ", t.YearDay())
+	fmt.Fprintf(file,
+		"============= Metering Time =============\n"+
+			"Current Time 	: "+t.Format("2006-01-02 15:04:05")+"\n"+
+			"minute of hour	: %d\n"+
+			"hour of day 	: %d\n"+
+			"day of month 	: %d\n"+
+			"day of year 	: %d\n",
+		t.Minute(), t.Hour(), t.Day(), t.YearDay())
 
 	if t.Minute() == 0 {
 		// Insert into metering_hour
@@ -99,15 +118,17 @@ func MeteringJob() {
 
 	meteringData := makeMeteringMap()
 
-	klog.Infoln("============= Metering Data =============")
+	fmt.Fprintf(file, "============= Metering Data =============\n")
 	for key, value := range meteringData {
-		klog.Infoln(key+"/cpu : ", value.Cpu)
-		klog.Infoln(key+"/memory : ", value.Memory)
-		klog.Infoln(key+"/storage : ", value.Storage)
-		klog.Infoln(key+"/publicIp : ", value.PublicIp)
-		klog.Infoln(key+"/trafficIn : ", value.TrafficIn)
-		klog.Infoln(key+"/trafficOut : ", value.TrafficOut)
-		klog.Infoln("-----------------------------------------")
+		fmt.Fprintf(file,
+			key+"/cpu			: %f\n"+
+				key+"/memory		: %f\n"+
+				key+"/storage		: %f\n"+
+				key+"/publicIp		: %d\n"+
+				key+"/trafficIn		: %f\n"+
+				key+"/trafficOut	: %f\n"+
+				"-----------------------------------------\n",
+			value.Cpu, value.Memory, value.Storage, value.PublicIp, value.TrafficIn, value.TrafficOut)
 	}
 	//Insert into metering (new data)
 	insertMeteringData(meteringData)
@@ -121,13 +142,14 @@ func deleteMeteringData() {
 }
 
 func insertMeteringData(meteringData map[string]*meteringModel.Metering) {
-	klog.Infoln("Insert into METERING Start!!")
-	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"))
+	fmt.Fprintf(file,
+		"Insert into METERING Start!!\n"+
+			"Current Time	: "+t.Format("2006-01-02 15:04:00")+"\n")
 
 	db, err := sql.Open(DB_DRIVER, DB_URI)
 	defer db.Close()
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 	} else {
 		for key, data := range meteringData {
 			_, err = db.Exec(METERING_INSERT_QUERY,
@@ -144,16 +166,16 @@ func insertMeteringData(meteringData map[string]*meteringModel.Metering) {
 				t.Format("2006-01-02 15:04:00"), "Success")
 
 			if err != nil {
-				klog.Errorln(err)
+				fmt.Fprintf(file, "%v\n", err)
 				break
 			}
 		}
 	}
 
 	if err != nil {
-		klog.Errorln("Insert into METERING failed..")
+		fmt.Fprintf(file, "Insert into METERING failed..\n")
 	} else {
-		klog.Infoln("Insert into METERING Success!!")
+		fmt.Fprintf(file, "Insert into METERING Success!!\n")
 	}
 }
 
@@ -276,13 +298,12 @@ func getMeteringData(query string) meteringModel.MetricDataList {
 	q := req.URL.Query()
 	q.Add("query", query)
 	req.URL.RawQuery = q.Encode()
-	//klog.Infoln("request URL  : ", req.URL.String())
 
 	// Request with Client Object
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		klog.Errorln("Prometheus Connection Failed.")
+		fmt.Fprintf(file, "Prometheus Connection Failed.\n")
 		for i := 0; i < 10; i++ {
 			time.Sleep(time.Second * 5)
 			resp, err = client.Do(req)
@@ -299,21 +320,20 @@ func getMeteringData(query string) meteringModel.MetricDataList {
 	// Result
 	bytes, _ := ioutil.ReadAll(resp.Body)
 	str := string(bytes) // byte to string
-	//klog.Infoln("Result string  : ", str)
 
 	if err := json.Unmarshal([]byte(str), &metricResponse); err != nil {
 	}
-	//klog.Infoln("Result MetricResponse  : ", metricResponse)
 	return metricResponse.Data
 }
 
 func insertMeteringYear() {
-	klog.Infoln("Insert into METERING_YEAR Start!!")
-	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"))
+	fmt.Fprintf(file,
+		"Insert into METERING_YEAR Start!!\n"+
+			"Current Time	: "+t.Format("2006-01-02 15:04:00")+"\n")
 
 	db, err := sql.Open(DB_DRIVER, DB_URI)
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
 	defer db.Close()
@@ -322,7 +342,7 @@ func insertMeteringYear() {
 	defer rows.Close()
 
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
 
@@ -343,7 +363,7 @@ func insertMeteringYear() {
 			&meteringData.MeteringTime,
 			&status)
 		if err != nil {
-			klog.Error(err)
+			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
 
@@ -363,19 +383,20 @@ func insertMeteringYear() {
 			//date_format(metering_time,'%Y-01-01 00:00:00'),
 			status)
 		if err != nil {
-			klog.Error(err)
+			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
 	}
-	klog.Infoln("Insert into METERING_YEAR Success!!")
-	klog.Infoln("--------------------------------------")
-	klog.Infoln("Update METERING_MONTH Past data to 'Merged' Start!!")
+	fmt.Fprintf(file,
+		"Insert into METERING_YEAR Success!!\n"+
+			"--------------------------------------\n"+
+			"Update METERING_MONTH Past data to 'Merged' Start!!\n")
 	_, err = db.Exec(METERING_MONTH_UPDATE_QUERY)
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
-	klog.Infoln("Update METERING_MONTH Past data to 'Merged' Success!!")
+	fmt.Fprintf(file, "Update METERING_MONTH Past data to 'Merged' Success!!\n")
 	/*
 		klog.Infoln("--------------------------------------")
 		klog.Infoln("Delete METERING for past 1 year Start!!")
@@ -389,12 +410,13 @@ func insertMeteringYear() {
 }
 
 func insertMeteringMonth() {
-	klog.Infoln("Insert into METERING_MONTH Start!!")
-	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"))
+	fmt.Fprintf(file,
+		"Insert into METERING_MONTH Start!!\n"+
+			"Current Time	: "+t.Format("2006-01-02 15:04:00")+"\n")
 
 	db, err := sql.Open(DB_DRIVER, DB_URI)
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
 	defer db.Close()
@@ -403,7 +425,7 @@ func insertMeteringMonth() {
 	defer rows.Close()
 
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
 
@@ -424,7 +446,7 @@ func insertMeteringMonth() {
 			&meteringData.MeteringTime,
 			&status)
 		if err != nil {
-			klog.Error(err)
+			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
 
@@ -444,19 +466,20 @@ func insertMeteringMonth() {
 			//date_format(metering_time,'%Y-%m-01 00:00:00'),
 			status)
 		if err != nil {
-			klog.Error(err)
+			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
 	}
-	klog.Infoln("Insert into METERING_MONTH Success!!")
-	klog.Infoln("--------------------------------------")
-	klog.Infoln("Update METERING_DAY Past data to 'Merged' Start!!")
+	fmt.Fprintf(file,
+		"Insert into METERING_MONTH Success!!\n"+
+			"--------------------------------------\n"+
+			"Update METERING_DAY Past data to 'Merged' Start!!\n")
 	_, err = db.Exec(METERING_DAY_UPDATE_QUERY)
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
-	klog.Infoln("Update METERING_DAY Past data to 'Merged' Success!!")
+	fmt.Fprintf(file, "Update METERING_DAY Past data to 'Merged' Success!!\n")
 	/*
 		klog.Infoln("--------------------------------------")
 		klog.Infoln("Delete METERING for past 1 month Start!!")
@@ -470,12 +493,13 @@ func insertMeteringMonth() {
 }
 
 func insertMeteringDay() {
-	klog.Infoln("Insert into METERING_DAY Start!!")
-	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"))
+	fmt.Fprintf(file,
+		"Insert into METERING_DAY Start!!\n"+
+			"Current Time	: "+t.Format("2006-01-02 15:04:00")+"\n")
 
 	db, err := sql.Open(DB_DRIVER, DB_URI)
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
 	defer db.Close()
@@ -484,7 +508,7 @@ func insertMeteringDay() {
 	defer rows.Close()
 
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
 
@@ -505,7 +529,7 @@ func insertMeteringDay() {
 			&meteringData.MeteringTime,
 			&status)
 		if err != nil {
-			klog.Error(err)
+			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
 
@@ -523,19 +547,20 @@ func insertMeteringDay() {
 			meteringData.MeteringTime.Format("2006-01-02 00:00:00"), //date_format(metering_time,'%Y-%m-%d 00:00:00')
 			status)
 		if err != nil {
-			klog.Error(err)
+			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
 	}
-	klog.Infoln("Insert into METERING_DAY Success!!")
-	klog.Infoln("--------------------------------------")
-	klog.Infoln("Update METERING_HOUR Past data to 'Merged' Start!!")
+	fmt.Fprintf(file,
+		"Insert into METERING_DAY Success!!\n"+
+			"--------------------------------------\n"+
+			"Update METERING_HOUR Past data to 'Merged' Start!!\n")
 	_, err = db.Exec(METERING_HOUR_UPDATE_QUERY)
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
-	klog.Infoln("Update METERING_HOUR Past data to 'Merged' Success!!")
+	fmt.Fprintf(file, "Update METERING_HOUR Past data to 'Merged' Success!!\n")
 	/*
 		klog.Infoln("--------------------------------------")
 		klog.Infoln("Delete METERING for past 1 day Start!!")
@@ -549,12 +574,13 @@ func insertMeteringDay() {
 }
 
 func insertMeteringHour() {
-	klog.Infoln("Insert into METERING_HOUR Start!!")
-	klog.Infoln("Current Time : " + t.Format("2006-01-02 15:04:00"))
+	fmt.Fprintf(file,
+		"Insert into METERING_HOUR Start!!\n"+
+			"Current Time	: "+t.Format("2006-01-02 15:04:00")+"\n")
 
 	db, err := sql.Open(DB_DRIVER, DB_URI)
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
 	defer db.Close()
@@ -563,7 +589,7 @@ func insertMeteringHour() {
 	defer rows.Close()
 
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
 
@@ -584,7 +610,7 @@ func insertMeteringHour() {
 			&meteringData.MeteringTime,
 			&status)
 		if err != nil {
-			klog.Error(err)
+			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
 
@@ -602,17 +628,18 @@ func insertMeteringHour() {
 			meteringData.MeteringTime.Format("2006-01-02 15:00:00"),
 			status)
 		if err != nil {
-			klog.Error(err)
+			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
 	}
-	klog.Infoln("Insert into METERING_HOUR Success!!")
-	klog.Infoln("--------------------------------------")
-	klog.Infoln("Delete METERING for past 1 hour Start!!")
+	fmt.Fprintf(file,
+		"Insert into METERING_HOUR Success!!\n"+
+			"--------------------------------------\n"+
+			"Update METERING Past data to 'Merged' Start!!\n")
 	_, err = db.Exec(METERING_DELETE_QUERY)
 	if err != nil {
-		klog.Error(err)
+		fmt.Fprintf(file, "%v\n", err)
 		return
 	}
-	klog.Infoln("Delete METERING for past 1 hour Success!!")
+	fmt.Fprintf(file, "Update METERING Past data to 'Merged' Success!!\n")
 }
