@@ -867,6 +867,13 @@ func GetFbc(namespace string, name string) (*configv1alpha1.FluentBitConfigurati
 ///
 
 func CreateClusterClaim(userId string, userGroup []string, cc *claimsv1alpha1.ClusterClaim) (*claimsv1alpha1.ClusterClaim, string, int) {
+	if len(cc.Annotations) == 0 {
+		cc.Annotations = map[string]string{
+			"owner": userId,
+		}
+	} else {
+		cc.Annotations["owner"] = userId
+	}
 	result, err := customClientset.ClaimsV1alpha1().ClusterClaims().Create(context.TODO(), cc, metav1.CreateOptions{})
 	if err != nil {
 		klog.Errorln("Create ClusterClaim  [ " + cc.Name + " ] Failed")
@@ -879,7 +886,6 @@ func CreateClusterClaim(userId string, userGroup []string, cc *claimsv1alpha1.Cl
 
 }
 func CreateCCRole(userId string, userGroup []string, cc *claimsv1alpha1.ClusterClaim) (string, int) {
-
 	claimRoleName := userId + "-" + cc.Name + "-cc-role"
 	clusterRole := &rbacApi.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{

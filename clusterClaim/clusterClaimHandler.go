@@ -55,7 +55,7 @@ func Post(res http.ResponseWriter, req *http.Request) {
 	}
 
 	msg, status = caller.CreateCCRole(userId, userGroups, result)
-	util.SetResponse(res, msg, cc, status)
+	util.SetResponse(res, msg, result, status)
 	return
 }
 
