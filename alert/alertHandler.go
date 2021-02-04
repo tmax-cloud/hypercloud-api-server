@@ -16,7 +16,7 @@ import (
 	alertModel "github.com/tmax-cloud/hypercloud-api-server/alert/model"
 
 	"github.com/oklog/ulid"
-	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"

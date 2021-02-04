@@ -72,18 +72,17 @@ func Contains(slice []string, item string) bool {
 	return ok
 }
 
-func Remove(slice []string, items []string) []string {
+func Remove(slice []string, item string) []string {
 	set := make(map[string]struct{}, len(slice))
 	for _, s := range slice {
 		set[s] = struct{}{}
 	}
 
-	for _, item := range items {
-		_, ok := set[item]
-		if ok {
-			delete(set, item)
-		}
+	// for _, item := range items {
+	if _, ok := set[item]; ok {
+		delete(set, item)
 	}
+	// }
 
 	var newSlice []string
 	for k, _ := range set {
@@ -91,6 +90,26 @@ func Remove(slice []string, items []string) []string {
 	}
 	return newSlice
 }
+
+// func Remove(slice []string, items []string) []string {
+// 	set := make(map[string]struct{}, len(slice))
+// 	for _, s := range slice {
+// 		set[s] = struct{}{}
+// 	}
+
+// 	for _, item := range items {
+// 		_, ok := set[item]
+// 		if ok {
+// 			delete(set, item)
+// 		}
+// 	}
+
+// 	var newSlice []string
+// 	for k, _ := range set {
+// 		newSlice = append(newSlice, k)
+// 	}
+// 	return newSlice
+// }
 
 func MonthToInt(month time.Month) int {
 	switch month {

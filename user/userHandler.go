@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/tmax-cloud/hypercloud-api-server/util"
-	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 
 	rbacApi "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -8,7 +8,7 @@ import (
 
 	// "encoding/json"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
-	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 
 	"k8s.io/klog"
 )

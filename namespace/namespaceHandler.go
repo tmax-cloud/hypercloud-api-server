@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/tmax-cloud/hypercloud-api-server/util"
-	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/Caller"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"

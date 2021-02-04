@@ -603,6 +603,7 @@ github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69
 github.com/tidwall/pretty v1.0.0/go.mod h1:XNkn88O1ChpSDQmQeStsy+sBenx6DDtFZJxhVysOjyk=
 github.com/tmax-cloud/claim-operator v0.0.0-20210114141758-083187ba4fc3 h1:6w/MueJ/oZiiOliuV7cG5kJgBEV0AaqstBwDW6YHEjQ=
 github.com/tmax-cloud/claim-operator v0.0.0-20210114141758-083187ba4fc3/go.mod h1:QtHUE9v7W6WbfAUkhBC9y9taItei3FR+oAlXXnCzqVY=
+github.com/tmax-cloud/cluster-manager-operator v0.0.0-20210109105810-9bf04e3af331 h1:Cfg3FSQl3wNAobqyirrYVRR/Lz8zOoZK/lyLa0FMuSw=
 github.com/tmax-cloud/cluster-manager-operator v0.0.0-20210109105810-9bf04e3af331/go.mod h1:yRIZKfTe7BB/HY0PjJdKntDf/TG3qHav94aDso5Sqkw=
 github.com/tmax-cloud/cluster-manager-operator v0.0.0-20210112070657-53ca50ba8160 h1:qbuyR1TUpmSsKTicOOe8HxfYdzhmSaTvL4OKwM7Knlk=
 github.com/tmax-cloud/cluster-manager-operator v0.0.0-20210112070657-53ca50ba8160/go.mod h1:yRIZKfTe7BB/HY0PjJdKntDf/TG3qHav94aDso5Sqkw=
