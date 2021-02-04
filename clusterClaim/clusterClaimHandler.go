@@ -26,7 +26,7 @@ const (
 func Put(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
-	clusterClaimName := queryParams.Get(QUERY_PARAMETER_CLUSTER_CLAIM)
+	clusterClaim := queryParams.Get(QUERY_PARAMETER_CLUSTER_CLAIM)
 	admit, err := strconv.ParseBool(queryParams.Get(QUERY_PARAMETER_CLUSTER_CLAIM_ADMIT))
 	reason := queryParams.Get(QUERY_PARAMETER_CLUSTER_CLAIM_ADMIT_REASON)
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
@@ -45,20 +45,20 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	clusterClaim, msg, status := k8sApiCaller.GetClusterClaim(userId, userGroups, clusterClaimName)
-	if clusterClaim == nil {
+	cc, msg, status := k8sApiCaller.GetClusterClaim(userId, userGroups, clusterClaim)
+	if cc == nil {
 		util.SetResponse(res, msg, nil, status)
 		return
 	}
 
-	if clusterClaim.Status.Phase != "Awaiting" {
+	if cc.Status.Phase != "Awaiting" {
 		msg = "ClusterClaim is already admitted or rejected by admin"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
-	updatedClusterClaim, msg, status := k8sApiCaller.AdmitClusterClaim(userId, userGroups, clusterClaim, admit, reason)
+	updatedClusterClaim, msg, status := k8sApiCaller.AdmitClusterClaim(userId, userGroups, cc, admit, reason)
 	if updatedClusterClaim == nil {
 		util.SetResponse(res, msg, nil, status)
 		return

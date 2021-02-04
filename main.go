@@ -229,6 +229,8 @@ func serveClusterClaim(res http.ResponseWriter, req *http.Request) {
 func serveCluster(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {
+	case http.MethodPost:
+		cluster.Post(res, req)
 	case http.MethodGet:
 		cluster.List(res, req)
 	case http.MethodPut:

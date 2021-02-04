@@ -834,7 +834,9 @@ func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 		}
 	} else if errors.IsNotFound(err) {
 		klog.Infoln("Role [" + clusterRoleName + "] is already deleted. pass")
+		return err.Error(), http.StatusOK
 	} else {
+		klog.Errorln("Error: Get clusterrole [" + clusterRoleName + "] is failed")
 		return err.Error(), http.StatusInternalServerError
 	}
 
@@ -846,7 +848,9 @@ func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 		}
 	} else if errors.IsNotFound(err) {
 		klog.Infoln("Rolebinding [" + clusterRoleBindingName + "] is already deleted. pass")
+		return err.Error(), http.StatusOK
 	} else {
+		klog.Errorln("Error: Get clusterrole [" + clusterRoleName + "] is failed")
 		return err.Error(), http.StatusInternalServerError
 	}
 	msg := "ClusterMnager role [" + clusterRoleName + "] and rolebinding [ " + clusterRoleBindingName + "]  is deleted"
