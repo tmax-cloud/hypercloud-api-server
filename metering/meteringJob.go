@@ -120,15 +120,13 @@ func MeteringJob() {
 
 	fmt.Fprintf(file, "============= Metering Data =============\n")
 	for key, value := range meteringData {
-		fmt.Fprintf(file,
-			key+"/cpu			: %f\n"+
-				key+"/memory		: %f\n"+
-				key+"/storage		: %f\n"+
-				key+"/publicIp		: %d\n"+
-				key+"/trafficIn		: %f\n"+
-				key+"/trafficOut	: %f\n"+
-				"-----------------------------------------\n",
-			value.Cpu, value.Memory, value.Storage, value.PublicIp, value.TrafficIn, value.TrafficOut)
+		fmt.Fprintf(file, "%-35s : %f\n", key+"/cpu", value.Cpu)
+		fmt.Fprintf(file, "%-35s : %f\n", key+"/memory", value.Memory)
+		fmt.Fprintf(file, "%-35s : %f\n", key+"/storage", value.Storage)
+		fmt.Fprintf(file, "%-35s : %d\n", key+"/publicIp", value.PublicIp)
+		fmt.Fprintf(file, "%-35s : %f\n", key+"/trafficIn", value.TrafficIn)
+		fmt.Fprintf(file, "%-35s : %f\n", key+"/trafficOut", value.TrafficOut)
+		fmt.Fprintf(file, "-----------------------------------------\n")
 	}
 	//Insert into metering (new data)
 	insertMeteringData(meteringData)
