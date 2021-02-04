@@ -218,6 +218,8 @@ func serveVersion(res http.ResponseWriter, req *http.Request) {
 func serveClusterClaim(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {
+	case http.MethodPost:
+		claim.Post(res, req)
 	case http.MethodGet:
 		claim.List(res, req)
 	case http.MethodPut:
@@ -229,8 +231,7 @@ func serveClusterClaim(res http.ResponseWriter, req *http.Request) {
 func serveCluster(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {
-	case http.MethodPost:
-		cluster.Post(res, req)
+
 	case http.MethodGet:
 		cluster.List(res, req)
 	case http.MethodPut:
@@ -335,7 +336,7 @@ func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 			body = data
 		}
 	}
-	klog.Infof("Request body: %s\n", body)
+	// klog.Infof("Request body: %s\n", body)
 
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {

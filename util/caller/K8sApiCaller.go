@@ -227,12 +227,12 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) c
 			klog.Infoln(" User [ " + userId + " ] has No Namespace Get Role in Any Namspace")
 		}
 	}
-	if len(nsList.Items) > 0 {
-		klog.Infoln("=== [ " + userId + " ] Accessible Namespace ===")
-		for _, ns := range nsList.Items {
-			klog.Infoln("  " + ns.Name)
-		}
-	}
+	// if len(nsList.Items) > 0 {
+	// 	klog.Infoln("=== [ " + userId + " ] Accessible Namespace ===")
+	// 	for _, ns := range nsList.Items {
+	// 		klog.Infoln("  " + ns.Name)
+	// 	}
+	// }
 	return *nsList
 }
 
@@ -862,4 +862,87 @@ func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 func GetFbc(namespace string, name string) (*configv1alpha1.FluentBitConfiguration, error) {
 	result, err := customClientset.ConfigV1alpha1().FluentBitConfigurations(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	return result, err
+}
+
+///
+
+func CreateClusterClaim(userId string, userGroup []string, cc *claimsv1alpha1.ClusterClaim) (*claimsv1alpha1.ClusterClaim, string, int) {
+	result, err := customClientset.ClaimsV1alpha1().ClusterClaims().Create(context.TODO(), cc, metav1.CreateOptions{})
+	if err != nil {
+		klog.Errorln("Create ClusterClaim  [ " + cc.Name + " ] Failed")
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+
+	msg := "Create ClusterClaim  [ " + cc.Name + " ] Success"
+	klog.Infoln(msg)
+	return result, msg, http.StatusOK
+
+}
+func CreateCCRole(userId string, userGroup []string, cc *claimsv1alpha1.ClusterClaim) (string, int) {
+
+	claimRoleName := userId + "-" + cc.Name + "-cc-role"
+	clusterRole := &rbacApi.ClusterRole{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: claimRoleName,
+			OwnerReferences: []metav1.OwnerReference{
+				metav1.OwnerReference{
+					APIVersion:         util.CLAIM_API_GROUP_VERSION,
+					Kind:               util.CLAIM_API_Kind,
+					Name:               cc.GetName(),
+					UID:                cc.GetUID(),
+					BlockOwnerDeletion: pointer.BoolPtr(true),
+					Controller:         pointer.BoolPtr(true),
+				},
+			},
+		},
+		Rules: []rbacApi.PolicyRule{
+			{APIGroups: []string{util.CLUSTER_API_GROUP}, Resources: []string{"clusterclaims"},
+				ResourceNames: []string{cc.Name}, Verbs: []string{"get"}},
+			{APIGroups: []string{util.CLUSTER_API_GROUP}, Resources: []string{"clusterclaims/status"},
+				ResourceNames: []string{cc.Name}, Verbs: []string{"get"}},
+		},
+	}
+
+	if _, err := Clientset.RbacV1().ClusterRoles().Create(context.TODO(), clusterRole, metav1.CreateOptions{}); err != nil {
+		klog.Errorln(err)
+		return err.Error(), http.StatusInternalServerError
+	}
+
+	claimRoleBindingName := userId + "-" + cc.Name + "-cc-rolebinding"
+	clusterRoleBinding := &rbacApi.ClusterRoleBinding{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: claimRoleBindingName,
+			OwnerReferences: []metav1.OwnerReference{
+				metav1.OwnerReference{
+					APIVersion:         util.CLAIM_API_GROUP_VERSION,
+					Kind:               util.CLAIM_API_Kind,
+					Name:               cc.GetName(),
+					UID:                cc.GetUID(),
+					BlockOwnerDeletion: pointer.BoolPtr(true),
+					Controller:         pointer.BoolPtr(true),
+				},
+			},
+		},
+		RoleRef: rbacApi.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "ClusterRole",
+			Name:     claimRoleName,
+		},
+		Subjects: []rbacApi.Subject{
+			{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "User",
+				Name:     userId,
+			},
+		},
+	}
+
+	if _, err := Clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding, metav1.CreateOptions{}); err != nil {
+		klog.Errorln(err)
+		return err.Error(), http.StatusInternalServerError
+	}
+	msg := "ClusterClaim role [" + claimRoleName + "] and rolebinding [ " + claimRoleBindingName + "]  is created"
+	klog.Infoln(msg)
+
+	return msg, http.StatusOK
 }

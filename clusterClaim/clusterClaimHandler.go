@@ -1,15 +1,14 @@
 package clusterClaim
 
 import (
-	// _ "github.com/go-sql-driver/mysql"
-
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
-	// "encoding/json"
+	claimsv1alpha1 "github.com/tmax-cloud/claim-operator/api/v1alpha1"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
-	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
-
+	caller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	"k8s.io/klog"
 )
 
@@ -22,6 +21,43 @@ const (
 	QUERY_PARAMETER_CLUSTER_CLAIM_ADMIT        = "admit"
 	QUERY_PARAMETER_CLUSTER_CLAIM_ADMIT_REASON = "reason"
 )
+
+func Post(res http.ResponseWriter, req *http.Request) {
+	var body []byte
+	if req.Body != nil {
+		if data, err := ioutil.ReadAll(req.Body); err == nil {
+			body = data
+		}
+	}
+
+	cc := &claimsv1alpha1.ClusterClaim{}
+	if err := json.Unmarshal(body, cc); err != nil {
+		klog.Error(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
+
+	queryParams := req.URL.Query()
+	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
+
+	if userId == "" {
+		msg := "UserId is empty."
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
+		return
+	}
+
+	result, msg, status := caller.CreateClusterClaim(userId, userGroups, cc)
+	if cc == nil {
+		util.SetResponse(res, msg, nil, status)
+		return
+	}
+
+	msg, status = caller.CreateCCRole(userId, userGroups, result)
+	util.SetResponse(res, msg, cc, status)
+	return
+}
 
 func Put(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
@@ -45,7 +81,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	cc, msg, status := k8sApiCaller.GetClusterClaim(userId, userGroups, clusterClaim)
+	cc, msg, status := caller.GetClusterClaim(userId, userGroups, clusterClaim)
 	if cc == nil {
 		util.SetResponse(res, msg, nil, status)
 		return
@@ -58,7 +94,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	updatedClusterClaim, msg, status := k8sApiCaller.AdmitClusterClaim(userId, userGroups, cc, admit, reason)
+	updatedClusterClaim, msg, status := caller.AdmitClusterClaim(userId, userGroups, cc, admit, reason)
 	if updatedClusterClaim == nil {
 		util.SetResponse(res, msg, nil, status)
 		return
@@ -89,7 +125,7 @@ func List(res http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// // var statusCode int
-	clusterClaimList, msg, status := k8sApiCaller.ListAccessibleClusterClaims(userId, userGroups)
+	clusterClaimList, msg, status := caller.ListAccessibleClusterClaims(userId, userGroups)
 
 	// if clusterClaimList.ResourceVersion != "" {
 	// 	status = http.StatusOK
