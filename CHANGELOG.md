@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.0.22 start -------------------->
+
+## Hypercloud-api-server 5.0.0.22 (Fri Feb  5 06:10:15 KST 2021)
+
+### Added
+  - [feat] add updateMemberRole for remote cluster by cho
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.0.21 start -------------------->
 
 ## Hypercloud-api-server 5.0.0.21 (Thu Feb  4 12:33:30 KST 2021)
