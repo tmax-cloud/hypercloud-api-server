@@ -58,7 +58,7 @@ func CreateSubjectRolebinding(clusterManager *clusterv1alpha1.ClusterManager, su
 		klog.Errorln(err)
 		return err.Error(), http.StatusInternalServerError
 	}
-	msg := "Create clusterrole [" + remoteRole + "] for subject [ " + subject + "] from [" + clusterManager.Name + "]"
+	msg := "Create clusterrole [" + remoteRole + "] to remote cluster [" + clusterManager.Name + "] for subject [" + subject + "] "
 	klog.Infoln(msg)
 	return msg, http.StatusOK
 }
@@ -77,11 +77,13 @@ func RemoveSubjectRolebinding(clusterManager *clusterv1alpha1.ClusterManager, su
 			return err.Error(), http.StatusInternalServerError
 		}
 	} else if errors.IsNotFound(err) {
-		klog.Infoln("Rolebinding [" + clusterRoleBindingName + "] is already deleted")
+		klog.Errorln("Rolebinding [" + clusterRoleBindingName + "] is already deleted")
+		return err.Error(), http.StatusInternalServerError
 	} else {
+		klog.Errorln(err)
 		return err.Error(), http.StatusInternalServerError
 	}
-	msg := "Remove rolebinding [" + clusterRoleBindingName + "] for subject [ " + subject + "] from [" + clusterManager.Name + "]"
+	msg := "Remove rolebinding [" + clusterRoleBindingName + "] from remote cluster [" + clusterManager.Name + "] for subject [" + subject + "]"
 	klog.Infoln(msg)
 
 	return msg, http.StatusOK

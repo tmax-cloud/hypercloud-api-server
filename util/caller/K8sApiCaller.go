@@ -666,7 +666,7 @@ func ListCluster(userId string, userGroups []string, accessible bool) (*clusterv
 		}
 		return clmList, msg, http.StatusOK
 	} else {
-		klog.Infoln("User [ " + userId + " ] has No ClusterManager List Role")
+		klog.Infoln("User [ " + userId + " ] has No ClusterManager List Role or acessible is true")
 		_clmList := []clusterv1alpha1.ClusterManager{}
 		for _, clm := range clmList.Items {
 			if clm.Status.Owner == userId {
@@ -675,7 +675,7 @@ func ListCluster(userId string, userGroups []string, accessible bool) (*clusterv
 				_clmList = append(_clmList, clm)
 			} else {
 				for _, userGroup := range userGroups {
-					if util.Contains(clm.Status.Members, userGroup) {
+					if util.Contains(clm.Status.Groups, userGroup) {
 						_clmList = append(_clmList, clm)
 						break
 					}
