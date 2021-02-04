@@ -16,8 +16,8 @@ const (
 	QUERY_PARAMETER_LIMIT        = "limit"
 	QUERY_PARAMETER_OFFSET       = "offset"
 	QUERY_PARAMETER_CLUSTER      = "cluster"
-	QUERY_PARAMETER_INVITE_USER  = "invitedUser"
-	QUERY_PARAMETER_INVITE_GROUP = "invitedGroup"
+	QUERY_PARAMETER_INVITE_USER  = "inviteUser"
+	QUERY_PARAMETER_INVITE_GROUP = "inviteGroup"
 	QUERY_PARAMETER_REMOVE_USER  = "removeUser"
 	QUERY_PARAMETER_REMOVE_GROUP = "removeGroup"
 	QUERY_PARAMETER_ACCESS       = "accessible"
@@ -195,8 +195,8 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 	} else if removeGroup != "" && removeUser == "" {
-		if !util.Contains(clm.Status.Groups, removeGroup) {
-			clm.Status.Groups = append(clm.Status.Groups, removeGroup)
+		if util.Contains(clm.Status.Groups, removeGroup) {
+			clm.Status.Groups = util.Remove(clm.Status.Groups, removeGroup)
 			updatedClm, msg, status := caller.UpdateClusterManager(userId, userGroups, clm)
 			if updatedClm != nil {
 				if updatedClm != nil {
