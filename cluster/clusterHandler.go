@@ -200,11 +200,11 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 			updatedClm, msg, status := caller.UpdateClusterManager(userId, userGroups, clm)
 			if updatedClm != nil {
 				if updatedClm != nil {
-					if msg, status = caller.DeleteCLMRole(updatedClm, removeUser); status != http.StatusOK {
+					if msg, status = caller.DeleteCLMRole(updatedClm, removeGroup); status != http.StatusOK {
 						util.SetResponse(res, msg, nil, status)
 						return
 					}
-					if msg, status = caller.RemoveSubjectRolebinding(updatedClm, removeUser); status != http.StatusOK {
+					if msg, status = caller.RemoveSubjectRolebinding(updatedClm, removeGroup); status != http.StatusOK {
 						util.SetResponse(res, msg, nil, status)
 						return
 					}
