@@ -252,6 +252,8 @@ func serveClusterRemoveMember(res http.ResponseWriter, req *http.Request) {
 func serveClusterMember(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {
+	case http.MethodPut:
+		cluster.UpdateMemberRole(res, req)
 	case http.MethodPost:
 		cluster.InviteMember(res, req)
 	default:

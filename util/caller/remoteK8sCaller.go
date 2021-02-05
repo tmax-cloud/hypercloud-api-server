@@ -7,7 +7,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 
 	clusterv1alpha1 "github.com/tmax-cloud/cluster-manager-operator/api/v1alpha1"
-	rbacApi "k8s.io/api/rbac/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -19,7 +18,7 @@ import (
 var remoteClientset *kubernetes.Clientset
 var remoteRestConfig *restclient.Config
 
-func CreateSubjectRolebinding(clusterManager *clusterv1alpha1.ClusterManager, subject string, remoteRole string, isGroup bool) (string, int) {
+func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, remoteRole string, isGroup bool) (string, int) {
 	remoteClientset, err := getRemoteK8sClient(clusterManager.Name)
 	if err != nil {
 		return err.Error(), http.StatusForbidden
@@ -37,7 +36,7 @@ func CreateSubjectRolebinding(clusterManager *clusterv1alpha1.ClusterManager, su
 		},
 	}
 	if !isGroup {
-		clusterRoleBinding.Subjects = []rbacApi.Subject{
+		clusterRoleBinding.Subjects = []rbacv1.Subject{
 			{
 				APIGroup: "rbac.authorization.k8s.io",
 				Kind:     "User",
@@ -45,7 +44,7 @@ func CreateSubjectRolebinding(clusterManager *clusterv1alpha1.ClusterManager, su
 			},
 		}
 	} else {
-		clusterRoleBinding.Subjects = []rbacApi.Subject{
+		clusterRoleBinding.Subjects = []rbacv1.Subject{
 			{
 				APIGroup: "rbac.authorization.k8s.io",
 				Kind:     "Group",
@@ -63,7 +62,7 @@ func CreateSubjectRolebinding(clusterManager *clusterv1alpha1.ClusterManager, su
 	return msg, http.StatusOK
 }
 
-func RemoveSubjectRolebinding(clusterManager *clusterv1alpha1.ClusterManager, subject string) (string, int) {
+func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string) (string, int) {
 	remoteClientset, err := getRemoteK8sClient(clusterManager.Name)
 	if err != nil {
 		return err.Error(), http.StatusForbidden
@@ -90,29 +89,30 @@ func RemoveSubjectRolebinding(clusterManager *clusterv1alpha1.ClusterManager, su
 }
 
 func getRemoteK8sClient(cluster string) (*kubernetes.Clientset, error) {
-	remoteKubeconfig, err := Clientset.CoreV1().Secrets("capi-system").Get(context.TODO(), cluster+"-kubeconfig", metav1.GetOptions{})
-	if err != nil {
-		klog.Errorln(err)
-		return nil, err
-	}
-	//
-	if value, ok := remoteKubeconfig.Data["value"]; ok {
-		remoteClientConfig, err := clientcmd.NewClientConfigFromBytes(value)
+	if remoteKubeconfig, err := Clientset.CoreV1().Secrets("capi-system").Get(context.TODO(), cluster+"-kubeconfig", metav1.GetOptions{}); err == nil {
+		if value, ok := remoteKubeconfig.Data["value"]; ok {
+			remoteClientConfig, err := clientcmd.NewClientConfigFromBytes(value)
+			if err != nil {
+				klog.Errorln(err)
+				return nil, err
+			}
+			remoteRestConfig, err = remoteClientConfig.ClientConfig()
+			if err != nil {
+				klog.Errorln(err)
+				return nil, err
+			}
+		}
+		remoteClientset, err = kubernetes.NewForConfig(remoteRestConfig)
 		if err != nil {
 			klog.Errorln(err)
 			return nil, err
 		}
-		remoteRestConfig, err = remoteClientConfig.ClientConfig()
-		if err != nil {
-			klog.Errorln(err)
-			return nil, err
-		}
-	}
-	remoteClientset, err = kubernetes.NewForConfig(remoteRestConfig)
-	if err != nil {
-		klog.Errorln(err)
+		return remoteClientset, nil
+	} else if errors.IsNotFound(err) {
+		klog.Infoln("Cluster [" + cluster + "] is not ready yet")
+		return nil, err
+	} else {
+		klog.Errorln("Error: Get clusterrole [" + cluster + "] is failed")
 		return nil, err
 	}
-
-	return remoteClientset, nil
 }

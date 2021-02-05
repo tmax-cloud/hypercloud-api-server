@@ -509,21 +509,6 @@ func AdmitClusterClaim(userId string, userGroups []string, clusterClaim *claimsv
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
-	// clusterClaimStatusUpdateRuleReview := authApi.SubjectAccessReview{
-	// 	Spec: authApi.SubjectAccessReviewSpec{
-	// 		ResourceAttributes: &authApi.ResourceAttributes{
-	// 			Resource: "clusterclaims/status",
-	// 			Verb:     "update",
-	// 			Group:    util.CLAIM_API_GROUP,
-	// 		},
-	// 		User: userId,
-	// 	},
-	// }
-	// sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &clusterClaimStatusUpdateRuleReview, metav1.CreateOptions{})
-	// if err != nil {
-	// 	klog.Errorln(err)
-	// 	return nil, err.Error(), http.StatusInternalServerError
-	// }
 	if clusterClaimStatusUpdateRuleResult.Status.Allowed {
 		klog.Infoln(" User [ " + userId + " ] has ClusterClaims/status Update Role, Can Update ClusterClaims")
 
@@ -669,13 +654,16 @@ func ListCluster(userId string, userGroups []string, accessible bool) (*clusterv
 		klog.Infoln("User [ " + userId + " ] has No ClusterManager List Role or acessible is true")
 		_clmList := []clusterv1alpha1.ClusterManager{}
 		for _, clm := range clmList.Items {
-			if clm.Status.Owner == userId {
+			if _, ok := clm.Status.Owner[userId]; ok {
+				// if clm.Status.Owner == userId {
 				_clmList = append(_clmList, clm)
-			} else if util.Contains(clm.Status.Members, userId) {
+			} else if _, ok := clm.Status.Members[userId]; ok {
+				// } else if util.Contains(clm.Status.Members, userId) {
 				_clmList = append(_clmList, clm)
 			} else {
 				for _, userGroup := range userGroups {
-					if util.Contains(clm.Status.Groups, userGroup) {
+					if _, ok := clm.Status.Groups[userGroup]; ok {
+						// if util.Contains(clm.Status.Groups, userGroup) {
 						_clmList = append(_clmList, clm)
 						break
 					}
@@ -863,8 +851,6 @@ func GetFbc(namespace string, name string) (*configv1alpha1.FluentBitConfigurati
 	result, err := customClientset.ConfigV1alpha1().FluentBitConfigurations(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	return result, err
 }
-
-///
 
 func CreateClusterClaim(userId string, userGroup []string, cc *claimsv1alpha1.ClusterClaim) (*claimsv1alpha1.ClusterClaim, string, int) {
 	if len(cc.Annotations) == 0 {
