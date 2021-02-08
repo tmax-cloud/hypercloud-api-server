@@ -118,6 +118,7 @@ func main() {
 	}
 
 	mux.HandleFunc("/metadata", serveMetadata)
+	mux.HandleFunc("/audit/member_suggestions", serveAuditMemberSuggestions)
 	mux.HandleFunc("/audit", serveAudit)
 	mux.HandleFunc("/audit/batch", serveAuditBatch)
 	mux.HandleFunc("/audit/websocket", serveAuditWss)
@@ -318,6 +319,15 @@ func serveAudit(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 	default:
 		//error
+	}
+}
+
+func serveAuditMemberSuggestions(w http.ResponseWriter, r *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	switch r.Method {
+	case http.MethodGet:
+		audit.MemberSuggestions(w, r)
+	default:
 	}
 }
 

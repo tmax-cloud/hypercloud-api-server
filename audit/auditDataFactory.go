@@ -135,3 +135,35 @@ func get(query string) (audit.EventList, int64) {
 
 	return eventList, row_count
 }
+
+func getMemberList(query string) ([]string, int64) {
+	db, err := sql.Open("postgres", pg_con_info)
+	if err != nil {
+		klog.Error(err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query(query)
+	if err != nil {
+		klog.Error(err)
+	}
+	defer rows.Close()
+
+	// var memberList []string
+	memberList := []string{}
+	var row_count int64
+
+	for rows.Next() {
+		var member string
+		err := rows.Scan(
+			&member,
+			&row_count)
+		if err != nil {
+			rows.Close()
+			klog.Error(err)
+		}
+		memberList = append(memberList, member)
+	}
+
+	return memberList, row_count
+}

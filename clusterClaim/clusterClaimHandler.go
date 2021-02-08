@@ -108,8 +108,6 @@ func List(res http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
-	klog.Infoln("userGroups = == ", userGroups)
-	klog.Infoln("userGroups = == ", len(userGroups))
 
 	// limit, err := strconv.Atoi(queryParams.Get(QUERY_PARAMETER_LIMIT))
 

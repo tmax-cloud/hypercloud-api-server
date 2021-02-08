@@ -179,6 +179,9 @@ func InviteMember(res http.ResponseWriter, req *http.Request) {
 	if targetUser != "" && targetGroup == "" {
 		if _, ok := clm.Status.Members[targetUser]; !ok {
 			// if !util.Contains(clm.Status.Members, targetUser) {
+			if clm.Status.Members == nil {
+				clm.Status.Members = map[string]string{}
+			}
 			clm.Status.Members[targetUser] = remoteRole
 			// clm.Status.Members = append(clm.Status.Members, targetUser)
 			updatedClm, msg, status := caller.UpdateClusterManager(userId, userGroups, clm)
@@ -209,6 +212,9 @@ func InviteMember(res http.ResponseWriter, req *http.Request) {
 	} else if targetGroup != "" && targetUser == "" {
 		if _, ok := clm.Status.Groups[targetGroup]; !ok {
 			// if !util.Contains(clm.Status.Groups, targetGroup) {
+			if clm.Status.Groups == nil {
+				clm.Status.Groups = map[string]string{}
+			}
 			clm.Status.Groups[targetGroup] = remoteRole
 			// clm.Status.Groups = append(clm.Status.Groups, targetGroup)
 			updatedClm, msg, status := caller.UpdateClusterManager(userId, userGroups, clm)

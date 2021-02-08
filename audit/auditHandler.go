@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/tmax-cloud/hypercloud-api-server/util"
+	"github.com/tmax-cloud/hypercloud-api-server/util/caller"
 
 	"github.com/google/uuid"
 	types "k8s.io/apimachinery/pkg/types"
@@ -18,21 +19,28 @@ import (
 )
 
 type urlParam struct {
-	Namespace string   `json:"namespace"`
-	Resource  string   `json:"resource"`
-	StartTime string   `json:"startTime"`
-	EndTime   string   `json:"endTime"`
-	Limit     string   `json:"limit"`
-	Offset    string   `json:"offset"`
-	Code      string   `json:"code"`
-	Verb      string   `json:"verb"`
-	Status    string   `json:"status"`
-	Sort      []string `json:"sort"`
+	TargetUser string   `json:"search"`
+	UserId     string   `json:"userId"`
+	Namespace  string   `json:"namespace"`
+	Resource   string   `json:"resource"`
+	StartTime  string   `json:"startTime"`
+	EndTime    string   `json:"endTime"`
+	Limit      string   `json:"limit"`
+	Offset     string   `json:"offset"`
+	Code       string   `json:"code"`
+	Verb       string   `json:"verb"`
+	Status     string   `json:"status"`
+	Sort       []string `json:"sort"`
 }
 
 type response struct {
 	EventList audit.EventList `json:"eventList"`
 	RowsCount int64           `json:"rowsCount"`
+}
+
+type MemberListResponse struct {
+	MemberList []string `json:"memberList"`
+	// RowsCount  int64    `json:"rowsCount"`
 }
 
 func AddAudit(w http.ResponseWriter, r *http.Request) {
@@ -102,9 +110,44 @@ func AddAuditBatch(w http.ResponseWriter, r *http.Request) {
 	util.SetResponse(w, "", nil, http.StatusOK)
 }
 
+func MemberSuggestions(w http.ResponseWriter, r *http.Request) {
+	userId := r.URL.Query().Get("userId")
+	search := r.URL.Query().Get("search")
+
+	var b strings.Builder
+	b.WriteString("select username, count(*) from audit where 1=1 ")
+
+	if sarResult, err := caller.CreateSubjectAccessReview(userId, nil, "", "namespaces", "", "", "list"); err != nil {
+		klog.Errorln(err)
+	} else if sarResult.Status.Allowed == false {
+		b.WriteString("and username = '")
+		b.WriteString(userId)
+		b.WriteString("' ")
+	}
+	b.WriteString("and username like '")
+	b.WriteString(search)
+	if search != "" {
+		b.WriteString("%' group by username order by count desc limit 5")
+	} else {
+		b.WriteString("') group by username order by count desc limit 5")
+	}
+	query := b.String()
+	klog.Info("query: ", query)
+	memberList, _ := getMemberList(query)
+
+	memberListResponse := MemberListResponse{
+		MemberList: memberList,
+		// RowsCount:  count,
+	}
+
+	util.SetResponse(w, "", memberListResponse, http.StatusOK)
+}
+
 func GetAudit(w http.ResponseWriter, r *http.Request) {
 	urlParam := urlParam{}
 
+	urlParam.TargetUser = r.URL.Query().Get("targetUser")
+	urlParam.UserId = r.URL.Query().Get("userId")
 	urlParam.Namespace = r.URL.Query().Get("namespace")
 	urlParam.Resource = r.URL.Query().Get("resource")
 	urlParam.Limit = r.URL.Query().Get("limit")
@@ -130,6 +173,8 @@ func GetAudit(w http.ResponseWriter, r *http.Request) {
 
 func queryBuilder(param urlParam) string {
 
+	targetUser := param.TargetUser
+	userId := param.UserId
 	namespace := param.Namespace
 	resource := param.Resource
 	startTime := param.StartTime
@@ -143,6 +188,19 @@ func queryBuilder(param urlParam) string {
 
 	var b strings.Builder
 	b.WriteString("select *, count(*) over() as full_count from audit where 1=1 ")
+
+	if sarResult, err := caller.CreateSubjectAccessReview(userId, nil, "", "namespaces", "", "", "list"); err != nil {
+		klog.Errorln(err)
+	} else if sarResult.Status.Allowed == false {
+		b.WriteString("and username = '")
+		b.WriteString(userId)
+		b.WriteString("' ")
+	}
+	if targetUser != "" {
+		b.WriteString("and username = '")
+		b.WriteString(targetUser)
+		b.WriteString("' ")
+	}
 
 	if startTime != "" && endTime != "" {
 		b.WriteString("and stagetimestamp between to_timestamp(")
