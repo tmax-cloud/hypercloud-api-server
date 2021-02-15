@@ -52,7 +52,6 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 	cluster := queryParams.Get(QUERY_PARAMETER_CLUSTER)
-	//
 	targetUser := queryParams.Get(QUERY_PARAMETER_TARGET_USER)
 	targetGroup := queryParams.Get(QUERY_PARAMETER_TARGET_GROUP)
 	remoteRole := queryParams.Get(QUERY_PARAMETER_REMOTE_ROLE)
@@ -71,9 +70,23 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if remoteRole == "" {
+		msg := "RemoteRole is empty."
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
+		return
+	}
+
 	clm, msg, status := caller.GetCluster(userId, userGroups, cluster)
 	if clm == nil {
 		util.SetResponse(res, msg, nil, status)
+		return
+	}
+
+	if clm.Status.Ready == false {
+		msg := "Cannot modify cluster member in not ready status"
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
@@ -82,7 +95,7 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 			clm.Status.Members[targetUser] = remoteRole
 			updatedClm, msg, status := caller.UpdateClusterManager(userId, userGroups, clm)
 			if updatedClm != nil {
-				if msg, status := caller.RemoveRoleFromRemote(updatedClm, targetUser); status != http.StatusOK {
+				if msg, status := caller.RemoveRoleFromRemote(updatedClm, targetUser, false); status != http.StatusOK {
 					util.SetResponse(res, msg, nil, status)
 					return
 				}
@@ -106,15 +119,15 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 	} else if targetGroup != "" && targetUser == "" {
-		if _, ok := clm.Status.Groups[targetGroup]; !ok {
+		if _, ok := clm.Status.Groups[targetGroup]; ok {
 			clm.Status.Groups[targetGroup] = remoteRole
 			updatedClm, msg, status := caller.UpdateClusterManager(userId, userGroups, clm)
 			if updatedClm != nil {
-				if msg, status := caller.RemoveRoleFromRemote(updatedClm, targetGroup); status != http.StatusOK {
+				if msg, status := caller.RemoveRoleFromRemote(updatedClm, targetGroup, true); status != http.StatusOK {
 					util.SetResponse(res, msg, nil, status)
 					return
 				}
-				if msg, status := caller.CreateRoleInRemote(updatedClm, targetGroup, remoteRole, false); status != http.StatusOK {
+				if msg, status := caller.CreateRoleInRemote(updatedClm, targetGroup, remoteRole, true); status != http.StatusOK {
 					util.SetResponse(res, msg, nil, status)
 					return
 				}
@@ -129,7 +142,7 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 			}
 		} else {
 			msg := "Group [" + targetGroup + "] is not a member of cluster [" + clm.Name + "]"
-			klog.Infoln(msg)
+			klog.Errorln(msg)
 			util.SetResponse(res, msg, nil, http.StatusBadRequest)
 			return
 		}
@@ -170,9 +183,22 @@ func InviteMember(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if remoteRole == "" {
+		msg := "RemoteRole is empty."
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
+		return
+	}
+
 	clm, msg, status := caller.GetCluster(userId, userGroups, cluster)
 	if clm == nil {
 		util.SetResponse(res, msg, nil, status)
+		return
+	}
+	if clm.Status.Ready == false {
+		msg := "Cannot invite member to cluster in not ready status"
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
@@ -211,12 +237,10 @@ func InviteMember(res http.ResponseWriter, req *http.Request) {
 		}
 	} else if targetGroup != "" && targetUser == "" {
 		if _, ok := clm.Status.Groups[targetGroup]; !ok {
-			// if !util.Contains(clm.Status.Groups, targetGroup) {
 			if clm.Status.Groups == nil {
 				clm.Status.Groups = map[string]string{}
 			}
 			clm.Status.Groups[targetGroup] = remoteRole
-			// clm.Status.Groups = append(clm.Status.Groups, targetGroup)
 			updatedClm, msg, status := caller.UpdateClusterManager(userId, userGroups, clm)
 			if updatedClm != nil {
 				if msg, status := caller.CreateCLMRole(updatedClm, targetGroup, true); status != http.StatusOK {
@@ -282,6 +306,12 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, msg, nil, status)
 		return
 	}
+	if clm.Status.Ready == false {
+		msg := "Cannot remove member from cluster in not ready status"
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
+		return
+	}
 
 	if targetUser != "" && targetGroup == "" {
 		if _, ok := clm.Status.Members[targetUser]; ok {
@@ -290,11 +320,11 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 			// clm.Status.Members = util.Remove(clm.Status.Members, targetUser)
 			updatedClm, msg, status := caller.UpdateClusterManager(userId, userGroups, clm)
 			if updatedClm != nil {
-				if msg, status = caller.DeleteCLMRole(updatedClm, targetUser); status != http.StatusOK {
+				if msg, status = caller.DeleteCLMRole(updatedClm, targetUser, false); status != http.StatusOK {
 					util.SetResponse(res, msg, nil, status)
 					return
 				}
-				if msg, status = caller.RemoveRoleFromRemote(updatedClm, targetUser); status != http.StatusOK {
+				if msg, status = caller.RemoveRoleFromRemote(updatedClm, targetUser, false); status != http.StatusOK {
 					util.SetResponse(res, msg, nil, status)
 					return
 				}
@@ -320,11 +350,11 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 			delete(clm.Status.Groups, targetGroup)
 			updatedClm, msg, status := caller.UpdateClusterManager(userId, userGroups, clm)
 			if updatedClm != nil {
-				if msg, status = caller.DeleteCLMRole(updatedClm, targetGroup); status != http.StatusOK {
+				if msg, status = caller.DeleteCLMRole(updatedClm, targetGroup, true); status != http.StatusOK {
 					util.SetResponse(res, msg, nil, status)
 					return
 				}
-				if msg, status = caller.RemoveRoleFromRemote(updatedClm, targetGroup); status != http.StatusOK {
+				if msg, status = caller.RemoveRoleFromRemote(updatedClm, targetGroup, true); status != http.StatusOK {
 					util.SetResponse(res, msg, nil, status)
 					return
 				}

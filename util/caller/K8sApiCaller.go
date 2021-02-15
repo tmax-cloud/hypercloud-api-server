@@ -218,14 +218,14 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) c
 		}
 		wg.Wait()
 
-		if len(nsList.Items) > 0 {
-			nsList.APIVersion = potentialNsList.APIVersion
-			nsList.Continue = potentialNsList.Continue
-			nsList.ResourceVersion = potentialNsList.ResourceVersion
-			nsList.TypeMeta = potentialNsList.TypeMeta
-		} else {
-			klog.Infoln(" User [ " + userId + " ] has No Namespace Get Role in Any Namspace")
-		}
+		// if len(nsList.Items) > 0 {
+		nsList.APIVersion = potentialNsList.APIVersion
+		nsList.Continue = potentialNsList.Continue
+		nsList.ResourceVersion = potentialNsList.ResourceVersion
+		nsList.TypeMeta = potentialNsList.TypeMeta
+		// } else {
+		// 	klog.Infoln(" User [ " + userId + " ] has No Namespace Get Role in Any Namspace")
+		// }
 	}
 	// if len(nsList.Items) > 0 {
 	// 	klog.Infoln("=== [ " + userId + " ] Accessible Namespace ===")
@@ -258,7 +258,7 @@ func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) 
 		klog.Errorln(err)
 		panic(err)
 	}
-	klog.Infoln("sarResult : " + sarResult.String())
+	// klog.Infoln("sarResult : " + sarResult.String())
 
 	// /apis/claim.tmax.io/v1alpha1/namespaceclaims?labelselector
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/namespaceclaims").Param(util.QUERY_PARAMETER_LABEL_SELECTOR, labelSelector).DoRaw(context.TODO())
@@ -316,14 +316,14 @@ func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) 
 			}
 			wg.Wait()
 
-			if len(nscList.Items) > 0 {
-				nscList.APIVersion = potentialNscList.APIVersion
-				nscList.Continue = potentialNscList.Continue
-				nscList.ResourceVersion = potentialNscList.ResourceVersion
-				nscList.TypeMeta = potentialNscList.TypeMeta
-			} else {
-				klog.Infoln(" User [ " + userId + " ] has No owner annotaion in Any NamspaceClaim")
-			}
+			// if len(nscList.Items) > 0 {
+			nscList.APIVersion = potentialNscList.APIVersion
+			nscList.Continue = potentialNscList.Continue
+			nscList.ResourceVersion = potentialNscList.ResourceVersion
+			nscList.TypeMeta = potentialNscList.TypeMeta
+			// } else {
+			// 	klog.Infoln(" User [ " + userId + " ] has No owner annotaion in Any NamspaceClaim")
+			// }
 		} else {
 			klog.Infoln(" User [ " + userId + " ] has no NamespaceClaim Get Role, User Cannot Access any NamespaceClaim")
 		}
@@ -332,9 +332,9 @@ func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) 
 
 	if len(nscList.Items) > 0 {
 		klog.Infoln("=== [ " + userId + " ] Accessible NamespaceClaim ===")
-		for _, nsc := range nscList.Items {
-			klog.Infoln("  ", nsc.Name)
-		}
+		// for _, nsc := range nscList.Items {
+		// 	klog.Infoln("  ", nsc.Name)
+		// }
 	}
 	return *nscList
 }
@@ -732,8 +732,31 @@ func UpdateClusterManager(userId string, userGroups []string, clm *clusterv1alph
 }
 
 func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, isGroup bool) (string, int) {
+	var clusterRoleName string
+	var clusterRoleBindingName string
+	clusterRoleBinding := &rbacApi.ClusterRoleBinding{}
+	if !isGroup {
+		clusterRoleName = subject + "-user-" + clusterManager.Name + "-clm-role"
+		clusterRoleBindingName = subject + "-user-" + clusterManager.Name + "-clm-rolebinding"
+		clusterRoleBinding.Subjects = []rbacApi.Subject{
+			{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "User",
+				Name:     subject,
+			},
+		}
+	} else {
+		clusterRoleName = subject + "-group-" + clusterManager.Name + "-clm-role"
+		clusterRoleBindingName = subject + "-group-" + clusterManager.Name + "-clm-rolebinding"
+		clusterRoleBinding.Subjects = []rbacApi.Subject{
+			{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "Group",
+				Name:     subject,
+			},
+		}
+	}
 
-	clusterRoleName := subject + "-" + clusterManager.Name + "-clm-role"
 	clusterRole := &rbacApi.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: clusterRoleName,
@@ -761,43 +784,23 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 		return err.Error(), http.StatusInternalServerError
 	}
 
-	clusterRoleBindingName := subject + "-" + clusterManager.Name + "-clm-rolebinding"
-	clusterRoleBinding := &rbacApi.ClusterRoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: clusterRoleBindingName,
-			OwnerReferences: []metav1.OwnerReference{
-				metav1.OwnerReference{
-					APIVersion:         util.CLUSTER_API_GROUP_VERSION,
-					Kind:               util.CLUSTER_API_Kind,
-					Name:               clusterManager.GetName(),
-					UID:                clusterManager.GetUID(),
-					BlockOwnerDeletion: pointer.BoolPtr(true),
-					Controller:         pointer.BoolPtr(true),
-				},
+	clusterRoleBinding.ObjectMeta = metav1.ObjectMeta{
+		Name: clusterRoleBindingName,
+		OwnerReferences: []metav1.OwnerReference{
+			metav1.OwnerReference{
+				APIVersion:         util.CLUSTER_API_GROUP_VERSION,
+				Kind:               util.CLUSTER_API_Kind,
+				Name:               clusterManager.GetName(),
+				UID:                clusterManager.GetUID(),
+				BlockOwnerDeletion: pointer.BoolPtr(true),
+				Controller:         pointer.BoolPtr(true),
 			},
-		},
-		RoleRef: rbacApi.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "ClusterRole",
-			Name:     clusterRoleName,
 		},
 	}
-	if !isGroup {
-		clusterRoleBinding.Subjects = []rbacApi.Subject{
-			{
-				APIGroup: "rbac.authorization.k8s.io",
-				Kind:     "User",
-				Name:     subject,
-			},
-		}
-	} else {
-		clusterRoleBinding.Subjects = []rbacApi.Subject{
-			{
-				APIGroup: "rbac.authorization.k8s.io",
-				Kind:     "Group",
-				Name:     subject,
-			},
-		}
+	clusterRoleBinding.RoleRef = rbacApi.RoleRef{
+		APIGroup: "rbac.authorization.k8s.io",
+		Kind:     "ClusterRole",
+		Name:     clusterRoleName,
 	}
 
 	if _, err := Clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding, metav1.CreateOptions{}); err != nil {
@@ -810,9 +813,17 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 	return msg, http.StatusOK
 }
 
-func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject string) (string, int) {
-	clusterRoleName := subject + "-" + clusterManager.Name + "-clm-role"
-	clusterRoleBindingName := subject + "-" + clusterManager.Name + "-clm-rolebinding"
+func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, isGroup bool) (string, int) {
+
+	var clusterRoleName string
+	var clusterRoleBindingName string
+	if !isGroup {
+		clusterRoleName = subject + "-user-" + clusterManager.Name + "-clm-role"
+		clusterRoleBindingName = subject + "-user-" + clusterManager.Name + "-clm-rolebinding"
+	} else {
+		clusterRoleName = subject + "-group-" + clusterManager.Name + "-clm-role"
+		clusterRoleBindingName = subject + "-group-" + clusterManager.Name + "-clm-rolebinding"
+	}
 
 	_, err := Clientset.RbacV1().ClusterRoles().Get(context.TODO(), clusterRoleName, metav1.GetOptions{})
 	if err == nil {

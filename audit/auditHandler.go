@@ -19,18 +19,18 @@ import (
 )
 
 type urlParam struct {
-	TargetUser string   `json:"search"`
-	UserId     string   `json:"userId"`
-	Namespace  string   `json:"namespace"`
-	Resource   string   `json:"resource"`
-	StartTime  string   `json:"startTime"`
-	EndTime    string   `json:"endTime"`
-	Limit      string   `json:"limit"`
-	Offset     string   `json:"offset"`
-	Code       string   `json:"code"`
-	Verb       string   `json:"verb"`
-	Status     string   `json:"status"`
-	Sort       []string `json:"sort"`
+	Search    string   `json:"search"`
+	UserId    string   `json:"userId"`
+	Namespace string   `json:"namespace"`
+	Resource  string   `json:"resource"`
+	StartTime string   `json:"startTime"`
+	EndTime   string   `json:"endTime"`
+	Limit     string   `json:"limit"`
+	Offset    string   `json:"offset"`
+	Code      string   `json:"code"`
+	Verb      string   `json:"verb"`
+	Status    string   `json:"status"`
+	Sort      []string `json:"sort"`
 }
 
 type response struct {
@@ -110,8 +110,14 @@ func AddAuditBatch(w http.ResponseWriter, r *http.Request) {
 	util.SetResponse(w, "", nil, http.StatusOK)
 }
 
-func MemberSuggestions(w http.ResponseWriter, r *http.Request) {
+func MemberSuggestions(res http.ResponseWriter, r *http.Request) {
 	userId := r.URL.Query().Get("userId")
+	if userId == "" {
+		msg := "UserId is empty."
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
+		return
+	}
 	search := r.URL.Query().Get("search")
 
 	var b strings.Builder
@@ -129,7 +135,7 @@ func MemberSuggestions(w http.ResponseWriter, r *http.Request) {
 	if search != "" {
 		b.WriteString("%' group by username order by count desc limit 5")
 	} else {
-		b.WriteString("') group by username order by count desc limit 5")
+		b.WriteString("' group by username order by count desc limit 5")
 	}
 	query := b.String()
 	klog.Info("query: ", query)
@@ -140,14 +146,24 @@ func MemberSuggestions(w http.ResponseWriter, r *http.Request) {
 		// RowsCount:  count,
 	}
 
-	util.SetResponse(w, "", memberListResponse, http.StatusOK)
+	util.SetResponse(res, "", memberListResponse, http.StatusOK)
 }
 
-func GetAudit(w http.ResponseWriter, r *http.Request) {
-	urlParam := urlParam{}
+func GetAudit(res http.ResponseWriter, r *http.Request) {
 
-	urlParam.TargetUser = r.URL.Query().Get("targetUser")
-	urlParam.UserId = r.URL.Query().Get("userId")
+	userId := r.URL.Query().Get("userId")
+
+	if userId == "" {
+		msg := "UserId is empty."
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
+		return
+	}
+	// search := r.URL.Query().Get("search")
+
+	urlParam := urlParam{}
+	urlParam.Search = r.URL.Query().Get("search")
+	urlParam.UserId = userId
 	urlParam.Namespace = r.URL.Query().Get("namespace")
 	urlParam.Resource = r.URL.Query().Get("resource")
 	urlParam.Limit = r.URL.Query().Get("limit")
@@ -160,7 +176,6 @@ func GetAudit(w http.ResponseWriter, r *http.Request) {
 	urlParam.Status = r.URL.Query().Get("status")
 
 	query := queryBuilder(urlParam)
-
 	eventList, count := get(query)
 
 	response := response{
@@ -168,12 +183,12 @@ func GetAudit(w http.ResponseWriter, r *http.Request) {
 		RowsCount: count,
 	}
 
-	util.SetResponse(w, "", response, http.StatusOK)
+	util.SetResponse(res, "", response, http.StatusOK)
 }
 
 func queryBuilder(param urlParam) string {
 
-	targetUser := param.TargetUser
+	search := param.Search
 	userId := param.UserId
 	namespace := param.Namespace
 	resource := param.Resource
@@ -196,10 +211,11 @@ func queryBuilder(param urlParam) string {
 		b.WriteString(userId)
 		b.WriteString("' ")
 	}
-	if targetUser != "" {
-		b.WriteString("and username = '")
-		b.WriteString(targetUser)
-		b.WriteString("' ")
+	if search != "" {
+		parsedSearch := strings.Replace(search, "_", "\\_", -1)
+		b.WriteString("and username like '")
+		b.WriteString(parsedSearch)
+		b.WriteString("%' ")
 	}
 
 	if startTime != "" && endTime != "" {
