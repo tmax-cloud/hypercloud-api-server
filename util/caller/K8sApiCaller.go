@@ -19,7 +19,7 @@ import (
 	configv1alpha1 "github.com/tmax-cloud/efk-operator/api/v1alpha1"
 	alertModel "github.com/tmax-cloud/hypercloud-api-server/alert/model"
 	client "github.com/tmax-cloud/hypercloud-api-server/client"
-	claim "github.com/tmax-cloud/hypercloud-go-operator/api/v1alpha1"
+	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
 	authApi "k8s.io/api/authorization/v1"
 	coreApi "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -339,16 +339,31 @@ func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) 
 	return *nscList
 }
 
-func DeleteNSWithUser(userId string) {
+func DeleteRQCWithUser(userId string) {
 	//TODO
+	_, err := Clientset.RESTClient().Delete().AbsPath("/apis/claim.tmax.io/v1alpha1/resourcequotaclaims").Param(util.QUERY_PARAMETER_USER_ID, userId).DoRaw(context.TODO())
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
 }
 
 func DeleteNSCWithUser(userId string) {
 	//TODO
+	_, err := Clientset.RESTClient().Delete().AbsPath("/apis/claim.tmax.io/v1alpha1/namespaceclaims").Param(util.QUERY_PARAMETER_USER_ID, userId).DoRaw(context.TODO())
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
 }
 
 func DeleteRBCWithUser(userId string) {
 	//TODO
+	_, err := Clientset.RESTClient().Delete().AbsPath("/apis/claim.tmax.io/v1alpha1/rolebindingclaims").Param(util.QUERY_PARAMETER_USER_ID, userId).DoRaw(context.TODO())
+	if err != nil {
+		klog.Errorln(err)
+		panic(err)
+	}
 }
 
 // ExecCommand sends a 'exec' command to specific pod.

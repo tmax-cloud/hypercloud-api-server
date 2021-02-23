@@ -164,8 +164,8 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			// Delete NamespaceClaim with user's Owner Annotation if Exists
 			k8sApiCaller.DeleteNSCWithUser(topicEvent.UserName)
 
-			// Delete Namespace with user's Owner Annotation & fromClaim Label if Exists
-			k8sApiCaller.DeleteNSWithUser(topicEvent.UserName)
+			// Delete ResourceQuotaClaim with UserId If Exists
+			k8sApiCaller.DeleteRQCWithUser(topicEvent.UserName)
 
 			// Delete ClusterRoleBinding with UserId If Exists
 			k8sApiCaller.DeleteRBCWithUser(topicEvent.UserName)

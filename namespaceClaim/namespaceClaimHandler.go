@@ -7,7 +7,7 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 
-	claim "github.com/tmax-cloud/hypercloud-go-operator/api/v1alpha1"
+	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
 
 	"k8s.io/klog"
 )

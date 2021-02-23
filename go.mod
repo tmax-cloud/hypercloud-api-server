@@ -12,9 +12,10 @@ require (
 	github.com/oklog/ulid v1.3.1
 	github.com/robfig/cron v1.2.0
 	github.com/tmax-cloud/claim-operator v0.0.0-20210114141758-083187ba4fc3
-	github.com/tmax-cloud/cluster-manager-operator v0.0.0-20210205050522-69310cb89233 
+	github.com/tmax-cloud/cluster-manager-operator v0.0.0-20210205050522-69310cb89233
 	github.com/tmax-cloud/efk-operator v0.0.0-20201207030412-fd9c02a3e1c2
 	github.com/tmax-cloud/hypercloud-go-operator v0.0.0-20201125074013-0e686fd12999
+	github.com/tmax-cloud/hypercloud-single-operator v0.0.0-20210222045913-0ace319d7c34
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.19.4
 	k8s.io/apimachinery v0.19.4
