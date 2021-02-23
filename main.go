@@ -26,7 +26,7 @@ import (
 	"net/http"
 
 	"github.com/robfig/cron"
-	// kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/Consumer"
+	// kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
 )
 
 type admitFunc func(v1beta1.AdmissionReview) *v1beta1.AdmissionResponse

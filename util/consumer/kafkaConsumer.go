@@ -161,13 +161,13 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		switch topicEvent.Type {
 		case "USER_DELETE":
 			klog.Info("User [ " + topicEvent.UserName + " ] Deleted !")
-			// Delete NamespaceClaim with user's Owner Annotation if Exists
+			// Delete NamespaceClaim with Creator Annotation
 			k8sApiCaller.DeleteNSCWithUser(topicEvent.UserName)
 
-			// Delete ResourceQuotaClaim with UserId If Exists
+			// Delete ResourceQuotaClaim with Creator Annotation
 			k8sApiCaller.DeleteRQCWithUser(topicEvent.UserName)
 
-			// Delete ClusterRoleBinding with UserId If Exists
+			// Delete RoleBindingClaim with Creator Annotation
 			k8sApiCaller.DeleteRBCWithUser(topicEvent.UserName)
 			break
 		default:

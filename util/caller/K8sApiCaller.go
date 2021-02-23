@@ -340,30 +340,69 @@ func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) 
 }
 
 func DeleteRQCWithUser(userId string) {
-	//TODO
-	_, err := Clientset.RESTClient().Delete().AbsPath("/apis/claim.tmax.io/v1alpha1/resourcequotaclaims").Param(util.QUERY_PARAMETER_USER_ID, userId).DoRaw(context.TODO())
-	if err != nil {
+	var rqcList = &claim.ResourceQuotaClaimList{}
+	//data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/").Namespace("").Resource("resourcequotaclaims").DoRaw(context.TODO()) // for hypercloud4 version
+	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/").Namespace("").Resource("resourcequotaclaims").DoRaw(context.TODO()) // for hypercloud5 version
+
+	if err = json.Unmarshal(data, &rqcList); err != nil {
 		klog.Errorln(err)
 		panic(err)
 	}
+
+	for _, rqc := range rqcList.Items {
+		if rqc.Annotations["creator"] == userId {
+			_, err := Clientset.RESTClient().Delete().AbsPath(rqc.SelfLink).DoRaw(context.TODO())
+			if err != nil {
+				klog.Errorln(err)
+				panic(err)
+			}
+		}
+	}
+	klog.Infoln("Successfully delete ResourceQuotaClaim made by", userId)
 }
 
 func DeleteNSCWithUser(userId string) {
-	//TODO
-	_, err := Clientset.RESTClient().Delete().AbsPath("/apis/claim.tmax.io/v1alpha1/namespaceclaims").Param(util.QUERY_PARAMETER_USER_ID, userId).DoRaw(context.TODO())
-	if err != nil {
+	var nscList = &claim.NamespaceClaimList{}
+	//data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/namespaceclaims").DoRaw(context.TODO()) // for hypercloud4 version
+	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/namespaceclaims").DoRaw(context.TODO()) // for hypercloud5 version
+
+	if err = json.Unmarshal(data, &nscList); err != nil {
 		klog.Errorln(err)
 		panic(err)
 	}
+
+	for _, nsc := range nscList.Items {
+		if nsc.Annotations["creator"] == userId {
+			_, err := Clientset.RESTClient().Delete().AbsPath(nsc.SelfLink).DoRaw(context.TODO())
+			if err != nil {
+				klog.Errorln(err)
+				panic(err)
+			}
+		}
+	}
+	klog.Infoln("Successfully delete NamespaceClaim made by", userId)
 }
 
 func DeleteRBCWithUser(userId string) {
-	//TODO
-	_, err := Clientset.RESTClient().Delete().AbsPath("/apis/claim.tmax.io/v1alpha1/rolebindingclaims").Param(util.QUERY_PARAMETER_USER_ID, userId).DoRaw(context.TODO())
-	if err != nil {
+	var rbcList = &claim.RoleBindingClaimList{}
+	//data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/").Namespace("").Resource("rolebindingclaims").DoRaw(context.TODO()) // for hypercloud4 version
+	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/").Namespace("").Resource("rolebindingclaims").DoRaw(context.TODO()) // for hypercloud5 version
+
+	if err = json.Unmarshal(data, &rbcList); err != nil {
 		klog.Errorln(err)
 		panic(err)
 	}
+
+	for _, rbc := range rbcList.Items {
+		if rbc.Annotations["creator"] == userId {
+			_, err := Clientset.RESTClient().Delete().AbsPath(rbc.SelfLink).DoRaw(context.TODO())
+			if err != nil {
+				klog.Errorln(err)
+				panic(err)
+			}
+		}
+	}
+	klog.Infoln("Successfully delete RoleBindingClaim made by", userId)
 }
 
 // ExecCommand sends a 'exec' command to specific pod.
