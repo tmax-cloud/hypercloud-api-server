@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	claimsv1alpha1 "github.com/tmax-cloud/claim-operator/api/v1alpha1"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
 	caller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
+	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
 	"k8s.io/klog"
 )
 

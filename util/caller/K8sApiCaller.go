@@ -14,11 +14,11 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/utils/pointer"
 
-	claimsv1alpha1 "github.com/tmax-cloud/claim-operator/api/v1alpha1"
-	clusterv1alpha1 "github.com/tmax-cloud/cluster-manager-operator/api/v1alpha1"
 	configv1alpha1 "github.com/tmax-cloud/efk-operator/api/v1alpha1"
 	alertModel "github.com/tmax-cloud/hypercloud-api-server/alert/model"
 	client "github.com/tmax-cloud/hypercloud-api-server/client"
+	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
+	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
 	authApi "k8s.io/api/authorization/v1"
 	coreApi "k8s.io/api/core/v1"

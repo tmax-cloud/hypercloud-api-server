@@ -1,28 +1,28 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/tmax-cloud/claim-operator/api/v1alpha1"
+	v1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
 
 	"k8s.io/client-go/kubernetes/scheme"
 	rest "k8s.io/client-go/rest"
 )
 
-type ClaimsV1alpha1Interface interface {
+type ClaimV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ClusterClaimGetter
 }
 
-// ClaimsV1alpha1Client is used to interact with features provided by the  group.
-type ClaimsV1alpha1Client struct {
+// ClaimV1alpha1Client is used to interact with features provided by the  group.
+type ClaimV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *ClaimsV1alpha1Client) ClusterClaims() ClusterClaimInterface {
+func (c *ClaimV1alpha1Client) ClusterClaims() ClusterClaimInterface {
 	return newClusterClaims(c)
 }
 
-// NewForConfig creates a new ClaimsV1alpha1Client for the given config.
-func NewForConfig(c *rest.Config) (*ClaimsV1alpha1Client, error) {
+// NewForConfig creates a new ClaimV1alpha1Client for the given config.
+func NewForConfig(c *rest.Config) (*ClaimV1alpha1Client, error) {
 	config := *c
 	if err := setConfigDefaults(&config); err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func NewForConfig(c *rest.Config) (*ClaimsV1alpha1Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ClaimsV1alpha1Client{client}, nil
+	return &ClaimV1alpha1Client{client}, nil
 }
 
 func setConfigDefaults(config *rest.Config) error {
@@ -50,7 +50,7 @@ func setConfigDefaults(config *rest.Config) error {
 
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
-func (c *ClaimsV1alpha1Client) RESTClient() rest.Interface {
+func (c *ClaimV1alpha1Client) RESTClient() rest.Interface {
 	if c == nil {
 		return nil
 	}

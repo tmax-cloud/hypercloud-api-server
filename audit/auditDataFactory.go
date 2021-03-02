@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	DB_USER     = "audit"
+	DB_USER     = "postgres"
 	DB_PASSWORD = "tmax"
-	DB_NAME     = "audit"
+	DB_NAME     = "postgres"
 	HOSTNAME    = "postgres-service.hypercloud5-system.svc"
 	PORT        = 5432
 )

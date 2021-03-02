@@ -172,7 +172,6 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			break
 		default:
 			klog.Info("Unknown Event Published from Hyperauth, Do nothing!")
-
 		}
 
 	}

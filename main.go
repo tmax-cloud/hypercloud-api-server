@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	gmux "github.com/gorilla/mux"
 	admission "github.com/tmax-cloud/hypercloud-api-server/admission"
 	"github.com/tmax-cloud/hypercloud-api-server/alert"
 	audit "github.com/tmax-cloud/hypercloud-api-server/audit"
@@ -19,6 +20,7 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/namespace"
 	"github.com/tmax-cloud/hypercloud-api-server/namespaceClaim"
 	user "github.com/tmax-cloud/hypercloud-api-server/user"
+	util "github.com/tmax-cloud/hypercloud-api-server/util"
 	version "github.com/tmax-cloud/hypercloud-api-server/version"
 	"k8s.io/api/admission/v1beta1"
 	"k8s.io/klog"
@@ -43,6 +45,10 @@ func main() {
 	flag.StringVar(&certFile, "certFile", "/run/secrets/tls/hypercloud-api-server.crt", "hypercloud5-api-server cert")
 	flag.StringVar(&keyFile, "keyFile", "/run/secrets/tls/hypercloud-api-server.key", "hypercloud5-api-server key")
 	flag.StringVar(&admission.SidecarContainerImage, "sidecarImage", "fluent/fluent-bit:1.5-debug", "Fluent-bit image name.")
+	flag.StringVar(&util.SMTPHost, "smtpHost", "mail.tmax.co.kr", "SMTP Server Host Address")
+	flag.IntVar(&util.SMTPPort, "smtpPort", 25, "SMTP Server Port")
+	flag.StringVar(&util.SMTPUsername, "smtpUsername", "/run/secrets/smtp/username", "SMTP Server Username")
+	flag.StringVar(&util.SMTPPassword, "smtpPassword", "/run/secrets/smtp/password", "SMTP Server Password")
 
 	// Get Hypercloud Operating Mode!!!
 	hcMode := os.Getenv("HC_MODE")
@@ -101,7 +107,8 @@ func main() {
 	}
 
 	// Req multiplexer
-	mux := http.NewServeMux()
+	mux := gmux.NewRouter()
+	// mux := http.NewServeMux()
 	mux.HandleFunc("/user", serveUser)
 	mux.HandleFunc("/metering", serveMetering)
 	mux.HandleFunc("/namespace", serveNamespace)
@@ -113,8 +120,10 @@ func main() {
 		// for multi mode only
 		mux.HandleFunc("/clusterclaim", serveClusterClaim)
 		mux.HandleFunc("/cluster", serveCluster)
-		mux.HandleFunc("/cluster/remove_member", serveClusterRemoveMember)
-		mux.HandleFunc("/cluster/member", serveClusterMember)
+		mux.HandleFunc("/cluster/remove_member", serveClusterRemoveMember)      // 멤버 삭제
+		mux.HandleFunc("/cluster/member", serveClusterMember)                   // 권한 변경
+		mux.HandleFunc("/cluster_invitations", serveClusterInvitations)         //추가 요청
+		mux.HandleFunc("/cluster_invitations/{admit}", serveClusterInvitations) //추가 요청 승인, 추가 요청 거절
 	}
 
 	mux.HandleFunc("/metadata", serveMetadata)
@@ -255,8 +264,33 @@ func serveClusterMember(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodPut:
 		cluster.UpdateMemberRole(res, req)
+	// case http.MethodPost:
+	// cluster.InviteMember(res, req)
+	default:
+	}
+}
+
+func serveClusterInvitations(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	vars := gmux.Vars(req)
+	switch req.Method {
+	case http.MethodGet:
+		if vars["admit"] == "" {
+			cluster.GetInvitation(res, req)
+		} else {
+		}
+		break
 	case http.MethodPost:
-		cluster.InviteMember(res, req)
+		if vars["admit"] == "accept" {
+			cluster.AcceptInvitation(res, req)
+		} else if vars["admit"] == "decline" {
+			cluster.DeclineInvitation(res, req)
+		} else if vars["admit"] == "" {
+			cluster.InviteMember(res, req)
+		} else {
+			//
+		}
+		break
 	default:
 	}
 }

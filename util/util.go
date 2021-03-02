@@ -2,11 +2,24 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/smtp"
 	"time"
 
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	// "k8s.io/klog/v2"
+	"k8s.io/klog"
+)
+
+var (
+	SMTPUsername string
+	SMTPPassword string
+	SMTPHost     string
+	SMTPPort     int
 )
 
 //Jsonpatch를 담을 수 있는 구조체
@@ -140,4 +153,36 @@ func MonthToInt(month time.Month) int {
 	default:
 		return 0
 	}
+}
+
+func SendEmail(from string, to []string, subject string, body string) error {
+	// 메일서버 로그인 정보 설정
+	content, err := ioutil.ReadFile(SMTPUsername)
+	if err != nil {
+		klog.Errorln(err)
+		return err
+	}
+	username := string(content)
+
+	content, err = ioutil.ReadFile(SMTPPassword)
+	if err != nil {
+		klog.Errorln(err)
+		return err
+	}
+	password := string(content)
+
+	auth := smtp.PlainAuth("", username, password, SMTPHost)
+
+	// 메시지 작성
+	headerSubject := fmt.Sprintf("Subject: %s\r\n", subject)
+	headerBlank := "\r\n"
+	body = "메일 테스트입니다\r\n"
+	msg := []byte(headerSubject + headerBlank + body)
+
+	// 메일 보내기
+	err = smtp.SendMail(fmt.Sprintf("%s:%d", SMTPHost, SMTPPort), auth, from, to, msg)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -19,7 +19,7 @@ import (
 	"context"
 	"time"
 
-	v1alpha1 "github.com/tmax-cloud/claim-operator/api/v1alpha1"
+	v1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -53,7 +53,7 @@ type clusterClaims struct {
 }
 
 // newclusterClaims returns a clusterClaims
-func newClusterClaims(c *ClaimsV1alpha1Client) *clusterClaims {
+func newClusterClaims(c *ClaimV1alpha1Client) *clusterClaims {
 	return &clusterClaims{
 		client: c.RESTClient(),
 	}

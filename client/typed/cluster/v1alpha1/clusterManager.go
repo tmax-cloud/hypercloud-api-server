@@ -19,7 +19,7 @@ import (
 	"context"
 	"time"
 
-	v1alpha1 "github.com/tmax-cloud/cluster-manager-operator/api/v1alpha1"
+	v1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"

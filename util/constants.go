@@ -27,9 +27,9 @@ const (
 	HYPERCLOUD4_NAMESPACE       = "hypercloud4-system"
 	HYPERCLOUD4_CLAIM_API_GROUP = "claim.tmax.io"
 
-	CLAIM_API_GROUP             = "claims.tmax.io"
+	CLAIM_API_GROUP             = "claim.tmax.io"
 	CLAIM_API_Kind              = "clusterclaims"
-	CLAIM_API_GROUP_VERSION     = "claims.tmax.io/v1alpha1"
+	CLAIM_API_GROUP_VERSION     = "claim.tmax.io/v1alpha1"
 	CLUSTER_API_GROUP           = "cluster.tmax.io"
 	CLUSTER_API_Kind            = "clustermanagers"
 	CLUSTER_API_GROUP_VERSION   = "cluster.tmax.io/v1alpha1"

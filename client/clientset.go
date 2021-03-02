@@ -3,7 +3,7 @@ package client
 import (
 	"fmt"
 
-	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-api-server/client/typed/claims/v1alpha1"
+	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-api-server/client/typed/claim/v1alpha1"
 	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-api-server/client/typed/cluster/v1alpha1"
 	configv1alpha1 "github.com/tmax-cloud/hypercloud-api-server/client/typed/config/v1alpha1"
 
@@ -15,14 +15,14 @@ import (
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
 	ConfigV1alpha1() configv1alpha1.ConfigV1alpha1Interface
-	ClaimsV1alpha1() claimsv1alpha1.ClaimsV1alpha1Interface
+	ClaimsV1alpha1() claimsv1alpha1.ClaimV1alpha1Interface
 	ClusterV1alpha1() clusterv1alpha1.ClusterV1alpha1Interface
 }
 
 type Clientset struct {
 	*discovery.DiscoveryClient
 	configV1alpha1  *configv1alpha1.ConfigV1alpha1Client
-	claimsv1alpha1  *claimsv1alpha1.ClaimsV1alpha1Client
+	claimsv1alpha1  *claimsv1alpha1.ClaimV1alpha1Client
 	clusterv1alpha1 *clusterv1alpha1.ClusterV1alpha1Client
 }
 
@@ -32,7 +32,7 @@ func (c *Clientset) ConfigV1alpha1() configv1alpha1.ConfigV1alpha1Interface {
 }
 
 // CoreV1 retrieves the CoreV1Client
-func (c *Clientset) ClaimsV1alpha1() claimsv1alpha1.ClaimsV1alpha1Interface {
+func (c *Clientset) ClaimsV1alpha1() claimsv1alpha1.ClaimV1alpha1Interface {
 	return c.claimsv1alpha1
 }
 

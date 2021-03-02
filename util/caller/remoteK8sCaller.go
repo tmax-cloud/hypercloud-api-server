@@ -6,7 +6,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
-	clusterv1alpha1 "github.com/tmax-cloud/cluster-manager-operator/api/v1alpha1"
+	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
