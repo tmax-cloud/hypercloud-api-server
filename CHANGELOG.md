@@ -1,6 +1,23 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.0.24 start -------------------->
+
+## Hypercloud-api-server 5.0.0.24 (Tue Mar  2 17:37:27 KST 2021)
+
+### Added
+  - [feat] 유저 삭제시 claim 삭제 로직 완성 by Seungwon Lee
+  - [feat] 유저 삭제시 claim 삭제  초안 by Seungwon Lee
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] refactor by chosangwon93
+
 <!-------------------- v5.0.0.23 start -------------------->
 
 ## Hypercloud-api-server 5.0.0.23 (Wed Feb 17 14:29:33 KST 2021)
