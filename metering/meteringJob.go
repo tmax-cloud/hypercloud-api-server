@@ -80,7 +80,7 @@ var err error
 
 func MeteringJob() {
 
-	fileName := "./logs/api-server-metering" + time.Now().AddDate(0, 0, -1).Format("2006-01-02") + ".log"
+	fileName := "./logs/api-server-metering" + time.Now().Format("2006-01-02") + ".log"
 	file, err = os.OpenFile(
 		fileName,
 		os.O_APPEND|os.O_WRONLY|os.O_CREATE,

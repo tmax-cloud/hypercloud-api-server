@@ -84,7 +84,7 @@ func main() {
 			klog.Error(err)
 			return
 		}
-		err = ioutil.WriteFile("./logs/api-server"+time.Now().AddDate(0, 0, -1).Format("2006-01-02")+".log", input, 0644)
+		err = ioutil.WriteFile("./logs/api-server"+time.Now().Format("2006-01-02")+".log", input, 0644)
 		if err != nil {
 			klog.Error(err, "Error creating", "./logs/api-server")
 			return
