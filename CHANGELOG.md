@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.1.1 start -------------------->
+
+## Hypercloud-api-server 5.0.1.1 (Tue Mar  9 11:34:52 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] 빌드시스템 수정, kafka 주석 해제 by Seungwon Lee
+  - [mod] log 제목 변경, 젠킨스 삭제 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.1.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.1.0 (Mon Mar  8 15:53:34 KST 2021)
