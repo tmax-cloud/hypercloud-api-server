@@ -1,0 +1,4 @@
+# ignore unnecessary files
+.git
+.cache
+*.md
