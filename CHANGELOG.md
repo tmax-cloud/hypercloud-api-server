@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.1.2 start -------------------->
+
+## Hypercloud-api-server 5.0.1.2 (Wed Mar 10 11:37:57 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] Insert문 수정 by Seungwon Lee
+  - [mod] metering DB postgres로 변경 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.1.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.1.1 (Tue Mar  9 11:34:52 KST 2021)
