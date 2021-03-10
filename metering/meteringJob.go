@@ -32,41 +32,38 @@ const (
 	METERING_DELETE_QUERY = "truncate metering"
 
 	METERING_HOUR_INSERT_QUERY = "insert into metering_hour values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)"
-	METERING_HOUR_SELECT_QUERY = "select id, namespace, trunc(sum(cpu)/count(*),2) as cpu, trunc(sum(memory)/count(*),0) as memory," +
-		"trunc(sum(storage)/count(*),0) as storage, trunc(sum(gpu)/count(*),2) as gpu," +
-		"trunc(sum(public_ip)/count(*),0) as public_ip, trunc(sum(private_ip)/count(*),0) as private_ip, " +
-		"trunc(sum(traffic_in)/count(*),2) as traffic_in, trunc(sum(traffic_out)/count(*),2) as traffic_out," +
-		"metering_time, status from metering group by hour(metering_time), namespace"
+	METERING_HOUR_SELECT_QUERY = "SELECT namespace, TRUNC(CAST(SUM(cpu)/COUNT(*) as numeric) ,2) as cpu, " +
+		"TRUNC(CAST(SUM(memory)/COUNT(*) as numeric) ,2) as memory, TRUNC(CAST(SUM(storage)/COUNT(*) as numeric) ,2) as storage, " +
+		"TRUNC(CAST(SUM(gpu)/COUNT(*) as numeric) ,2) as gpu, SUM(public_ip)/COUNT(*) as public_ip, SUM(private_ip)/COUNT(*) as private_ip, " +
+		"TRUNC(CAST(SUM(traffic_in)/COUNT(*) as numeric) ,2) as traffic_in, TRUNC(CAST(SUM(traffic_out)/COUNT(*) as numeric) ,2) as traffic_out, " +
+		"DATE_TRUNC('hour', metering_time), status FROM metering GROUP BY DATE_TRUNC('hour', metering_time), namespace, status"
 	METERING_HOUR_UPDATE_QUERY = "update metering_hour set status = 'Merged' where status = 'Success'"
 	METERING_HOUR_DELETE_QUERY = "delete from metering_hour where status = 'Merged'"
 
 	METERING_DAY_INSERT_QUERY = "insert into metering_day values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)"
-	METERING_DAY_SELECT_QUERY = "select id, namespace, trunc(sum(cpu)/count(*),2) as cpu, trunc(sum(memory)/count(*),0) as memory, " +
-		"trunc(sum(storage)/count(*),0) as storage, trunc(sum(gpu)/count(*),2) as gpu, " +
-		"trunc(sum(public_ip)/count(*),0) as public_ip, trunc(sum(private_ip)/count(*),0) as private_ip," +
-		"trunc(sum(traffic_in)/count(*),2) as traffic_in, trunc(sum(traffic_out)/count(*),2) as traffic_out," +
-		"metering_time, status from metering_hour where status = 'Success' " +
-		"group by day(metering_time), namespace"
+	METERING_DAY_SELECT_QUERY = "SELECT namespace, TRUNC(CAST(SUM(cpu)/COUNT(*) as numeric) ,2) as cpu, " +
+		"TRUNC(CAST(SUM(memory)/COUNT(*) as numeric) ,2) as memory, TRUNC(CAST(SUM(storage)/COUNT(*) as numeric) ,2) as storage, " +
+		"TRUNC(CAST(SUM(gpu)/COUNT(*) as numeric) ,2) as gpu, SUM(public_ip)/COUNT(*) as public_ip, SUM(private_ip)/COUNT(*) as private_ip, " +
+		"TRUNC(CAST(SUM(traffic_in)/COUNT(*) as numeric) ,2) as traffic_in, TRUNC(CAST(SUM(traffic_out)/COUNT(*) as numeric) ,2) as traffic_out, " +
+		"DATE_TRUNC('day', metering_time), status FROM metering_hour WHERE status='Success' GROUP BY DATE_TRUNC('day', metering_time), namespace, status"
 	METERING_DAY_UPDATE_QUERY = "update metering_day set status = 'Merged' where status = 'Success'"
 	METERING_DAY_DELETE_QUERY = "delete from metering_day where status = 'Merged'"
 
 	METERING_MONTH_INSERT_QUERY = "insert into metering_month values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)"
-	METERING_MONTH_SELECT_QUERY = "select id, namespace, trunc(sum(cpu)/count(*),2) as cpu, trunc(sum(memory)/count(*),0) as memory, " +
-		"trunc(sum(storage)/count(*),0) as storage, trunc(sum(gpu)/count(*),2) as gpu, " +
-		"trunc(sum(public_ip)/count(*),0) as public_ip, trunc(sum(private_ip)/count(*),0) as private_ip, " +
-		"trunc(sum(traffic_in)/count(*),2) as traffic_in, trunc(sum(traffic_out)/count(*),2) as traffic_out," +
-		"metering_time, status from metering_day where status = 'Success' " +
-		"group by month(metering_time), namespace"
+	METERING_MONTH_SELECT_QUERY = "SELECT namespace, TRUNC(CAST(SUM(cpu)/COUNT(*) as numeric) ,2) as cpu, " +
+		"TRUNC(CAST(SUM(memory)/COUNT(*) as numeric) ,2) as memory, TRUNC(CAST(SUM(storage)/COUNT(*) as numeric) ,2) as storage, " +
+		"TRUNC(CAST(SUM(gpu)/COUNT(*) as numeric) ,2) as gpu, SUM(public_ip)/COUNT(*) as public_ip, SUM(private_ip)/COUNT(*) as private_ip, " +
+		"TRUNC(CAST(SUM(traffic_in)/COUNT(*) as numeric) ,2) as traffic_in, TRUNC(CAST(SUM(traffic_out)/COUNT(*) as numeric) ,2) as traffic_out, " +
+		"DATE_TRUNC('month', metering_time), status FROM metering_day WHERE status='Success' GROUP BY DATE_TRUNC('month', metering_time), namespace, status"
 	METERING_MONTH_UPDATE_QUERY = "update metering_month set status = 'Merged' where status = 'Success'"
 	METERING_MONTH_DELETE_QUERY = "delete from metering_month where status = 'Merged'"
 
 	METERING_YEAR_INSERT_QUERY = "insert into metering_year values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)"
-	METERING_YEAR_SELECT_QUERY = "select id, namespace, trunc(sum(cpu)/count(*),2) as cpu, trunc(sum(memory)/count(*),0) as memory, " +
-		"trunc(sum(storage)/count(*),0) as storage, trunc(sum(gpu)/count(*),2) as gpu, " +
-		"trunc(sum(public_ip)/count(*),0) as public_ip, trunc(sum(private_ip)/count(*),0) as private_ip, " +
-		"trunc(sum(traffic_in)/count(*),2) as traffic_in, trunc(sum(traffic_out)/count(*),2) as traffic_out," +
-		"date_format(metering_time,'%Y-01-01 %H:00:00') as metering_time, status from metering_month where status = 'Success' " +
-		"group by year(metering_time), namespace"
+	METERING_YEAR_SELECT_QUERY = "SELECT namespace, TRUNC(CAST(SUM(cpu)/COUNT(*) as numeric) ,2) as cpu, " +
+		"TRUNC(CAST(SUM(memory)/COUNT(*) as numeric) ,2) as memory, TRUNC(CAST(SUM(storage)/COUNT(*) as numeric) ,2) as storage, " +
+		"TRUNC(CAST(SUM(gpu)/COUNT(*) as numeric) ,2) as gpu, SUM(public_ip)/COUNT(*) as public_ip, SUM(private_ip)/COUNT(*) as private_ip, " +
+		"TRUNC(CAST(SUM(traffic_in)/COUNT(*) as numeric) ,2) as traffic_in, TRUNC(CAST(SUM(traffic_out)/COUNT(*) as numeric) ,2) as traffic_out, " +
+		"DATE_TRUNC('year', metering_time), status FROM metering_month WHERE status='Success' GROUP BY DATE_TRUNC('year', metering_time), namespace, status"
 
 	PROMETHEUS_URI = "http://prometheus-k8s.monitoring:9090/api/v1/query" // use this when running on pod
 	//PROMETHEUS_GET_CPU_QUERY         = "namespace:container_cpu_usage_seconds_total:sum_rate"
@@ -361,7 +358,7 @@ func insertMeteringYear() {
 	var status string
 	for rows.Next() {
 		err := rows.Scan(
-			&meteringData.Id,
+			//&meteringData.Id,
 			&meteringData.Namespace,
 			&meteringData.Cpu,
 			&meteringData.Memory,
@@ -444,7 +441,7 @@ func insertMeteringMonth() {
 	var status string
 	for rows.Next() {
 		err := rows.Scan(
-			&meteringData.Id,
+			//&meteringData.Id,
 			&meteringData.Namespace,
 			&meteringData.Cpu,
 			&meteringData.Memory,
@@ -527,7 +524,7 @@ func insertMeteringDay() {
 	var status string
 	for rows.Next() {
 		err := rows.Scan(
-			&meteringData.Id,
+			//&meteringData.Id,
 			&meteringData.Namespace,
 			&meteringData.Cpu,
 			&meteringData.Memory,
@@ -608,7 +605,7 @@ func insertMeteringHour() {
 	var status string
 	for rows.Next() {
 		err := rows.Scan(
-			&meteringData.Id,
+			//&meteringData.Id,
 			&meteringData.Namespace,
 			&meteringData.Cpu,
 			&meteringData.Memory,
