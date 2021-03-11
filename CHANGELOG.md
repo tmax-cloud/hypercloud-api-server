@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.2.0 start -------------------->
+
+## Hypercloud-api-server 5.0.2.0 (Thu Mar 11 19:31:21 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] manage cluster member using db by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.1.2 start -------------------->
 
 ## Hypercloud-api-server 5.0.1.2 (Wed Mar 10 11:37:57 KST 2021)
