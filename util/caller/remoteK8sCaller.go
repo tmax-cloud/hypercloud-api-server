@@ -18,7 +18,7 @@ import (
 var remoteClientset *kubernetes.Clientset
 var remoteRestConfig *restclient.Config
 
-func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, remoteRole string, isGroup bool) (string, int) {
+func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, remoteRole string, attribute string) (string, int) {
 	if remoteRole == "admin" {
 		remoteRole = "cluster-admin"
 	}
@@ -30,7 +30,7 @@ func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject 
 	// var clusterRoleName string
 	var clusterRoleBindingName string
 	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
-	if !isGroup {
+	if attribute == "user" {
 		// clusterRoleName = subject + "-user-" + clusterManager.Name + "-clm-role"
 		clusterRoleBindingName = subject + "-user-rolebinding"
 		clusterRoleBinding.Subjects = []rbacv1.Subject{
@@ -70,7 +70,7 @@ func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject 
 	return msg, http.StatusOK
 }
 
-func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, isGroup bool) (string, int) {
+func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) (string, int) {
 	remoteClientset, err := getRemoteK8sClient(clusterManager.Name)
 	if err != nil {
 		return err.Error(), http.StatusInternalServerError
@@ -78,7 +78,7 @@ func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subjec
 
 	// var clusterRoleName string
 	var clusterRoleBindingName string
-	if !isGroup {
+	if attribute == "user" {
 		clusterRoleBindingName = subject + "-user-rolebinding"
 	} else {
 		clusterRoleBindingName = subject + "-group-rolebinding"

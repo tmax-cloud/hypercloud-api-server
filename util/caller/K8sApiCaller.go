@@ -17,6 +17,7 @@ import (
 	configv1alpha1 "github.com/tmax-cloud/efk-operator/api/v1alpha1"
 	alertModel "github.com/tmax-cloud/hypercloud-api-server/alert/model"
 	client "github.com/tmax-cloud/hypercloud-api-server/client"
+	clusterDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/cluster"
 	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
 	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
@@ -28,7 +29,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
-
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/scheme"
 )
@@ -706,22 +706,17 @@ func ListCluster(userId string, userGroups []string, accessible bool) (*clusterv
 		return clmList, msg, http.StatusOK
 	} else {
 		klog.Infoln("User [ " + userId + " ] has No ClusterManager List Role or acessible is true")
+
+		// db에서 읽어온다.
+		clusterNameList, err := clusterDataFactory.ListAceesibleCluster(userId, userGroups)
+		if err != nil {
+			klog.Errorln(err)
+			return nil, err.Error(), http.StatusInternalServerError
+		}
 		_clmList := []clusterv1alpha1.ClusterManager{}
 		for _, clm := range clmList.Items {
-			if _, ok := clm.Status.Owner[userId]; ok {
-				// if clm.Status.Owner == userId {
+			if util.Contains(clusterNameList, clm.Name) {
 				_clmList = append(_clmList, clm)
-			} else if _, ok := clm.Status.Members[userId]; ok {
-				// } else if util.Contains(clm.Status.Members, userId) {
-				_clmList = append(_clmList, clm)
-			} else {
-				for _, userGroup := range userGroups {
-					if _, ok := clm.Status.Groups[userGroup]; ok {
-						// if util.Contains(clm.Status.Groups, userGroup) {
-						_clmList = append(_clmList, clm)
-						break
-					}
-				}
 			}
 		}
 		clmList.Items = _clmList
@@ -785,11 +780,11 @@ func UpdateClusterManager(userId string, userGroups []string, clm *clusterv1alph
 	}
 }
 
-func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, isGroup bool) (string, int) {
+func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) (string, int) {
 	var clusterRoleName string
 	var clusterRoleBindingName string
 	clusterRoleBinding := &rbacApi.ClusterRoleBinding{}
-	if !isGroup {
+	if attribute == "user" {
 		clusterRoleName = subject + "-user-" + clusterManager.Name + "-clm-role"
 		clusterRoleBindingName = subject + "-user-" + clusterManager.Name + "-clm-rolebinding"
 		clusterRoleBinding.Subjects = []rbacApi.Subject{
@@ -867,11 +862,11 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 	return msg, http.StatusOK
 }
 
-func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, isGroup bool) (string, int) {
+func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) (string, int) {
 
 	var clusterRoleName string
 	var clusterRoleBindingName string
-	if !isGroup {
+	if attribute == "user" {
 		clusterRoleName = subject + "-user-" + clusterManager.Name + "-clm-role"
 		clusterRoleBindingName = subject + "-user-" + clusterManager.Name + "-clm-rolebinding"
 	} else {

@@ -47,8 +47,13 @@ func main() {
 	flag.StringVar(&admission.SidecarContainerImage, "sidecarImage", "fluent/fluent-bit:1.5-debug", "Fluent-bit image name.")
 	flag.StringVar(&util.SMTPHost, "smtpHost", "mail.tmax.co.kr", "SMTP Server Host Address")
 	flag.IntVar(&util.SMTPPort, "smtpPort", 25, "SMTP Server Port")
-	flag.StringVar(&util.SMTPUsername, "smtpUsername", "/run/secrets/smtp/username", "SMTP Server Username")
-	flag.StringVar(&util.SMTPPassword, "smtpPassword", "/run/secrets/smtp/password", "SMTP Server Password")
+	flag.StringVar(&util.SMTPUsernamePath, "smtpUsername", "/run/secrets/smtp/username", "SMTP Server Username")
+	flag.StringVar(&util.SMTPPasswordPath, "smtpPassword", "/run/secrets/smtp/password", "SMTP Server Password")
+	flag.StringVar(&util.AccessSecretPath, "accessSecret", "/run/secrets/token/accessSecret", "Token Access Secret")
+	flag.StringVar(&util.HtmlHomePath, "htmlPath", "/run/configs/html/", "Invite htlm path")
+	flag.StringVar(&util.TokenExpiredDate, "tokenExpiredDate", "/run/configs/html/", "Invite htlm path")
+
+	go util.ReadFile()
 
 	// Get Hypercloud Operating Mode!!!
 	hcMode := os.Getenv("HC_MODE")
@@ -118,12 +123,15 @@ func main() {
 
 	if hcMode != "single" {
 		// for multi mode only
-		mux.HandleFunc("/clusterclaim", serveClusterClaim)
-		mux.HandleFunc("/cluster", serveCluster)
-		mux.HandleFunc("/cluster/remove_member", serveClusterRemoveMember)      // 멤버 삭제
-		mux.HandleFunc("/cluster/member", serveClusterMember)                   // 권한 변경
-		mux.HandleFunc("/cluster_invitations", serveClusterInvitations)         //추가 요청
-		mux.HandleFunc("/cluster_invitations/{admit}", serveClusterInvitations) //추가 요청 승인, 추가 요청 거절
+		mux.HandleFunc("/clusterclaim", serveClusterClaim)                                                             // listGet
+		mux.HandleFunc("/clusterclaim/{clusterclaim}", serveClusterClaim)                                              // listGet, claim 승인 (db에 넣어야할듯?)
+		mux.HandleFunc("/cluster", serveCluster)                                                                       // listGet (role read)
+		mux.HandleFunc("/cluster/{cluster}/member", serveClusterMember)                                                // listGet (all cluster member , status == invited)
+		mux.HandleFunc("/cluster/{cluster}/member_invitation", serveClusterInvitation)                                 // 요청리스트 get
+		mux.HandleFunc("/cluster/{cluster}/member_invitation/{attribute}/{member}", serveClusterInvitation)            // 추가 요청 (db + token 발급)
+		mux.HandleFunc("/cluster/{cluster}/member_invitation/{attribute}/{user}/{admit}", serveClusterInvitationAdmit) // 추가 요청 승인, 추가 요청 거절
+		mux.HandleFunc("/cluster/{cluster}/remove_member/{attribute}/{member}", serveClusterMember)                    // 멤버 삭제 (db)
+		mux.HandleFunc("/cluster/{cluster}/update_role/{attribute}/{member}", serveClusterMember)                      // 권한 변경 (db)
 	}
 
 	mux.HandleFunc("/metadata", serveMetadata)
@@ -228,8 +236,6 @@ func serveVersion(res http.ResponseWriter, req *http.Request) {
 func serveClusterClaim(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {
-	case http.MethodPost:
-		claim.Post(res, req)
 	case http.MethodGet:
 		claim.List(res, req)
 	case http.MethodPut:
@@ -241,54 +247,56 @@ func serveClusterClaim(res http.ResponseWriter, req *http.Request) {
 func serveCluster(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {
-
 	case http.MethodGet:
 		cluster.List(res, req)
 	case http.MethodPut:
-		// invite multiple users
-		// cluster.Put(res, req)
 	default:
 	}
 }
-func serveClusterRemoveMember(res http.ResponseWriter, req *http.Request) {
+func serveClusterMember(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {
 	case http.MethodPost:
 		cluster.RemoveMember(res, req)
-	default:
-	}
-}
-
-func serveClusterMember(res http.ResponseWriter, req *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
-	switch req.Method {
+	case http.MethodGet:
+		cluster.ListClusterMember(res, req)
 	case http.MethodPut:
 		cluster.UpdateMemberRole(res, req)
-	// case http.MethodPost:
-	// cluster.InviteMember(res, req)
 	default:
 	}
 }
 
-func serveClusterInvitations(res http.ResponseWriter, req *http.Request) {
+func serveClusterInvitation(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	vars := gmux.Vars(req)
 	switch req.Method {
 	case http.MethodGet:
-		if vars["admit"] == "" {
-			cluster.GetInvitation(res, req)
+		cluster.ListInvitation(res, req)
+		break
+	case http.MethodPost:
+		if vars["attribute"] == "user" {
+			cluster.InviteUser(res, req)
+		} else if vars["attribute"] == "group" {
+			cluster.InviteGroup(res, req)
 		} else {
+			// errror
 		}
 		break
+	default:
+	}
+}
+
+func serveClusterInvitationAdmit(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	vars := gmux.Vars(req)
+	switch req.Method {
 	case http.MethodPost:
 		if vars["admit"] == "accept" {
 			cluster.AcceptInvitation(res, req)
-		} else if vars["admit"] == "decline" {
+		} else if vars["admit"] == "reject" {
 			cluster.DeclineInvitation(res, req)
-		} else if vars["admit"] == "" {
-			cluster.InviteMember(res, req)
 		} else {
-			//
+			// errror
 		}
 		break
 	default:

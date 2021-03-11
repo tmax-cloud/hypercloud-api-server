@@ -5,21 +5,42 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/smtp"
+	"strings"
 	"time"
 
+	jwt "github.com/dgrijalva/jwt-go"
+	// cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
+	"errors"
+
+	gomail "gopkg.in/gomail.v2"
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	// "k8s.io/klog/v2"
 	"k8s.io/klog"
 )
 
+type ClusterMemberInfo struct {
+	Id          int64
+	Cluster     string
+	Member      string
+	Attribute   string
+	Role        string
+	Status      string
+	CreatedTime time.Time
+	UpdatedTime time.Time
+}
+
 var (
-	SMTPUsername string
-	SMTPPassword string
-	SMTPHost     string
-	SMTPPort     int
+	SMTPUsernamePath string
+	SMTPPasswordPath string
+	SMTPHost         string
+	SMTPPort         int
+	AccessSecretPath string
+	accessSecret     string
+	username         string
+	password         string
+	inviteMail       string
+	HtmlHomePath     string
+	TokenExpiredDate string
 )
 
 //Jsonpatch를 담을 수 있는 구조체
@@ -27,6 +48,30 @@ type PatchOps struct {
 	Op    string      `json:"op"`
 	Path  string      `json:"path"`
 	Value interface{} `json:"value,omitempty"`
+}
+
+func ReadFile() {
+	content, err := ioutil.ReadFile(AccessSecretPath)
+	if err != nil {
+		klog.Errorln(err)
+		return
+	}
+	accessSecret = string(content)
+	klog.Infoln(accessSecret)
+
+	content, err = ioutil.ReadFile(SMTPUsernamePath)
+	if err != nil {
+		klog.Errorln(err)
+		return
+	}
+	username = string(content)
+
+	content, err = ioutil.ReadFile(SMTPPasswordPath)
+	if err != nil {
+		klog.Errorln(err)
+		return
+	}
+	password = string(content)
 }
 
 // Jsonpatch를 하나 만들어서 slice에 추가하는 함수
@@ -50,7 +95,7 @@ func ToAdmissionResponse(err error) *v1beta1.AdmissionResponse {
 func SetResponse(res http.ResponseWriter, outString string, outJson interface{}, status int) http.ResponseWriter {
 
 	//set Cors
-	res.Header().Set("Access-Control-Allow-Origin", "*")
+	// res.Header().Set("Access-Control-Allow-Origin", "*")
 	res.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	res.Header().Set("Access-Control-Max-Age", "3628800")
 	res.Header().Set("Access-Control-Expose-Headers", "Content-Type, X-Requested-With, Accept, Authorization, Referer, User-Agent")
@@ -155,34 +200,131 @@ func MonthToInt(month time.Month) int {
 	}
 }
 
-func SendEmail(from string, to []string, subject string, body string) error {
-	// 메일서버 로그인 정보 설정
-	content, err := ioutil.ReadFile(SMTPUsername)
+func SendEmail(from string, to []string, subject string, bodyParameter map[string]string) error {
+	// func SendEmail(from string, to []string, subject string, body string, imgPath string, imgCid string) error {
+	content, err := ioutil.ReadFile(HtmlHomePath + "invite.html")
 	if err != nil {
 		klog.Errorln(err)
 		return err
 	}
-	username := string(content)
+	inviteMail = string(content)
 
-	content, err = ioutil.ReadFile(SMTPPassword)
-	if err != nil {
-		klog.Errorln(err)
-		return err
+	for k, v := range bodyParameter {
+		inviteMail = strings.Replace(inviteMail, k, v, -1)
 	}
-	password := string(content)
+	klog.Infoln(inviteMail)
 
-	auth := smtp.PlainAuth("", username, password, SMTPHost)
+	m := gomail.NewMessage()
+	m.SetHeader("From", username)
+	m.SetHeader("To", strings.Join(to[:], ","))
+	m.SetHeader("Subject", subject)
+	m.SetBody("text/html", inviteMail)
+	// m.Embed(imgPath)
+	d := gomail.NewDialer(SMTPHost, SMTPPort, username, password)
 
-	// 메시지 작성
-	headerSubject := fmt.Sprintf("Subject: %s\r\n", subject)
-	headerBlank := "\r\n"
-	body = "메일 테스트입니다\r\n"
-	msg := []byte(headerSubject + headerBlank + body)
-
-	// 메일 보내기
-	err = smtp.SendMail(fmt.Sprintf("%s:%d", SMTPHost, SMTPPort), auth, from, to, msg)
-	if err != nil {
+	if err := d.DialAndSend(m); err != nil {
+		klog.Errorln(err)
 		return err
 	}
 	return nil
+}
+
+func CreateToken(clusterMember ClusterMemberInfo) (string, error) {
+	atClaims := jwt.MapClaims{}
+	atClaims["authorized"] = true
+	atClaims["user_id"] = clusterMember.Member
+	klog.Info("clusterMember.Member = \n" + clusterMember.Member)
+	atClaims["cluster"] = clusterMember.Cluster
+	klog.Info(atClaims["user_id"])
+	atClaims["exp"] = time.Now().Add(time.Minute * 5).Unix()
+	test := time.Now().Add(time.Minute * 5).Unix()
+	klog.Info(test)
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+	token, err := at.SignedString([]byte(accessSecret))
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func StringParameterException(userGroups []string, args ...string) error {
+	if userGroups == nil {
+		msg := "UserGroups is empty."
+		klog.Infoln(msg)
+		return errors.New(msg)
+	}
+
+	for _, arg := range args {
+		if arg == "" {
+			msg := arg + " is empty."
+			klog.Infoln(msg)
+			return errors.New(msg)
+		}
+	}
+	return nil
+}
+
+func ExtractTokenFromHeader(r *http.Request) string {
+	bearToken := r.Header.Get("Authorization")
+	strArr := strings.Split(bearToken, " ")
+	if len(strArr) == 2 {
+		return strArr[1]
+	}
+	return ""
+}
+
+func ExtractTokenFromQuery(r *http.Request) string {
+	bearToken := r.URL.Query().Get("token")
+	klog.Info(bearToken)
+
+	if bearToken == "" {
+		return ""
+	}
+	return bearToken
+}
+
+func VerifyToken(r *http.Request) (*jwt.Token, error) {
+	tokenString := ExtractTokenFromQuery(r)
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		//Make sure that the token method conform to "SigningMethodHMAC"
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New(fmt.Sprintf("unexpected signing method: %v", token.Header["alg"]))
+		}
+		return []byte(accessSecret), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
+}
+
+// func TokenValid(r *http.Request) error {
+// 	token, err := VerifyToken(r)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
+// 		return err
+// 	}
+// 	return nil
+// }
+
+func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) error {
+	var member string
+	var cluster string
+	token, err := VerifyToken(r)
+	if err != nil {
+		return err
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if ok && token.Valid {
+		member, ok = claims["user_id"].(string)
+		cluster, ok = claims["cluster"].(string)
+	}
+
+	if clusterMember.Member == member && clusterMember.Cluster == cluster {
+		return nil
+	}
+	return errors.New("Request user or target cluster does not match with token payload")
+
 }

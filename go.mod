@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/Shopify/sarama v1.19.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/eapache/go-resiliency v1.2.0 // indirect
 	github.com/evanphx/json-patch v4.9.0+incompatible
 	github.com/frankban/quicktest v1.11.3 // indirect
@@ -21,6 +22,7 @@ require (
 	github.com/tmax-cloud/efk-operator v0.0.0-20201207030412-fd9c02a3e1c2
 	github.com/tmax-cloud/hypercloud-multi-operator v0.0.0-20210225041531-7124d026aacf
 	github.com/tmax-cloud/hypercloud-single-operator v0.0.0-20210222045913-0ace319d7c34
+	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.19.4
 	k8s.io/apimachinery v0.19.4
