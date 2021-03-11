@@ -28,7 +28,7 @@ import (
 	"net/http"
 
 	"github.com/robfig/cron"
-	// kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
+	kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
 )
 
 type admitFunc func(v1beta1.AdmissionReview) *v1beta1.AdmissionResponse
@@ -89,7 +89,7 @@ func main() {
 			klog.Error(err)
 			return
 		}
-		err = ioutil.WriteFile("./logs/api-server"+time.Now().AddDate(0, 0, -1).Format("2006-01-02")+".log", input, 0644)
+		err = ioutil.WriteFile("./logs/api-server"+time.Now().Format("2006-01-02")+".log", input, 0644)
 		if err != nil {
 			klog.Error(err, "Error creating", "./logs/api-server")
 			return
@@ -103,8 +103,8 @@ func main() {
 	cronJob.AddFunc("0 */1 * ? * *", metering.MeteringJob)
 	cronJob.Start()
 
-	// // Hyperauth Event Consumer
-	// go kafkaConsumer.HyperauthConsumer()
+	// Hyperauth Event Consumer
+	go kafkaConsumer.HyperauthConsumer()
 
 	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {

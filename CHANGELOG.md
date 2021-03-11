@@ -1,6 +1,108 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.1.2 start -------------------->
+
+## Hypercloud-api-server 5.0.1.2 (Wed Mar 10 11:37:57 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] Insert문 수정 by Seungwon Lee
+  - [mod] metering DB postgres로 변경 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.1.1 start -------------------->
+
+## Hypercloud-api-server 5.0.1.1 (Tue Mar  9 11:34:52 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] 빌드시스템 수정, kafka 주석 해제 by Seungwon Lee
+  - [mod] log 제목 변경, 젠킨스 삭제 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.1.0 start -------------------->
+
+## Hypercloud-api-server 5.0.1.0 (Mon Mar  8 15:53:34 KST 2021)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.0.43 start -------------------->
+
+## Hypercloud-api-server 5.0.0.43 (Mon Mar  8 15:39:04 KST 2021)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.0.42 start -------------------->
+
+## Hypercloud-api-server 5.0.0.42 (Mon Mar  8 15:32:22 KST 2021)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.0.40 start -------------------->
+
+## Hypercloud-api-server 5.0.0.40 (Mon Mar  8 14:52:29 KST 2021)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.0.25 start -------------------->
+
+## Hypercloud-api-server 5.0.0.25 (Mon Mar  8 13:51:22 KST 2021)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.0.24 start -------------------->
 
 ## Hypercloud-api-server 5.0.0.24 (Tue Mar  2 17:37:27 KST 2021)
