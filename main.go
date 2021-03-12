@@ -21,6 +21,7 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/namespaceClaim"
 	user "github.com/tmax-cloud/hypercloud-api-server/user"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	version "github.com/tmax-cloud/hypercloud-api-server/version"
 	"k8s.io/api/admission/v1beta1"
 	"k8s.io/klog"
@@ -120,6 +121,7 @@ func main() {
 	mux.HandleFunc("/alert", serveAlert)
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
+	mux.HandleFunc("/deleteClaim", serveDeleteClaim)
 
 	if hcMode != "single" {
 		// for multi mode only
@@ -228,6 +230,23 @@ func serveVersion(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		version.Get(res, req)
+	default:
+		//error
+	}
+}
+
+func serveDeleteClaim(res http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodDelete:
+		userId := req.URL.Query().Get(util.QUERY_PARAMETER_USER_ID)
+		if userId != "" {
+			k8sApiCaller.DeleteRQCWithUser(userId)
+			k8sApiCaller.DeleteNSCWithUser(userId)
+			k8sApiCaller.DeleteRBCWithUser(userId)
+			util.SetResponse(res, "Successfully delete claims of "+userId, nil, http.StatusOK)
+		} else {
+			util.SetResponse(res, "userId is missing", nil, http.StatusBadRequest)
+		}
 	default:
 		//error
 	}
