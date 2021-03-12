@@ -121,7 +121,7 @@ func main() {
 	mux.HandleFunc("/alert", serveAlert)
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
-	mux.HandleFunc("/deleteClaim", serveDeleteClaim)
+	mux.HandleFunc("/claim", serveClaim)
 
 	if hcMode != "single" {
 		// for multi mode only
@@ -235,7 +235,7 @@ func serveVersion(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func serveDeleteClaim(res http.ResponseWriter, req *http.Request) {
+func serveClaim(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodDelete:
 		userId := req.URL.Query().Get(util.QUERY_PARAMETER_USER_ID)
