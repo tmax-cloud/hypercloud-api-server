@@ -1,4 +1,4 @@
-package version
+package model
 
 // ModuleInfo is a strcut for storing configMap file.
 // It must support all possible cases described in configMap.
