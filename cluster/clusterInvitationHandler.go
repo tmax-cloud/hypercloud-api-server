@@ -76,9 +76,6 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
-	klog.Infoln(clusterOwner)
-	klog.Infoln(existUser)
-	klog.Infoln(util.Contains(existUser, memberId))
 
 	if util.Contains(existUser, memberId) {
 		msg := "Member is already invited in cluster"
@@ -204,9 +201,6 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 			existGroup = append(existGroup, val.MemberId)
 		}
 	}
-	klog.Infoln(clusterOwner)
-	klog.Infoln(existGroup)
-	klog.Infoln(util.Contains(existGroup, memberId))
 
 	if userId != clusterOwner {
 		msg := "Request user is not a cluster owner"
