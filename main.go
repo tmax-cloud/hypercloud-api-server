@@ -28,7 +28,6 @@ import (
 	"net/http"
 
 	"github.com/robfig/cron"
-	kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
 )
 
 type admitFunc func(v1beta1.AdmissionReview) *v1beta1.AdmissionResponse
@@ -51,12 +50,13 @@ func main() {
 	flag.StringVar(&util.SMTPPasswordPath, "smtpPassword", "/run/secrets/smtp/password", "SMTP Server Password")
 	flag.StringVar(&util.AccessSecretPath, "accessSecret", "/run/secrets/token/accessSecret", "Token Access Secret")
 	flag.StringVar(&util.HtmlHomePath, "htmlPath", "/run/configs/html/", "Invite htlm path")
-	flag.StringVar(&util.TokenExpiredDate, "tokenExpiredDate", "/run/configs/html/", "Invite htlm path")
+	// flag.StringVar(&util.TokenExpiredDate, "tokenExpiredDate", "24hours", "Token Expired Date")
 
 	go util.ReadFile()
 
 	// Get Hypercloud Operating Mode!!!
 	hcMode := os.Getenv("HC_MODE")
+	util.TokenExpiredDate = os.Getenv("INVITATION_TOKEN_EXPIRED_DATE")
 
 	// For Log file
 	klog.InitFlags(nil)
@@ -104,7 +104,7 @@ func main() {
 	cronJob.Start()
 
 	// Hyperauth Event Consumer
-	go kafkaConsumer.HyperauthConsumer()
+	// go kafkaConsumer.HyperauthConsumer()
 
 	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
@@ -124,10 +124,10 @@ func main() {
 	if hcMode != "single" {
 		// for multi mode only
 		mux.HandleFunc("/clusterclaim", serveClusterClaim)                                                             // listGet
-		mux.HandleFunc("/clusterclaim/{clusterclaim}", serveClusterClaim)                                              // listGet, claim 승인 (db에 넣어야할듯?)
-		mux.HandleFunc("/cluster", serveCluster)                                                                       // listGet (role read)
-		mux.HandleFunc("/cluster/{cluster}/member", serveClusterMember)                                                // listGet (all cluster member , status == invited)
-		mux.HandleFunc("/cluster/{cluster}/member_invitation", serveClusterInvitation)                                 // 요청리스트 get
+		mux.HandleFunc("/clusterclaim/{clusterclaim}", serveClusterClaim)                                              // listGet, claim 승인
+		mux.HandleFunc("/cluster", serveCluster)                                                                       // listGet
+		mux.HandleFunc("/cluster/{cluster}/member", serveClusterMember)                                                // listGet (all cluster member not pending status)
+		mux.HandleFunc("/cluster/{cluster}/member_invitation", serveClusterInvitation)                                 // listGet (only pending status)
 		mux.HandleFunc("/cluster/{cluster}/member_invitation/{attribute}/{member}", serveClusterInvitation)            // 추가 요청 (db + token 발급)
 		mux.HandleFunc("/cluster/{cluster}/member_invitation/{attribute}/{user}/{admit}", serveClusterInvitationAdmit) // 추가 요청 승인, 추가 요청 거절
 		mux.HandleFunc("/cluster/{cluster}/remove_member/{attribute}/{member}", serveClusterMember)                    // 멤버 삭제 (db)

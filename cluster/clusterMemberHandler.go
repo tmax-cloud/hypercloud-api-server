@@ -52,9 +52,9 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	vars := gmux.Vars(req)
 	cluster := vars["cluster"]
 	attribute := vars["attribute"]
-	member := vars["member"]
+	memberId := vars["member"]
 
-	if err := util.StringParameterException(userGroups, userId, cluster, attribute, member); err != nil {
+	if err := util.StringParameterException(userGroups, userId, cluster, attribute, memberId); err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
@@ -74,7 +74,7 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 
 	clusterMember := util.ClusterMemberInfo{}
 	clusterMember.Cluster = cluster
-	clusterMember.Member = member
+	clusterMember.MemberId = memberId
 	clusterMember.Attribute = attribute
 	clusterMember.Status = "invited"
 
@@ -86,21 +86,20 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// role 삭제
-	if msg, status = caller.DeleteCLMRole(clm, member, attribute); status != http.StatusOK {
+	if msg, status = caller.DeleteCLMRole(clm, memberId, attribute); status != http.StatusOK {
 		util.SetResponse(res, msg, nil, status)
 		return
 	}
-	if msg, status = caller.RemoveRoleFromRemote(clm, member, attribute); status != http.StatusOK {
+	if msg, status = caller.RemoveRoleFromRemote(clm, memberId, attribute); status != http.StatusOK {
 		util.SetResponse(res, msg, nil, status)
 		return
 	}
-	msg = "User [" + member + "] is removed from cluster [" + clm.Name + "]"
+	msg = "User [" + memberId + "] is removed from cluster [" + clm.Name + "]"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, status)
 	return
 }
 
-// mux.HandleFunc("/cluster/{cluster}/update_role/{attribute}", serveClusterMemberRole)                           // 권한 변경 (db)
 func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
@@ -110,9 +109,9 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	vars := gmux.Vars(req)
 	cluster := vars["cluster"]
 	attribute := vars["attribute"]
-	member := vars["member"]
+	memberId := vars["member"]
 
-	if err := util.StringParameterException(userGroups, userId, cluster, attribute, member, remoteRole); err != nil {
+	if err := util.StringParameterException(userGroups, userId, cluster, attribute, memberId, remoteRole); err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
@@ -132,7 +131,7 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 
 	clusterMember := util.ClusterMemberInfo{}
 	clusterMember.Cluster = cluster
-	clusterMember.Member = member
+	clusterMember.MemberId = memberId
 	clusterMember.Role = remoteRole
 	clusterMember.Attribute = attribute
 	clusterMember.Status = "invited"
@@ -145,15 +144,15 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// role 삭제 후 재 생성
-	if msg, status := caller.RemoveRoleFromRemote(clm, member, attribute); status != http.StatusOK {
+	if msg, status := caller.RemoveRoleFromRemote(clm, memberId, attribute); status != http.StatusOK {
 		util.SetResponse(res, msg, nil, status)
 		return
 	}
-	if msg, status := caller.CreateRoleInRemote(clm, member, remoteRole, attribute); status != http.StatusOK {
+	if msg, status := caller.CreateRoleInRemote(clm, memberId, remoteRole, attribute); status != http.StatusOK {
 		util.SetResponse(res, msg, nil, status)
 		return
 	}
-	msg = attribute + " [" + member + "] role is updated to [" + remoteRole + "] in cluster [" + clm.Name + "]"
+	msg = attribute + " [" + memberId + "] role is updated to [" + remoteRole + "] in cluster [" + clm.Name + "]"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, status)
 	return

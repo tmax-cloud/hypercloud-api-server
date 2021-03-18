@@ -12,12 +12,15 @@ import (
 )
 
 const (
+	// QUERY_PARAMETER_USER_NAME   = "Name"
 	QUERY_PARAMETER_USER_ID     = "userId"
+	QUERY_PARAMETER_USER_NAME   = "userName"
 	QUERY_PARAMETER_LIMIT       = "limit"
 	QUERY_PARAMETER_OFFSET      = "offset"
 	QUERY_PARAMETER_CLUSTER     = "cluster"
 	QUERY_PARAMETER_ACCESS_ONLY = "accessOnly"
 	QUERY_PARAMETER_REMOTE_ROLE = "remoteRole"
+	QUERY_PARAMETER_MEMBER_NAME = "memberName"
 )
 
 func List(res http.ResponseWriter, req *http.Request) {

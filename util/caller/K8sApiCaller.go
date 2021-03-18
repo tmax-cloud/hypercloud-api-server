@@ -912,6 +912,11 @@ func GetFbc(namespace string, name string) (*configv1alpha1.FluentBitConfigurati
 	return result, err
 }
 
+func GetConsoleService(namespace string, name string) (*coreApi.Service, error) {
+	result, err := Clientset.CoreV1().Services(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	return result, err
+}
+
 func CreateClusterClaim(userId string, userGroup []string, cc *claimsv1alpha1.ClusterClaim) (*claimsv1alpha1.ClusterClaim, string, int) {
 	if len(cc.Annotations) == 0 {
 		cc.Annotations = map[string]string{

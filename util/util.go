@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	// cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
+
 	"errors"
+
+	"regexp"
 
 	gomail "gopkg.in/gomail.v2"
 	"k8s.io/api/admission/v1beta1"
@@ -21,7 +24,8 @@ import (
 type ClusterMemberInfo struct {
 	Id          int64
 	Cluster     string
-	Member      string
+	MemberId    string
+	MemberName  string
 	Attribute   string
 	Role        string
 	Status      string
@@ -30,17 +34,18 @@ type ClusterMemberInfo struct {
 }
 
 var (
-	SMTPUsernamePath string
-	SMTPPasswordPath string
-	SMTPHost         string
-	SMTPPort         int
-	AccessSecretPath string
-	accessSecret     string
-	username         string
-	password         string
-	inviteMail       string
-	HtmlHomePath     string
-	TokenExpiredDate string
+	SMTPUsernamePath       string
+	SMTPPasswordPath       string
+	SMTPHost               string
+	SMTPPort               int
+	AccessSecretPath       string
+	accessSecret           string
+	username               string
+	password               string
+	inviteMail             string
+	HtmlHomePath           string
+	TokenExpiredDate       string
+	ParsedTokenExpiredDate time.Duration
 )
 
 //Jsonpatch를 담을 수 있는 구조체
@@ -72,6 +77,32 @@ func ReadFile() {
 		return
 	}
 	password = string(content)
+
+	ParsedTokenExpiredDate = parseDate(TokenExpiredDate)
+
+}
+func parseDate(tokenExpiredDate string) time.Duration {
+	regex := regexp.MustCompile("[0-9]+")
+	num := regex.FindAllString(tokenExpiredDate, -1)[0]
+	parsedNum, err := strconv.Atoi(num)
+	if err != nil {
+		panic(err)
+	}
+	regex = regexp.MustCompile("[a-z]+")
+	unit := regex.FindAllString(tokenExpiredDate, -1)[0]
+
+	switch unit {
+	case "minutes":
+		return time.Minute * time.Duration(parsedNum)
+	case "hours":
+		return time.Hour * time.Duration(parsedNum)
+	case "days":
+		return time.Hour * time.Duration(24) * time.Duration(parsedNum)
+	case "weeks":
+		return time.Hour * time.Duration(24) * time.Duration(7) * time.Duration(parsedNum)
+	default:
+		return time.Hour * time.Duration(24) * time.Duration(7) //1days
+	}
 }
 
 // Jsonpatch를 하나 만들어서 slice에 추가하는 함수
@@ -232,13 +263,10 @@ func SendEmail(from string, to []string, subject string, bodyParameter map[strin
 func CreateToken(clusterMember ClusterMemberInfo) (string, error) {
 	atClaims := jwt.MapClaims{}
 	atClaims["authorized"] = true
-	atClaims["user_id"] = clusterMember.Member
-	klog.Info("clusterMember.Member = \n" + clusterMember.Member)
+	atClaims["user_id"] = clusterMember.MemberId
 	atClaims["cluster"] = clusterMember.Cluster
-	klog.Info(atClaims["user_id"])
-	atClaims["exp"] = time.Now().Add(time.Minute * 5).Unix()
-	test := time.Now().Add(time.Minute * 5).Unix()
-	klog.Info(test)
+	atClaims["user_name"] = clusterMember.MemberName
+	atClaims["exp"] = time.Now().Add(ParsedTokenExpiredDate).Unix()
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	token, err := at.SignedString([]byte(accessSecret))
 	if err != nil {
@@ -310,7 +338,7 @@ func VerifyToken(r *http.Request) (*jwt.Token, error) {
 // }
 
 func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) error {
-	var member string
+	var memberId string
 	var cluster string
 	token, err := VerifyToken(r)
 	if err != nil {
@@ -318,11 +346,11 @@ func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) error {
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
-		member, ok = claims["user_id"].(string)
+		memberId, ok = claims["user_id"].(string)
 		cluster, ok = claims["cluster"].(string)
 	}
 
-	if clusterMember.Member == member && clusterMember.Cluster == cluster {
+	if clusterMember.MemberId == memberId && clusterMember.Cluster == cluster {
 		return nil
 	}
 	return errors.New("Request user or target cluster does not match with token payload")

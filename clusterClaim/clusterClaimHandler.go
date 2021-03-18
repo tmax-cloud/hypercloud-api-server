@@ -16,6 +16,7 @@ import (
 
 const (
 	QUERY_PARAMETER_USER_ID                    = "userId"
+	QUERY_PARAMETER_USER_NAME                  = "userName"
 	QUERY_PARAMETER_LABEL_SELECTOR             = "labelSelector"
 	QUERY_PARAMETER_LIMIT                      = "limit"
 	QUERY_PARAMETER_OFFSET                     = "offset"
@@ -64,6 +65,7 @@ func Post(res http.ResponseWriter, req *http.Request) {
 func Put(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
+	userName := queryParams.Get(QUERY_PARAMETER_USER_NAME)
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 	reason := queryParams.Get(QUERY_PARAMETER_CLUSTER_CLAIM_ADMIT_REASON)
 	admit := queryParams.Get(QUERY_PARAMETER_CLUSTER_CLAIM_ADMIT)
@@ -100,7 +102,8 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	clusterMember := util.ClusterMemberInfo{}
 	clusterMember.Cluster = cc.Spec.ClusterName
 	clusterMember.Role = "admin"
-	clusterMember.Member = userId
+	clusterMember.MemberId = userId
+	clusterMember.MemberName = userName
 	clusterMember.Attribute = "user"
 	clusterMember.Status = "owner"
 	if err := clusterDataFactory.Insert(clusterMember); err != nil {

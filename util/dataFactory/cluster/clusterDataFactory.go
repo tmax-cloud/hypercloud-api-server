@@ -10,6 +10,7 @@ import (
 
 	pq "github.com/lib/pq"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
+
 	"k8s.io/klog"
 )
 
@@ -19,10 +20,10 @@ const (
 	DB_NAME             = "postgres"
 	HOSTNAME            = "postgres-service.hypercloud5-system.svc"
 	PORT                = 5432
-	INSERT_QUERY        = "INSERT INTO CLUSTER_MEMBER (cluster, member, attribute, role, status, createdTime, updatedTime) VALUES ($1, $2, $3, $4, $5, $6, $7)"
-	DELETE_QUERY        = "DELETE FROM CLUSTER_MEMBER WHERE cluster = $1 and member = $2 and attribute = $3"
-	UPDATE_STATUS_QUERY = "UPDATE CLUSTER_MEMBER SET STATUS = 'invited' WHERE cluster = $1 and member = $2 and attribute = $3"
-	UPDATE_ROLE_QUERY   = "UPDATE CLUSTER_MEMBER SET ROLE = '@@ROLE@@' WHERE cluster = $1 and member = $2 and attribute = $3"
+	INSERT_QUERY        = "INSERT INTO CLUSTER_MEMBER (cluster, member_id, member_name, attribute, role, status, createdTime, updatedTime) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
+	DELETE_QUERY        = "DELETE FROM CLUSTER_MEMBER WHERE cluster = $1 and member_id = $2 and attribute = $3"
+	UPDATE_STATUS_QUERY = "UPDATE CLUSTER_MEMBER SET STATUS = 'invited' WHERE cluster = $1 and member_id = $2 and attribute = $3"
+	UPDATE_ROLE_QUERY   = "UPDATE CLUSTER_MEMBER SET ROLE = '@@ROLE@@' WHERE cluster = $1 and member_id = $2 and attribute = $3"
 )
 
 var pg_con_info string
@@ -84,7 +85,7 @@ func Insert(item util.ClusterMemberInfo) error {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(INSERT_QUERY, item.Cluster, item.Member, item.Attribute, item.Role, item.Status, time.Now(), time.Now())
+	_, err = db.Exec(INSERT_QUERY, item.Cluster, item.MemberId, item.MemberName, item.Attribute, item.Role, item.Status, time.Now(), time.Now())
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -125,7 +126,99 @@ func ListClusterMember(cluster string) ([]util.ClusterMemberInfo, error) {
 		rows.Scan(
 			&clusterMember.Id,
 			&clusterMember.Cluster,
-			&clusterMember.Member,
+			&clusterMember.MemberId,
+			&clusterMember.MemberName,
+			&clusterMember.Attribute,
+			&clusterMember.Role,
+			&clusterMember.Status,
+			&clusterMember.CreatedTime,
+			&clusterMember.UpdatedTime,
+		)
+		clusterMemberList = append(clusterMemberList, clusterMember)
+	}
+	return clusterMemberList, nil
+}
+
+func ListAllClusterUser(cluster string) ([]util.ClusterMemberInfo, error) {
+	db, err := sql.Open("postgres", pg_con_info)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	defer db.Close()
+	clusterMemberList := []util.ClusterMemberInfo{}
+	var b strings.Builder
+
+	b.WriteString("select * from CLUSTER_MEMBER where 1=1 ")
+
+	b.WriteString("and attribute = 'user'")
+
+	b.WriteString("and cluster = '")
+	b.WriteString(cluster)
+	b.WriteString("' ")
+
+	query := b.String()
+	klog.Infoln("Query: " + query)
+	rows, err := db.Query(query)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		clusterMember := util.ClusterMemberInfo{}
+		rows.Scan(
+			&clusterMember.Id,
+			&clusterMember.Cluster,
+			&clusterMember.MemberId,
+			&clusterMember.MemberName,
+			&clusterMember.Attribute,
+			&clusterMember.Role,
+			&clusterMember.Status,
+			&clusterMember.CreatedTime,
+			&clusterMember.UpdatedTime,
+		)
+		clusterMemberList = append(clusterMemberList, clusterMember)
+	}
+	return clusterMemberList, nil
+}
+
+func ListAllClusterGroup(cluster string) ([]util.ClusterMemberInfo, error) {
+	db, err := sql.Open("postgres", pg_con_info)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	defer db.Close()
+	clusterMemberList := []util.ClusterMemberInfo{}
+	var b strings.Builder
+
+	b.WriteString("select * from CLUSTER_MEMBER where 1=1 ")
+
+	b.WriteString("and cluster = '")
+	b.WriteString(cluster)
+	b.WriteString("' ")
+
+	b.WriteString("and attribute = 'group'")
+	b.WriteString("or status = 'owner'")
+
+	query := b.String()
+	klog.Infoln("Query: " + query)
+	rows, err := db.Query(query)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		clusterMember := util.ClusterMemberInfo{}
+		rows.Scan(
+			&clusterMember.Id,
+			&clusterMember.Cluster,
+			&clusterMember.MemberId,
+			&clusterMember.MemberName,
 			&clusterMember.Attribute,
 			&clusterMember.Role,
 			&clusterMember.Status,
@@ -198,8 +291,8 @@ func GetPendingUser(clusterMember util.ClusterMemberInfo) ([]util.ClusterMemberI
 	b.WriteString(clusterMember.Cluster)
 	b.WriteString("' ")
 
-	b.WriteString("and member = '")
-	b.WriteString(clusterMember.Member)
+	b.WriteString("and member_id = '")
+	b.WriteString(clusterMember.MemberId)
 	b.WriteString("' ")
 
 	b.WriteString("and attribute = 'user' ")
@@ -220,7 +313,8 @@ func GetPendingUser(clusterMember util.ClusterMemberInfo) ([]util.ClusterMemberI
 		rows.Scan(
 			&clusterMember.Id,
 			&clusterMember.Cluster,
-			&clusterMember.Member,
+			&clusterMember.MemberId,
+			&clusterMember.MemberName,
 			&clusterMember.Attribute,
 			&clusterMember.Role,
 			&clusterMember.Status,
@@ -265,7 +359,8 @@ func ListPendingUser(cluster string) ([]util.ClusterMemberInfo, error) {
 		rows.Scan(
 			&clusterMember.Id,
 			&clusterMember.Cluster,
-			&clusterMember.Member,
+			&clusterMember.MemberId,
+			&clusterMember.MemberName,
 			&clusterMember.Attribute,
 			&clusterMember.Role,
 			&clusterMember.Status,
@@ -293,8 +388,8 @@ func GetInvitedGroup(clusterMember util.ClusterMemberInfo) (int, error) {
 	b.WriteString(clusterMember.Cluster)
 	b.WriteString("' ")
 
-	b.WriteString("and member = '")
-	b.WriteString(clusterMember.Member)
+	b.WriteString("and member_id = '")
+	b.WriteString(clusterMember.MemberId)
 	b.WriteString("' ")
 
 	b.WriteString("and attribute = '")
@@ -330,7 +425,7 @@ func UpdateStatus(item util.ClusterMemberInfo) error {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(UPDATE_STATUS_QUERY, item.Cluster, item.Member, item.Attribute)
+	_, err = db.Exec(UPDATE_STATUS_QUERY, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -349,7 +444,7 @@ func UpdateRole(item util.ClusterMemberInfo) error {
 
 	query := strings.Replace(UPDATE_ROLE_QUERY, "@@ROLE@@", item.Role, -1)
 
-	_, err = db.Exec(query, item.Cluster, item.Member, item.Attribute)
+	_, err = db.Exec(query, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -366,7 +461,7 @@ func Delete(item util.ClusterMemberInfo) error {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(DELETE_QUERY, item.Cluster, item.Member, item.Attribute)
+	_, err = db.Exec(DELETE_QUERY, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
 		klog.Error(err)
 		return err
