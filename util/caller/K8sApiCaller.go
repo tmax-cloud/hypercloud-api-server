@@ -372,7 +372,7 @@ func DeleteNSCWithUser(userId string) {
 	}
 
 	for _, nsc := range nscList.Items {
-		if nsc.Annotations["creator"] == userId {
+		if nsc.Annotations["owner"] == userId {
 			_, err := Clientset.RESTClient().Delete().AbsPath(nsc.SelfLink).DoRaw(context.TODO())
 			if err != nil {
 				klog.Errorln(err)

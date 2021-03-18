@@ -21,6 +21,7 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/namespaceClaim"
 	user "github.com/tmax-cloud/hypercloud-api-server/user"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
+	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	version "github.com/tmax-cloud/hypercloud-api-server/version"
 	"k8s.io/api/admission/v1beta1"
 	"k8s.io/klog"
@@ -28,6 +29,10 @@ import (
 	"net/http"
 
 	"github.com/robfig/cron"
+<<<<<<< HEAD
+=======
+	//kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
+>>>>>>> 61d6ea86f9f8449aaeca7dbda00b106067cdbbf7
 )
 
 type admitFunc func(v1beta1.AdmissionReview) *v1beta1.AdmissionResponse
@@ -104,7 +109,11 @@ func main() {
 	cronJob.Start()
 
 	// Hyperauth Event Consumer
+<<<<<<< HEAD
 	// go kafkaConsumer.HyperauthConsumer()
+=======
+	//go kafkaConsumer.HyperauthConsumer()
+>>>>>>> 61d6ea86f9f8449aaeca7dbda00b106067cdbbf7
 
 	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
@@ -120,6 +129,7 @@ func main() {
 	mux.HandleFunc("/alert", serveAlert)
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
+	mux.HandleFunc("/claim", serveClaim)
 
 	if hcMode != "single" {
 		// for multi mode only
@@ -228,6 +238,23 @@ func serveVersion(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		version.Get(res, req)
+	default:
+		//error
+	}
+}
+
+func serveClaim(res http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodDelete:
+		userId := req.URL.Query().Get(util.QUERY_PARAMETER_USER_ID)
+		if userId != "" {
+			k8sApiCaller.DeleteRQCWithUser(userId)
+			k8sApiCaller.DeleteNSCWithUser(userId)
+			k8sApiCaller.DeleteRBCWithUser(userId)
+			util.SetResponse(res, "Successfully delete claims of "+userId, nil, http.StatusOK)
+		} else {
+			util.SetResponse(res, "userId is missing", nil, http.StatusBadRequest)
+		}
 	default:
 		//error
 	}

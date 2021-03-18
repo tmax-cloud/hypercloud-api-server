@@ -14,6 +14,7 @@ import (
 
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
+	versionModel "github.com/tmax-cloud/hypercloud-api-server/version/model"
 
 	"net/http"
 	"strings"
@@ -24,11 +25,11 @@ import (
 // Get handles ~/version get method
 func Get(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("**** GET /version")
-	var conf Config
+	var conf versionModel.Config
 
 	// 1. READ CONFIG FILE
 	// File path should be same with what declared on volume mount in yaml file.
-	yamlFile, err := ioutil.ReadFile("/version/module.config")
+	yamlFile, err := ioutil.ReadFile("/go/src/version/version.config")
 	if err != nil {
 		klog.Errorln(err)
 	}
@@ -37,14 +38,14 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		klog.Errorln(err)
 	}
 	configSize := len(conf.Modules)
-	result := make([]Module, configSize)
+	result := make([]versionModel.Module, configSize)
 
 	// Main algorithm
 	var wg sync.WaitGroup
 	wg.Add(configSize)
 
 	for idx, mod := range conf.Modules {
-		go func(idx int, mod ModuleInfo) { // GoRoutine
+		go func(idx int, mod versionModel.ModuleInfo) { // GoRoutine
 			defer wg.Done()
 			klog.Infoln("Module Name = ", mod.Name)
 			result[idx].Name = mod.Name
@@ -60,7 +61,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 			}
 			podList, exist := k8sApiCaller.GetPodListByLabel(labels, mod.Namespace)
 
-			ps := NewPodStatus()
+			ps := versionModel.NewPodStatus()
 
 			if exist {
 				if mod.ReadinessProbe.Exec.Command != nil {
@@ -185,7 +186,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 }
 
 // AppendStatusResult connects status of each pod to one string.
-func AppendStatusResult(p PodStatus) string {
+func AppendStatusResult(p versionModel.PodStatus) string {
 	temp := ""
 	for s, num := range p.Data {
 		temp += s + "(" + strconv.Itoa(num) + "),"
