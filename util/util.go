@@ -62,7 +62,7 @@ func ReadFile() {
 		return
 	}
 	accessSecret = string(content)
-	klog.Infoln(accessSecret)
+	// klog.Infoln(accessSecret)
 
 	content, err = ioutil.ReadFile(SMTPUsernamePath)
 	if err != nil {
@@ -303,8 +303,6 @@ func ExtractTokenFromHeader(r *http.Request) string {
 
 func ExtractTokenFromQuery(r *http.Request) string {
 	bearToken := r.URL.Query().Get("token")
-	klog.Info(bearToken)
-
 	if bearToken == "" {
 		return ""
 	}

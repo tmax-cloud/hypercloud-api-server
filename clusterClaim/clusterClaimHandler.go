@@ -73,7 +73,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	vars := gmux.Vars(req)
 	clusterClaim := vars["clusterclaim"]
 
-	if err := util.StringParameterException(userGroups, userId, admit, reason); err != nil {
+	if err := util.StringParameterException(userGroups, userId, admit, reason, userName); err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return

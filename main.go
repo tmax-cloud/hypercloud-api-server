@@ -126,9 +126,10 @@ func main() {
 
 	if hcMode != "single" {
 		// for multi mode only
-		mux.HandleFunc("/clusterclaim", serveClusterClaim)                                                             // listGet
+		mux.HandleFunc("/clusterclaim", serveClusterClaim)                                                             // listGet clusterClaim
 		mux.HandleFunc("/clusterclaim/{clusterclaim}", serveClusterClaim)                                              // listGet, claim 승인
-		mux.HandleFunc("/cluster", serveCluster)                                                                       // listGet
+		mux.HandleFunc("/cluster", serveCluster)                                                                       // listGet custer
+		mux.HandleFunc("/cluster/{cluster}/namespace", serveClusterNamespace)                                          // listGet Namespace
 		mux.HandleFunc("/cluster/{cluster}/member", serveClusterMember)                                                // listGet (all cluster member not pending status)
 		mux.HandleFunc("/cluster/{cluster}/member_invitation", serveClusterInvitation)                                 // listGet (only pending status)
 		mux.HandleFunc("/cluster/{cluster}/member_invitation/{attribute}/{member}", serveClusterInvitation)            // 추가 요청 (db + token 발급)
@@ -273,6 +274,16 @@ func serveCluster(res http.ResponseWriter, req *http.Request) {
 	default:
 	}
 }
+
+func serveClusterNamespace(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodGet:
+		cluster.ListClusterNamespace(res, req)
+	default:
+	}
+}
+
 func serveClusterMember(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {

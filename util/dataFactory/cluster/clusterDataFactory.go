@@ -22,8 +22,8 @@ const (
 	PORT                = 5432
 	INSERT_QUERY        = "INSERT INTO CLUSTER_MEMBER (cluster, member_id, member_name, attribute, role, status, createdTime, updatedTime) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 	DELETE_QUERY        = "DELETE FROM CLUSTER_MEMBER WHERE cluster = $1 and member_id = $2 and attribute = $3"
-	UPDATE_STATUS_QUERY = "UPDATE CLUSTER_MEMBER SET STATUS = 'invited' WHERE cluster = $1 and member_id = $2 and attribute = $3"
-	UPDATE_ROLE_QUERY   = "UPDATE CLUSTER_MEMBER SET ROLE = '@@ROLE@@' WHERE cluster = $1 and member_id = $2 and attribute = $3"
+	UPDATE_STATUS_QUERY = "UPDATE CLUSTER_MEMBER SET STATUS = 'invited' WHERE cluster = $1 and member_id = $2 and attribute = $3 and updatedTime = $4"
+	UPDATE_ROLE_QUERY   = "UPDATE CLUSTER_MEMBER SET ROLE = '@@ROLE@@' WHERE cluster = $1 and member_id = $2 and attribute = $3 and updatedTime = $4"
 )
 
 var pg_con_info string
@@ -94,7 +94,7 @@ func Insert(item util.ClusterMemberInfo) error {
 	return nil
 }
 
-func ListClusterMember(cluster string) ([]util.ClusterMemberInfo, error) {
+func ListClusterMemberWithOutPending(cluster string) ([]util.ClusterMemberInfo, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -111,6 +111,49 @@ func ListClusterMember(cluster string) ([]util.ClusterMemberInfo, error) {
 	b.WriteString("' ")
 
 	b.WriteString("and status not in ('pending') ")
+
+	query := b.String()
+	klog.Infoln("Query: " + query)
+	rows, err := db.Query(query)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		clusterMember := util.ClusterMemberInfo{}
+		rows.Scan(
+			&clusterMember.Id,
+			&clusterMember.Cluster,
+			&clusterMember.MemberId,
+			&clusterMember.MemberName,
+			&clusterMember.Attribute,
+			&clusterMember.Role,
+			&clusterMember.Status,
+			&clusterMember.CreatedTime,
+			&clusterMember.UpdatedTime,
+		)
+		clusterMemberList = append(clusterMemberList, clusterMember)
+	}
+	return clusterMemberList, nil
+}
+
+func ListAllClusterMember(cluster string) ([]util.ClusterMemberInfo, error) {
+	db, err := sql.Open("postgres", pg_con_info)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	defer db.Close()
+	clusterMemberList := []util.ClusterMemberInfo{}
+	var b strings.Builder
+
+	b.WriteString("select * from CLUSTER_MEMBER where 1=1 ")
+
+	b.WriteString("and cluster = '")
+	b.WriteString(cluster)
+	b.WriteString("' ")
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
@@ -242,12 +285,12 @@ func ListAceesibleCluster(userId string, userGroups []string) ([]string, error) 
 
 	b.WriteString("select cluster from CLUSTER_MEMBER where 1=1 ")
 
-	b.WriteString("and member = '")
+	b.WriteString("and member_id = '")
 	b.WriteString(userId)
 	b.WriteString("' ")
 
 	for _, userGroup := range userGroups {
-		b.WriteString("or member = '")
+		b.WriteString("or member_id = '")
 		b.WriteString(userGroup)
 		b.WriteString("' ")
 	}
@@ -425,7 +468,7 @@ func UpdateStatus(item util.ClusterMemberInfo) error {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(UPDATE_STATUS_QUERY, item.Cluster, item.MemberId, item.Attribute)
+	_, err = db.Exec(UPDATE_STATUS_QUERY, item.Cluster, item.MemberId, item.Attribute, time.Now())
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -444,7 +487,7 @@ func UpdateRole(item util.ClusterMemberInfo) error {
 
 	query := strings.Replace(UPDATE_ROLE_QUERY, "@@ROLE@@", item.Role, -1)
 
-	_, err = db.Exec(query, item.Cluster, item.MemberId, item.Attribute)
+	_, err = db.Exec(query, item.Cluster, item.MemberId, item.Attribute, time.Now())
 	if err != nil {
 		klog.Error(err)
 		return err
