@@ -1,6 +1,24 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.4.0 start -------------------->
+
+## Hypercloud-api-server 5.0.4.0 (Thu Mar 25 09:28:54 KST 2021)
+
+### Added
+  - [feat] awscost api by Seungwon Lee
+
+### Changed
+  - [mod] datafactory by chosangwon93
+  - [mod] 정규식 수정 by Seungwon Lee
+  - [mod] output 변경 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.3.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.3.0 (Thu Mar 18 17:51:05 KST 2021)
