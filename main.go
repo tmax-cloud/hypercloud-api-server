@@ -14,6 +14,7 @@ import (
 	admission "github.com/tmax-cloud/hypercloud-api-server/admission"
 	"github.com/tmax-cloud/hypercloud-api-server/alert"
 	audit "github.com/tmax-cloud/hypercloud-api-server/audit"
+	awscost "github.com/tmax-cloud/hypercloud-api-server/awscost"
 	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
 	claim "github.com/tmax-cloud/hypercloud-api-server/clusterClaim"
 	metering "github.com/tmax-cloud/hypercloud-api-server/metering"
@@ -123,6 +124,7 @@ func main() {
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
 	mux.HandleFunc("/claim", serveClaim)
+	mux.HandleFunc("/awscost", serveAwscost)
 
 	if hcMode != "single" {
 		// for multi mode only
@@ -452,5 +454,16 @@ func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 	if _, err := w.Write(respBytes); err != nil {
 		klog.Error(err)
 		responseAdmissionReview.Response = admission.ToAdmissionResponse(err)
+	}
+}
+
+func serveAwscost(res http.ResponseWriter, req *http.Request) {
+	switch req.Method {
+	case http.MethodGet:
+		awscost.Get(res, req)
+	case http.MethodPut:
+	case http.MethodOptions:
+	default:
+		//error
 	}
 }

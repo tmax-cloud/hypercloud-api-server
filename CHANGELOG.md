@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.3.0 start -------------------->
+
+## Hypercloud-api-server 5.0.3.0 (Thu Mar 18 17:51:05 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] remove cluster member info from status by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.2.2 start -------------------->
 
 ## Hypercloud-api-server 5.0.2.2 (Tue Mar 16 17:26:01 KST 2021)
