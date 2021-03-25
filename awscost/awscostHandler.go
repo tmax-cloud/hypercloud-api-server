@@ -89,6 +89,7 @@ func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageO
 	if granularity == "" {
 		granularity = "MONTHLY"
 	}
+	granularity = strings.ToUpper(granularity)
 
 	// "AmortizedCost", "NetAmortizedCost", "BlendedCost", "UnblendedCost", "NetUnblendedCost", "UsageQuantity", "NormalizedUsageAmount",
 	metrics := queryParams["metrics"]
@@ -103,6 +104,7 @@ func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageO
 	if dimension == "" {
 		dimension = "INSTANCE_TYPE"
 	}
+	dimension = strings.ToUpper(dimension)
 
 	/*** GET CREDENTIALS BY READING /root/.aws/credentials ***/
 	sess, err := session.NewSessionWithOptions(session.Options{
