@@ -203,7 +203,7 @@ func ParsingVersion(str string) string {
 		return "latest"
 	}
 
-	r, err := regexp.Compile(":[a-z]*[A-Z]*[0-9]+\\.[0-9]+\\.[0-9]+")
+	r, err := regexp.Compile(":[a-z]*[A-Z]*[0-9]+(\\.[0-9]+)*")
 	if err != nil {
 		klog.Errorln(err)
 	}
