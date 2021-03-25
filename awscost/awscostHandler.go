@@ -1,7 +1,6 @@
 package awscost
 
 import (
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -14,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	awscostModel "github.com/tmax-cloud/hypercloud-api-server/awscost/model"
+	"github.com/tmax-cloud/hypercloud-api-server/util"
 	"k8s.io/klog"
 )
 
@@ -53,14 +53,19 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	res.Header().Set("Content-Type", "application/json")
-	js, err := json.Marshal(result)
-	if err != nil {
-		klog.Errorln(err)
+	/*** MOVE IN TO STRUCT ARRAY FOR SIMPLIFICATION OUTPUT ***/
+	result_struct := make([]awscostModel.Awscost, len(result))
+	i := 0
+	for k, e := range result {
+		result_struct[i].Keys = k
+		result_struct[i].Metrics = e.Metrics
+		i++
 	}
-	res.Write(js)
 
-	klog.Infoln(result)
+	util.SetResponse(res, "", result_struct, http.StatusOK)
+
+	klog.Infoln("=== RESULT ===")
+	klog.Infoln(result_struct)
 }
 
 func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageOutput, error) {
@@ -149,14 +154,6 @@ func insert(result map[string]awscostModel.Awscost, output *costexplorer.GetCost
 			}
 		}
 	}
-
-	// t1, _ := strconv.ParseFloat(*output.ResultsByTime[0].Groups[0].Metrics["BlendedCost"].Amount, 64)
-	// t2 := *output.ResultsByTime[0].Groups[0].Metrics["BlendedCost"].Unit
-	// temp := awscostModel.NewAwscost()
-	// temp.Metrics["BlendedCost"] = &awscostModel.Metric{Amount: t1, Unit: t2}
-
-	//result = append(result, *temp)
-
 	return result
 }
 

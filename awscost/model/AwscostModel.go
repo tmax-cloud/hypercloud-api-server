@@ -1,6 +1,7 @@
 package model
 
 type Awscost struct {
+	Keys    string
 	Metrics map[string]*Metric `json: metrics`
 }
 
