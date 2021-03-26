@@ -36,7 +36,7 @@ const (
 		"TRUNC(CAST(SUM(memory)/COUNT(*) as numeric) ,2) as memory, TRUNC(CAST(SUM(storage)/COUNT(*) as numeric) ,2) as storage, " +
 		"TRUNC(CAST(SUM(gpu)/COUNT(*) as numeric) ,2) as gpu, SUM(public_ip)/COUNT(*) as public_ip, SUM(private_ip)/COUNT(*) as private_ip, " +
 		"TRUNC(CAST(SUM(traffic_in)/COUNT(*) as numeric) ,2) as traffic_in, TRUNC(CAST(SUM(traffic_out)/COUNT(*) as numeric) ,2) as traffic_out, " +
-		"DATE_TRUNC('hour', metering_time), status FROM metering GROUP BY DATE_TRUNC('hour', metering_time), namespace, status"
+		"DATE_TRUNC('hour', metering_time) as metering_time, status FROM metering GROUP BY DATE_TRUNC('hour', metering_time), namespace, status"
 	METERING_HOUR_UPDATE_QUERY = "update metering_hour set status = 'Merged' where status = 'Success'"
 	METERING_HOUR_DELETE_QUERY = "delete from metering_hour where status = 'Merged'"
 
@@ -45,7 +45,7 @@ const (
 		"TRUNC(CAST(SUM(memory)/COUNT(*) as numeric) ,2) as memory, TRUNC(CAST(SUM(storage)/COUNT(*) as numeric) ,2) as storage, " +
 		"TRUNC(CAST(SUM(gpu)/COUNT(*) as numeric) ,2) as gpu, SUM(public_ip)/COUNT(*) as public_ip, SUM(private_ip)/COUNT(*) as private_ip, " +
 		"TRUNC(CAST(SUM(traffic_in)/COUNT(*) as numeric) ,2) as traffic_in, TRUNC(CAST(SUM(traffic_out)/COUNT(*) as numeric) ,2) as traffic_out, " +
-		"DATE_TRUNC('day', metering_time), status FROM metering_hour WHERE status='Success' GROUP BY DATE_TRUNC('day', metering_time), namespace, status"
+		"DATE_TRUNC('day', metering_time) as metering_time, status FROM metering_hour WHERE status='Success' GROUP BY DATE_TRUNC('day', metering_time), namespace, status"
 	METERING_DAY_UPDATE_QUERY = "update metering_day set status = 'Merged' where status = 'Success'"
 	METERING_DAY_DELETE_QUERY = "delete from metering_day where status = 'Merged'"
 
@@ -54,7 +54,7 @@ const (
 		"TRUNC(CAST(SUM(memory)/COUNT(*) as numeric) ,2) as memory, TRUNC(CAST(SUM(storage)/COUNT(*) as numeric) ,2) as storage, " +
 		"TRUNC(CAST(SUM(gpu)/COUNT(*) as numeric) ,2) as gpu, SUM(public_ip)/COUNT(*) as public_ip, SUM(private_ip)/COUNT(*) as private_ip, " +
 		"TRUNC(CAST(SUM(traffic_in)/COUNT(*) as numeric) ,2) as traffic_in, TRUNC(CAST(SUM(traffic_out)/COUNT(*) as numeric) ,2) as traffic_out, " +
-		"DATE_TRUNC('month', metering_time), status FROM metering_day WHERE status='Success' GROUP BY DATE_TRUNC('month', metering_time), namespace, status"
+		"DATE_TRUNC('month', metering_time) as metering_time, status FROM metering_day WHERE status='Success' GROUP BY DATE_TRUNC('month', metering_time), namespace, status"
 	METERING_MONTH_UPDATE_QUERY = "update metering_month set status = 'Merged' where status = 'Success'"
 	METERING_MONTH_DELETE_QUERY = "delete from metering_month where status = 'Merged'"
 
@@ -63,7 +63,7 @@ const (
 		"TRUNC(CAST(SUM(memory)/COUNT(*) as numeric) ,2) as memory, TRUNC(CAST(SUM(storage)/COUNT(*) as numeric) ,2) as storage, " +
 		"TRUNC(CAST(SUM(gpu)/COUNT(*) as numeric) ,2) as gpu, SUM(public_ip)/COUNT(*) as public_ip, SUM(private_ip)/COUNT(*) as private_ip, " +
 		"TRUNC(CAST(SUM(traffic_in)/COUNT(*) as numeric) ,2) as traffic_in, TRUNC(CAST(SUM(traffic_out)/COUNT(*) as numeric) ,2) as traffic_out, " +
-		"DATE_TRUNC('year', metering_time), status FROM metering_month WHERE status='Success' GROUP BY DATE_TRUNC('year', metering_time), namespace, status"
+		"DATE_TRUNC('year', metering_time) as metering_time, status FROM metering_month WHERE status='Success' GROUP BY DATE_TRUNC('year', metering_time), namespace, status"
 
 	PROMETHEUS_URI = "http://prometheus-k8s.monitoring:9090/api/v1/query" // use this when running on pod
 	//PROMETHEUS_GET_CPU_QUERY         = "namespace:container_cpu_usage_seconds_total:sum_rate"
