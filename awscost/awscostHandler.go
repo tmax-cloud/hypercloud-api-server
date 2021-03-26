@@ -36,15 +36,31 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	reg := regexp.MustCompile("\\[.*\\]")
 
 	/*** GET COST INFO FOR EACH ACCOUNT ***/
+	size := len(lines)/3
+	var sess [size]session.Session
+	var svc [size]costexplorer.CostExplorer
+	idx := 0
 	result := make(map[string]awscostModel.Awscost)
 	var output *costexplorer.GetCostAndUsageOutput
+	
 	for _, account := range lines {
 		if reg.MatchString(account) {
 			account = strings.TrimLeft(account, "[")
 			account = strings.TrimRight(account, "]")
 			klog.Infoln("Account Name : ", account)
 
-			output, err = makeCost(req, account)
+			/*** GET CREDENTIALS BY READING /root/.aws/credentials ***/
+			sess[idx], err = session.NewSessionWithOptions(session.Options{
+				Profile: account,
+				//SharedConfigState: session.SharedConfigEnable,
+			})
+			if err != nil {
+				klog.Errorln(err)
+			}
+			svc[idx] := costexplorer.New(sess)
+			idx++
+
+			output, err = makeCost(req)
 			if err != nil {
 				klog.Errorln(err)
 				return
@@ -68,7 +84,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln(result_struct)
 }
 
-func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageOutput, error) {
+func makeCost(req *http.Request) (*costexplorer.GetCostAndUsageOutput, error) {
 
 	queryParams := req.URL.Query()
 
@@ -105,13 +121,6 @@ func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageO
 		dimension = "INSTANCE_TYPE"
 	}
 	dimension = strings.ToUpper(dimension)
-
-	/*** GET CREDENTIALS BY READING /root/.aws/credentials ***/
-	sess, err := session.NewSessionWithOptions(session.Options{
-		Profile: account,
-		//SharedConfigState: session.SharedConfigEnable,
-	})
-	svc := costexplorer.New(sess)
 
 	/*** GET COST FROM AWS ***/
 	result, err := svc.GetCostAndUsage(&costexplorer.GetCostAndUsageInput{
