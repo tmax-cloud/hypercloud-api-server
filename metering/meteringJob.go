@@ -110,18 +110,22 @@ func MeteringJob() {
 			"day of year 	: %d\n",
 		t.Minute(), t.Hour(), t.Day(), t.YearDay())
 
-	if t.Minute() == 0 {
-		// Insert into metering_hour
-		insertMeteringHour()
-	} else if t.Hour() == 0 {
-		// Insert into metering_day
-		insertMeteringDay()
-	} else if t.Day() == 1 {
-		// Insert into metering_month
-		insertMeteringMonth()
-	} else if t.YearDay() == 1 {
+	switch {
+	case t.YearDay() == 1 && t.Day() == 1 && t.Hour() == 0 && t.Minute() == 0:
 		// Insert into metering_year
 		insertMeteringYear()
+		fallthrough
+	case t.Day() == 1 && t.Hour() == 0 && t.Minute() == 0:
+		// Insert into metering_month
+		insertMeteringMonth()
+		fallthrough
+	case t.Hour() == 0 && t.Minute() == 0:
+		// Insert into metering_day
+		insertMeteringDay()
+		fallthrough
+	case t.Minute() == 0:
+		// Insert into metering_hour
+		insertMeteringHour()
 	}
 
 	meteringData := makeMeteringMap()
