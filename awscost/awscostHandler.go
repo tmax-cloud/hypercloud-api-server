@@ -111,6 +111,9 @@ func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageO
 		Profile: account,
 		//SharedConfigState: session.SharedConfigEnable,
 	})
+	if err != nil {
+		klog.Errorln(err)
+	}
 	svc := costexplorer.New(sess)
 
 	/*** GET COST FROM AWS ***/
