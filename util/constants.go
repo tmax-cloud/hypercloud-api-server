@@ -17,6 +17,9 @@ const (
 	QUERY_PARAMETER_PERIOD         = "period"
 	QUERY_PARAMETER_NAME           = "name"
 	QUERY_PARAMETER_USER_GROUP     = "userGroup"
+	QUERY_PARAMETER_GRANULARITY    = "granularity"
+	QUERY_PARAMETER_METRICS        = "metrics"
+	QUERY_PARAMETER_DIMENSION      = "dimension"
 
 	//HyperAuth
 	//HYPERAUTH_URL = "http://hyperauth.hyperauth"

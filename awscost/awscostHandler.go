@@ -21,7 +21,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 
 	/*** DETERMIN HOW TO SORT THE RESULT ***/
 	// POSSIBLE VALUE : "account", "dimension"
-	sort := req.URL.Query().Get("sort")
+	sort := req.URL.Query().Get(util.QUERY_PARAMETER_SORT)
 	if sort == "" {
 		sort = "account"
 	}
@@ -76,8 +76,8 @@ func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageO
 	//Must be in YYYY-MM-DD Format
 	var startTime int64
 	var endTime int64
-	startUnix := queryParams.Get("startTime")
-	endUnix := queryParams.Get("endTime")
+	startUnix := queryParams.Get(util.QUERY_PARAMETER_STARTTIME)
+	endUnix := queryParams.Get(util.QEURY_PARAMETER_ENDTIME)
 	if startUnix == "" || endUnix == "" {
 		klog.Errorln("Must pass both of startTime and endTime")
 		return nil, errors.New("Time parameter error")
@@ -85,14 +85,14 @@ func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageO
 	startTime, _ = strconv.ParseInt(startUnix, 10, 64)
 	endTime, _ = strconv.ParseInt(endUnix, 10, 64)
 
-	granularity := queryParams.Get("granularity") // "MONTHLY"
+	granularity := queryParams.Get(util.QUERY_PARAMETER_GRANULARITY) // "MONTHLY"
 	if granularity == "" {
 		granularity = "MONTHLY"
 	}
 	granularity = strings.ToUpper(granularity)
 
 	// "AmortizedCost", "NetAmortizedCost", "BlendedCost", "UnblendedCost", "NetUnblendedCost", "UsageQuantity", "NormalizedUsageAmount",
-	metrics := queryParams["metrics"]
+	metrics := queryParams[util.QUERY_PARAMETER_METRICS]
 	if len(metrics) == 0 {
 		metrics = []string{
 			"BlendedCost",
@@ -100,7 +100,7 @@ func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageO
 	}
 
 	// "AZ", "INSTANCE_TYPE", "OPERATING_SYSTEM", "SERVICE", "REGION", ...
-	dimension := queryParams.Get("dimension")
+	dimension := queryParams.Get(util.QUERY_PARAMETER_DIMENSION)
 	if dimension == "" {
 		dimension = "INSTANCE_TYPE"
 	}
