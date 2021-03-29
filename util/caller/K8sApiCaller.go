@@ -405,6 +405,48 @@ func DeleteRBCWithUser(userId string) {
 	klog.Infoln("Successfully delete RoleBindingClaim made by", userId)
 }
 
+func DeleteCRBWithUser(userId string) {
+	crbList, err := Clientset.RbacV1().ClusterRoleBindings().List(
+		context.TODO(),
+		metav1.ListOptions{},
+	)
+	if err != nil {
+		klog.Errorln(err)
+		return
+	}
+
+	for _, crb := range crbList.Items {
+		for _, subject := range crb.Subjects {
+			if subject.Name == userId {
+				Clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), crb.ObjectMeta.Name, metav1.DeleteOptions{})
+				klog.Infoln("ClusterRoleBinding ", crb.ObjectMeta.Name, " is deleted")
+			}
+		}
+	}
+	klog.Infoln("delete ClusterRoleBinding for ", userId, " Done")
+}
+
+func DeleteRBWithUser(userId string) {
+	rbList, err := Clientset.RbacV1().RoleBindings("").List(
+		context.TODO(),
+		metav1.ListOptions{},
+	)
+	if err != nil {
+		klog.Errorln(err)
+		return
+	}
+
+	for _, rb := range rbList.Items {
+		for _, subject := range rb.Subjects {
+			if subject.Name == userId {
+				Clientset.RbacV1().RoleBindings("").Delete(context.TODO(), rb.ObjectMeta.Name, metav1.DeleteOptions{})
+				klog.Infoln("ClusterRoleBinding ", rb.ObjectMeta.Name, " is deleted")
+			}
+		}
+	}
+	klog.Infoln("delete RoleBinding for ", userId, " Done")
+}
+
 // ExecCommand sends a 'exec' command to specific pod.
 // It returns outputs of command.
 // If the container parameter == "", it chooses first container.
