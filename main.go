@@ -247,6 +247,8 @@ func serveClaim(res http.ResponseWriter, req *http.Request) {
 			k8sApiCaller.DeleteRQCWithUser(userId)
 			k8sApiCaller.DeleteNSCWithUser(userId)
 			k8sApiCaller.DeleteRBCWithUser(userId)
+			k8sApiCaller.DeleteCRBWithUser(userId)
+			k8sApiCaller.DeleteRBWithUser(userId)
 			util.SetResponse(res, "Successfully delete claims of "+userId, nil, http.StatusOK)
 		} else {
 			util.SetResponse(res, "userId is missing", nil, http.StatusBadRequest)

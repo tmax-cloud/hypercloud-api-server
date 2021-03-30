@@ -356,6 +356,7 @@ func DeleteRQCWithUser(userId string) {
 				klog.Errorln(err)
 				panic(err)
 			}
+			klog.Infoln("ResourceQuotaClaim ", rqc.Name, " is deleted")
 		}
 	}
 	klog.Infoln("Successfully delete ResourceQuotaClaim made by", userId)
@@ -378,6 +379,7 @@ func DeleteNSCWithUser(userId string) {
 				klog.Errorln(err)
 				panic(err)
 			}
+			klog.Infoln("NamespaceClaim ", nsc.Name, " is deleted")
 		}
 	}
 	klog.Infoln("Successfully delete NamespaceClaim made by", userId)
@@ -400,6 +402,7 @@ func DeleteRBCWithUser(userId string) {
 				klog.Errorln(err)
 				panic(err)
 			}
+			klog.Infoln("RoleBindingClaim ", rbc.Name, " is deleted")
 		}
 	}
 	klog.Infoln("Successfully delete RoleBindingClaim made by", userId)
@@ -423,7 +426,7 @@ func DeleteCRBWithUser(userId string) {
 			}
 		}
 	}
-	klog.Infoln("delete ClusterRoleBinding for ", userId, " Done")
+	klog.Infoln("Successfully delete RoleBinding made by", userId)
 }
 
 func DeleteRBWithUser(userId string) {
@@ -439,12 +442,12 @@ func DeleteRBWithUser(userId string) {
 	for _, rb := range rbList.Items {
 		for _, subject := range rb.Subjects {
 			if subject.Name == userId {
-				Clientset.RbacV1().RoleBindings("").Delete(context.TODO(), rb.ObjectMeta.Name, metav1.DeleteOptions{})
-				klog.Infoln("ClusterRoleBinding ", rb.ObjectMeta.Name, " is deleted")
+				Clientset.RbacV1().RoleBindings(rb.ObjectMeta.Namespace).Delete(context.TODO(), rb.ObjectMeta.Name, metav1.DeleteOptions{})
+				klog.Infoln("RoleBinding", rb.ObjectMeta.Name, "is deleted")
 			}
 		}
 	}
-	klog.Infoln("delete RoleBinding for ", userId, " Done")
+	klog.Infoln("Successfully delete RoleBinding made by", userId)
 }
 
 // ExecCommand sends a 'exec' command to specific pod.
