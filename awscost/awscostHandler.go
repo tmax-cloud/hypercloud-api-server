@@ -17,14 +17,12 @@ import (
 	"k8s.io/klog"
 )
 
-func Get(res http.ResponseWriter, req *http.Request) {
+var sess []*session.Session
+var svc []*costexplorer.CostExplorer
+var accounts []string // array of accounts
+var size int          // size of accounts
 
-	/*** DETERMIN HOW TO SORT THE RESULT ***/
-	// POSSIBLE VALUE : "account", "dimension"
-	sort := req.URL.Query().Get(util.QUERY_PARAMETER_SORT)
-	if sort == "" {
-		sort = "account"
-	}
+func init() {
 
 	/*** READ AND PARSING FROM CREDENTIAL FILE ***/
 	fileName := "/root/.aws/credentials"
@@ -35,22 +33,51 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	lines := strings.Split(string(dat), "\n")
 	reg := regexp.MustCompile("\\[.*\\]")
 
-	/*** GET COST INFO FOR EACH ACCOUNT ***/
-	result := make(map[string]awscostModel.Awscost)
-	var output *costexplorer.GetCostAndUsageOutput
+	/*** MAKE SESSION ***/
+	size = len(lines) / 3
+	idx := 0
+	sess = make([]*session.Session, size)
+	svc = make([]*costexplorer.CostExplorer, size)
+	accounts = make([]string, size)
 	for _, account := range lines {
 		if reg.MatchString(account) {
 			account = strings.TrimLeft(account, "[")
 			account = strings.TrimRight(account, "]")
 			klog.Infoln("Account Name : ", account)
+			accounts[idx] = account
 
-			output, err = makeCost(req, account)
+			/*** GET CREDENTIALS BY READING /root/.aws/credentials ***/
+			sess[idx], err = session.NewSessionWithOptions(session.Options{
+				Profile: account,
+				//SharedConfigState: session.SharedConfigEnable,
+			})
 			if err != nil {
 				klog.Errorln(err)
-				return
 			}
-			result = insert(result, output, req, account, sort)
+			svc[idx] = costexplorer.New(sess[idx])
+			idx++
 		}
+	}
+}
+
+func Get(res http.ResponseWriter, req *http.Request) {
+
+	/*** DETERMIN HOW TO SORT THE RESULT ***/
+	// POSSIBLE VALUE : "account", "dimension"
+	sort := req.URL.Query().Get(util.QUERY_PARAMETER_SORT)
+	if sort == "" {
+		sort = "account"
+	}
+
+	/*** GET COST INFO FOR EACH ACCOUNT ***/
+	result := make(map[string]awscostModel.Awscost)
+	for i := 0; i < size; i++ {
+		output, err := makeCost(req, i)
+		if err != nil {
+			klog.Errorln(err)
+			return
+		}
+		result = insert(result, output, req, accounts[i], sort)
 	}
 
 	/*** MOVE IN TO STRUCT ARRAY FOR SIMPLIFICATION OUTPUT ***/
@@ -68,7 +95,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln(result_struct)
 }
 
-func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageOutput, error) {
+func makeCost(req *http.Request, svc_idx int) (*costexplorer.GetCostAndUsageOutput, error) {
 
 	queryParams := req.URL.Query()
 
@@ -77,7 +104,7 @@ func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageO
 	var startTime int64
 	var endTime int64
 	startUnix := queryParams.Get(util.QUERY_PARAMETER_STARTTIME)
-	endUnix := queryParams.Get(util.QEURY_PARAMETER_ENDTIME)
+	endUnix := queryParams.Get(util.QUERY_PARAMETER_ENDTIME)
 	if startUnix == "" || endUnix == "" {
 		klog.Errorln("Must pass both of startTime and endTime")
 		return nil, errors.New("Time parameter error")
@@ -106,18 +133,8 @@ func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageO
 	}
 	dimension = strings.ToUpper(dimension)
 
-	/*** GET CREDENTIALS BY READING /root/.aws/credentials ***/
-	sess, err := session.NewSessionWithOptions(session.Options{
-		Profile: account,
-		//SharedConfigState: session.SharedConfigEnable,
-	})
-	if err != nil {
-		klog.Errorln(err)
-	}
-	svc := costexplorer.New(sess)
-
 	/*** GET COST FROM AWS ***/
-	result, err := svc.GetCostAndUsage(&costexplorer.GetCostAndUsageInput{
+	result, err := svc[svc_idx].GetCostAndUsage(&costexplorer.GetCostAndUsageInput{
 		TimePeriod: &costexplorer.DateInterval{
 			Start: aws.String(time.Unix(startTime, 0).Format("2006-01-02")),
 			End:   aws.String(time.Unix(endTime, 0).Format("2006-01-02")),
