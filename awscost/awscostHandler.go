@@ -61,7 +61,7 @@ func init() {
 }
 
 func Get(res http.ResponseWriter, req *http.Request) {
-
+	klog.Infoln("**** GET /awscost")
 	/*** DETERMIN HOW TO SORT THE RESULT ***/
 	// POSSIBLE VALUE : "account", "dimension"
 	sort := req.URL.Query().Get(util.QUERY_PARAMETER_SORT)
