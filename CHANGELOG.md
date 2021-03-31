@@ -1,6 +1,27 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.5.0 start -------------------->
+
+## Hypercloud-api-server 5.0.5.0 (Thu Apr  1 08:53:25 KST 2021)
+
+### Added
+  - [feat] deleteCRB/RB 추가 by Seungwon Lee
+
+### Changed
+  - [mod] metering merge 버그 수정 by GitHub
+  - [mod] awscostHandler 리팩토링 by Seungwon Lee
+  - [mod] 세션 생성 방식 변경 by Seungwon Lee
+  - [mod] 파라미터 형식 수정 by Seungwon Lee
+  - [mod] DB merge 조건문 버그 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] combine to delete /user by Seungwon Lee
+
 <!-------------------- v5.0.4.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.4.0 (Thu Mar 25 09:28:54 KST 2021)
