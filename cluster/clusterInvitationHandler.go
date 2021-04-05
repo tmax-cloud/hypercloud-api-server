@@ -22,7 +22,7 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	remoteRole := queryParams.Get(QUERY_PARAMETER_REMOTE_ROLE)
 	memberName := queryParams.Get(QUERY_PARAMETER_MEMBER_NAME)
 	vars := gmux.Vars(req)
-	cluster := vars["cluster"]
+	cluster := vars["clustermanager"]
 	memberId := vars["member"]
 	clusterManagerNamespace := vars["namespace"]
 
@@ -155,7 +155,7 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 	remoteRole := queryParams.Get(QUERY_PARAMETER_REMOTE_ROLE)
 
 	vars := gmux.Vars(req)
-	cluster := vars["cluster"]
+	cluster := vars["clustermanager"]
 	memberId := vars["member"]
 	clusterManagerNamespace := vars["namespace"]
 
@@ -267,8 +267,8 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 	vars := gmux.Vars(req)
-	cluster := vars["cluster"]
-	memberId := vars["user"]
+	cluster := vars["clustermanager"]
+	memberId := vars["member"]
 	clusterManagerNamespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, cluster, memberId, clusterManagerNamespace); err != nil {
@@ -377,8 +377,8 @@ func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
 	// token := queryParams.Get(QUERY_PARAMETER_REMOTE_ROLE)
 
 	vars := gmux.Vars(req)
-	cluster := vars["cluster"]
-	memberId := vars["user"]
+	cluster := vars["clustermanager"]
+	memberId := vars["member"]
 	clusterManagerNamespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, cluster, memberId, clusterManagerNamespace); err != nil {
@@ -449,7 +449,7 @@ func ListInvitation(res http.ResponseWriter, req *http.Request) {
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 	vars := gmux.Vars(req)
-	cluster := vars["cluster"]
+	cluster := vars["clustermanager"]
 	clusterManagerNamespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, cluster, clusterManagerNamespace); err != nil {

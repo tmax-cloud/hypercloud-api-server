@@ -17,7 +17,7 @@ func ListClusterMember(res http.ResponseWriter, req *http.Request) {
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 	vars := gmux.Vars(req)
-	cluster := vars["cluster"]
+	cluster := vars["clustermanager"]
 	clusterManagerNamespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, cluster, clusterManagerNamespace); err != nil {
@@ -69,7 +69,7 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 
 	vars := gmux.Vars(req)
-	cluster := vars["cluster"]
+	cluster := vars["clustermanager"]
 	attribute := vars["attribute"]
 	memberId := vars["member"]
 	clusterManagerNamespace := vars["namespace"]
@@ -163,7 +163,7 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	remoteRole := queryParams.Get(QUERY_PARAMETER_REMOTE_ROLE)
 
 	vars := gmux.Vars(req)
-	cluster := vars["cluster"]
+	cluster := vars["clustermanager"]
 	attribute := vars["attribute"]
 	memberId := vars["member"]
 	clusterManagerNamespace := vars["namespace"]
