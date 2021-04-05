@@ -52,7 +52,7 @@ func Post(res http.ResponseWriter, req *http.Request) {
 func Delete(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("**** DELETE /user")
 	queryParams := req.URL.Query()
-	userId := queryParams.Get("userId")
+	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
 
 	if userId == "" {
 		out := "userId is Missing"
@@ -63,9 +63,15 @@ func Delete(res http.ResponseWriter, req *http.Request) {
 
 	klog.Infoln("userId is : " + userId)
 
-	//Call DeleteClusterRoleBinding for New User
+	//Call Delete resource function for New User
 	k8sApiCaller.DeleteClusterRoleBinding(userId)
-	out := "Delete ClusterRoleBinding for New User Success"
+	k8sApiCaller.DeleteRQCWithUser(userId)
+	k8sApiCaller.DeleteNSCWithUser(userId)
+	k8sApiCaller.DeleteRBCWithUser(userId)
+	k8sApiCaller.DeleteCRBWithUser(userId)
+	k8sApiCaller.DeleteRBWithUser(userId)
+	out := "Successfully delete related resources with " + userId
+	klog.Infoln(out)
 	util.SetResponse(res, out, nil, http.StatusOK)
 }
 
