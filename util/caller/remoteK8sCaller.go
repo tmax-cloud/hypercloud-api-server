@@ -22,7 +22,7 @@ func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject 
 	if remoteRole == "admin" {
 		remoteRole = "cluster-admin"
 	}
-	remoteClientset, err := getRemoteK8sClient(clusterManager.Name)
+	remoteClientset, err := getRemoteK8sClient(clusterManager)
 	if err != nil {
 		return err.Error(), http.StatusForbidden
 	}
@@ -71,7 +71,7 @@ func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject 
 }
 
 func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) (string, int) {
-	remoteClientset, err := getRemoteK8sClient(clusterManager.Name)
+	remoteClientset, err := getRemoteK8sClient(clusterManager)
 	if err != nil {
 		return err.Error(), http.StatusInternalServerError
 	}
@@ -103,8 +103,8 @@ func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subjec
 	return msg, http.StatusOK
 }
 
-func getRemoteK8sClient(cluster string) (*kubernetes.Clientset, error) {
-	if remoteKubeconfig, err := Clientset.CoreV1().Secrets("capi-system").Get(context.TODO(), cluster+"-kubeconfig", metav1.GetOptions{}); err == nil {
+func getRemoteK8sClient(clusterManager *clusterv1alpha1.ClusterManager) (*kubernetes.Clientset, error) {
+	if remoteKubeconfig, err := Clientset.CoreV1().Secrets(clusterManager.Namespace).Get(context.TODO(), clusterManager.Name+"-kubeconfig", metav1.GetOptions{}); err == nil {
 		if value, ok := remoteKubeconfig.Data["value"]; ok {
 			remoteClientConfig, err := clientcmd.NewClientConfigFromBytes(value)
 			if err != nil {
@@ -124,10 +124,10 @@ func getRemoteK8sClient(cluster string) (*kubernetes.Clientset, error) {
 		}
 		return remoteClientset, nil
 	} else if errors.IsNotFound(err) {
-		klog.Infoln("Cluster [" + cluster + "] is not ready yet")
+		klog.Infoln("Cluster [" + clusterManager.Name + "] is not ready yet")
 		return nil, err
 	} else {
-		klog.Errorln("Error: Get clusterrole [" + cluster + "] is failed")
+		klog.Errorln("Error: Get clusterrole [" + clusterManager.Name + "] is failed")
 		return nil, err
 	}
 }

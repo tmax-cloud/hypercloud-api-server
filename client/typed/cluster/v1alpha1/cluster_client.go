@@ -17,8 +17,8 @@ type ClusterV1alpha1Client struct {
 	restClient rest.Interface
 }
 
-func (c *ClusterV1alpha1Client) ClusterManagers() ClusterManagerInterface {
-	return newClusterManagers(c)
+func (c *ClusterV1alpha1Client) ClusterManagers(namespace string) ClusterManagerInterface {
+	return newClusterManagers(c, namespace)
 }
 
 // NewForConfig creates a new ClusterV1alpha1Client for the given config.

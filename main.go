@@ -128,16 +128,17 @@ func main() {
 
 	if hcMode != "single" {
 		// for multi mode only
-		mux.HandleFunc("/clusterclaim", serveClusterClaim)                                                             // listGet clusterClaim
-		mux.HandleFunc("/clusterclaim/{clusterclaim}", serveClusterClaim)                                              // listGet, claim 승인
-		mux.HandleFunc("/cluster", serveCluster)                                                                       // listGet custer
-		mux.HandleFunc("/cluster/{cluster}/namespace", serveClusterNamespace)                                          // listGet Namespace
-		mux.HandleFunc("/cluster/{cluster}/member", serveClusterMember)                                                // listGet (all cluster member not pending status)
-		mux.HandleFunc("/cluster/{cluster}/member_invitation", serveClusterInvitation)                                 // listGet (only pending status)
-		mux.HandleFunc("/cluster/{cluster}/member_invitation/{attribute}/{member}", serveClusterInvitation)            // 추가 요청 (db + token 발급)
-		mux.HandleFunc("/cluster/{cluster}/member_invitation/{attribute}/{user}/{admit}", serveClusterInvitationAdmit) // 추가 요청 승인, 추가 요청 거절
-		mux.HandleFunc("/cluster/{cluster}/remove_member/{attribute}/{member}", serveClusterMember)                    // 멤버 삭제 (db)
-		mux.HandleFunc("/cluster/{cluster}/update_role/{attribute}/{member}", serveClusterMember)                      // 권한 변경 (db)
+		mux.HandleFunc("/clusterclaim", serveClusterClaim)                                                                                    //List all clusterclaim
+		mux.HandleFunc("/namespaces/{namespace}/clusterclaim", serveClusterClaim)                                                             // list all clusterclaim in a namespace
+		mux.HandleFunc("/namespaces/{namespace}/clusterclaim/{clusterclaim}", serveClusterClaim)                                              // admit clusterclaim
+		mux.HandleFunc("/cluster", serveCluster)                                                                                              // list all clustermanager
+		mux.HandleFunc("/namespaces/{namespace}/cluster", serveCluster)                                                                       // list all clustermanager in a namespace
+		mux.HandleFunc("/namespaces/{namespace}/cluster/{cluster}/member", serveClusterMember)                                                // listGet (all cluster member not pending status)
+		mux.HandleFunc("/namespaces/{namespace}/cluster/{cluster}/member_invitation", serveClusterInvitation)                                 // listGet (only pending status)
+		mux.HandleFunc("/namespaces/{namespace}/cluster/{cluster}/member_invitation/{attribute}/{member}", serveClusterInvitation)            // 추가 요청 (db + token 발급)
+		mux.HandleFunc("/namespaces/{namespace}/cluster/{cluster}/member_invitation/{attribute}/{user}/{admit}", serveClusterInvitationAdmit) // 추가 요청 승인, 추가 요청 거절
+		mux.HandleFunc("/namespaces/{namespace}/cluster/{cluster}/remove_member/{attribute}/{member}", serveClusterMember)                    // 멤버 삭제 (db)
+		mux.HandleFunc("/namespaces/{namespace}/cluster/{cluster}/update_role/{attribute}/{member}", serveClusterMember)                      // 권한 변경 (db)
 	}
 
 	mux.HandleFunc("/metadata", serveMetadata)
@@ -273,15 +274,6 @@ func serveCluster(res http.ResponseWriter, req *http.Request) {
 	case http.MethodGet:
 		cluster.List(res, req)
 	case http.MethodPut:
-	default:
-	}
-}
-
-func serveClusterNamespace(res http.ResponseWriter, req *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
-	switch req.Method {
-	case http.MethodGet:
-		cluster.ListClusterNamespace(res, req)
 	default:
 	}
 }

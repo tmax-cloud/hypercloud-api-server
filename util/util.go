@@ -23,6 +23,7 @@ import (
 
 type ClusterMemberInfo struct {
 	Id          int64
+	Namespace   string
 	Cluster     string
 	MemberId    string
 	MemberName  string
@@ -263,8 +264,9 @@ func SendEmail(from string, to []string, subject string, bodyParameter map[strin
 func CreateToken(clusterMember ClusterMemberInfo) (string, error) {
 	atClaims := jwt.MapClaims{}
 	atClaims["authorized"] = true
-	atClaims["user_id"] = clusterMember.MemberId
+	atClaims["namespace"] = clusterMember.Namespace
 	atClaims["cluster"] = clusterMember.Cluster
+	atClaims["user_id"] = clusterMember.MemberId
 	atClaims["user_name"] = clusterMember.MemberName
 	atClaims["exp"] = time.Now().Add(ParsedTokenExpiredDate).Unix()
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
@@ -284,7 +286,7 @@ func StringParameterException(userGroups []string, args ...string) error {
 
 	for _, arg := range args {
 		if arg == "" {
-			msg := arg + " is empty."
+			msg := arg + "Something is empty."
 			klog.Infoln(msg)
 			return errors.New(msg)
 		}
@@ -338,6 +340,7 @@ func VerifyToken(r *http.Request) (*jwt.Token, error) {
 func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) error {
 	var memberId string
 	var cluster string
+	var namespace string
 	token, err := VerifyToken(r)
 	if err != nil {
 		return err
@@ -346,9 +349,10 @@ func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) error {
 	if ok && token.Valid {
 		memberId, ok = claims["user_id"].(string)
 		cluster, ok = claims["cluster"].(string)
+		namespace, ok = claims["namespace"].(string)
 	}
 
-	if clusterMember.MemberId == memberId && clusterMember.Cluster == cluster {
+	if clusterMember.MemberId == memberId && clusterMember.Cluster == cluster && clusterMember.Namespace == namespace {
 		return nil
 	}
 	return errors.New("Request user or target cluster does not match with token payload")

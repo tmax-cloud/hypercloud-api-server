@@ -20,10 +20,10 @@ const (
 	DB_NAME             = "postgres"
 	HOSTNAME            = "postgres-service.hypercloud5-system.svc"
 	PORT                = 5432
-	INSERT_QUERY        = "INSERT INTO CLUSTER_MEMBER (cluster, member_id, member_name, attribute, role, status, createdTime, updatedTime) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
-	DELETE_QUERY        = "DELETE FROM CLUSTER_MEMBER WHERE cluster = $1 and member_id = $2 and attribute = $3"
-	UPDATE_STATUS_QUERY = "UPDATE CLUSTER_MEMBER SET STATUS = 'invited' WHERE cluster = $1 and member_id = $2 and attribute = $3 and updatedTime = $4"
-	UPDATE_ROLE_QUERY   = "UPDATE CLUSTER_MEMBER SET ROLE = '@@ROLE@@' WHERE cluster = $1 and member_id = $2 and attribute = $3 and updatedTime = $4"
+	INSERT_QUERY        = "INSERT INTO CLUSTER_MEMBER (namespace, cluster, member_id, member_name, attribute, role, status, createdTime, updatedTime) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
+	DELETE_QUERY        = "DELETE FROM CLUSTER_MEMBER WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4"
+	UPDATE_STATUS_QUERY = "UPDATE CLUSTER_MEMBER SET STATUS = 'invited' WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4"
+	UPDATE_ROLE_QUERY   = "UPDATE CLUSTER_MEMBER SET ROLE = '@@ROLE@@' WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4"
 )
 
 var pg_con_info string
@@ -85,7 +85,7 @@ func Insert(item util.ClusterMemberInfo) error {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(INSERT_QUERY, item.Cluster, item.MemberId, item.MemberName, item.Attribute, item.Role, item.Status, time.Now(), time.Now())
+	_, err = db.Exec(INSERT_QUERY, item.Namespace, item.Cluster, item.MemberId, item.MemberName, item.Attribute, item.Role, item.Status, time.Now(), time.Now())
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -94,7 +94,7 @@ func Insert(item util.ClusterMemberInfo) error {
 	return nil
 }
 
-func ListClusterMemberWithOutPending(cluster string) ([]util.ClusterMemberInfo, error) {
+func ListClusterMemberWithOutPending(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -105,6 +105,10 @@ func ListClusterMemberWithOutPending(cluster string) ([]util.ClusterMemberInfo, 
 	var b strings.Builder
 
 	b.WriteString("select * from CLUSTER_MEMBER where 1=1 ")
+
+	b.WriteString("and namespace = '")
+	b.WriteString(namespace)
+	b.WriteString("' ")
 
 	b.WriteString("and cluster = '")
 	b.WriteString(cluster)
@@ -125,6 +129,7 @@ func ListClusterMemberWithOutPending(cluster string) ([]util.ClusterMemberInfo, 
 		clusterMember := util.ClusterMemberInfo{}
 		rows.Scan(
 			&clusterMember.Id,
+			&clusterMember.Namespace,
 			&clusterMember.Cluster,
 			&clusterMember.MemberId,
 			&clusterMember.MemberName,
@@ -139,7 +144,7 @@ func ListClusterMemberWithOutPending(cluster string) ([]util.ClusterMemberInfo, 
 	return clusterMemberList, nil
 }
 
-func ListAllClusterMember(cluster string) ([]util.ClusterMemberInfo, error) {
+func ListAllClusterMember(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -150,6 +155,10 @@ func ListAllClusterMember(cluster string) ([]util.ClusterMemberInfo, error) {
 	var b strings.Builder
 
 	b.WriteString("select * from CLUSTER_MEMBER where 1=1 ")
+
+	b.WriteString("and namespace = '")
+	b.WriteString(namespace)
+	b.WriteString("' ")
 
 	b.WriteString("and cluster = '")
 	b.WriteString(cluster)
@@ -168,6 +177,7 @@ func ListAllClusterMember(cluster string) ([]util.ClusterMemberInfo, error) {
 		clusterMember := util.ClusterMemberInfo{}
 		rows.Scan(
 			&clusterMember.Id,
+			&clusterMember.Namespace,
 			&clusterMember.Cluster,
 			&clusterMember.MemberId,
 			&clusterMember.MemberName,
@@ -182,7 +192,7 @@ func ListAllClusterMember(cluster string) ([]util.ClusterMemberInfo, error) {
 	return clusterMemberList, nil
 }
 
-func ListAllClusterUser(cluster string) ([]util.ClusterMemberInfo, error) {
+func ListAllClusterUser(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -196,6 +206,10 @@ func ListAllClusterUser(cluster string) ([]util.ClusterMemberInfo, error) {
 
 	b.WriteString("and attribute = 'user'")
 
+	b.WriteString("and namespace = '")
+	b.WriteString(namespace)
+	b.WriteString("' ")
+
 	b.WriteString("and cluster = '")
 	b.WriteString(cluster)
 	b.WriteString("' ")
@@ -213,6 +227,7 @@ func ListAllClusterUser(cluster string) ([]util.ClusterMemberInfo, error) {
 		clusterMember := util.ClusterMemberInfo{}
 		rows.Scan(
 			&clusterMember.Id,
+			&clusterMember.Namespace,
 			&clusterMember.Cluster,
 			&clusterMember.MemberId,
 			&clusterMember.MemberName,
@@ -227,7 +242,7 @@ func ListAllClusterUser(cluster string) ([]util.ClusterMemberInfo, error) {
 	return clusterMemberList, nil
 }
 
-func ListAllClusterGroup(cluster string) ([]util.ClusterMemberInfo, error) {
+func ListAllClusterGroup(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -238,6 +253,10 @@ func ListAllClusterGroup(cluster string) ([]util.ClusterMemberInfo, error) {
 	var b strings.Builder
 
 	b.WriteString("select * from CLUSTER_MEMBER where 1=1 ")
+
+	b.WriteString("and namespace = '")
+	b.WriteString(namespace)
+	b.WriteString("' ")
 
 	b.WriteString("and cluster = '")
 	b.WriteString(cluster)
@@ -259,6 +278,7 @@ func ListAllClusterGroup(cluster string) ([]util.ClusterMemberInfo, error) {
 		clusterMember := util.ClusterMemberInfo{}
 		rows.Scan(
 			&clusterMember.Id,
+			&clusterMember.Namespace,
 			&clusterMember.Cluster,
 			&clusterMember.MemberId,
 			&clusterMember.MemberName,
@@ -273,7 +293,7 @@ func ListAllClusterGroup(cluster string) ([]util.ClusterMemberInfo, error) {
 	return clusterMemberList, nil
 }
 
-func ListAceesibleCluster(userId string, userGroups []string) ([]string, error) {
+func ListAceesibleClusterInNamespace(userId string, userGroups []string, namespace string) ([]string, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -285,6 +305,10 @@ func ListAceesibleCluster(userId string, userGroups []string) ([]string, error) 
 
 	b.WriteString("select cluster from CLUSTER_MEMBER where 1=1 ")
 
+	b.WriteString("and namespace = '")
+	b.WriteString(namespace)
+	b.WriteString("' ")
+
 	b.WriteString("and member_id = '")
 	b.WriteString(userId)
 	b.WriteString("' ")
@@ -295,7 +319,7 @@ func ListAceesibleCluster(userId string, userGroups []string) ([]string, error) 
 		b.WriteString("' ")
 	}
 
-	b.WriteString("and status not in ('invited') ")
+	b.WriteString("and status not in ('pending') ")
 
 	b.WriteString("group by cluster")
 
@@ -330,6 +354,10 @@ func GetPendingUser(clusterMember util.ClusterMemberInfo) ([]util.ClusterMemberI
 
 	b.WriteString("select * from CLUSTER_MEMBER where 1=1 ")
 
+	b.WriteString("and namespace = '")
+	b.WriteString(clusterMember.Namespace)
+	b.WriteString("' ")
+
 	b.WriteString("and cluster = '")
 	b.WriteString(clusterMember.Cluster)
 	b.WriteString("' ")
@@ -355,6 +383,7 @@ func GetPendingUser(clusterMember util.ClusterMemberInfo) ([]util.ClusterMemberI
 		clusterMember := util.ClusterMemberInfo{}
 		rows.Scan(
 			&clusterMember.Id,
+			&clusterMember.Namespace,
 			&clusterMember.Cluster,
 			&clusterMember.MemberId,
 			&clusterMember.MemberName,
@@ -369,7 +398,7 @@ func GetPendingUser(clusterMember util.ClusterMemberInfo) ([]util.ClusterMemberI
 	return clusterMemberList, nil
 }
 
-func ListPendingUser(cluster string) ([]util.ClusterMemberInfo, error) {
+func ListPendingUser(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -379,6 +408,10 @@ func ListPendingUser(cluster string) ([]util.ClusterMemberInfo, error) {
 	clusterMemberList := []util.ClusterMemberInfo{}
 	var b strings.Builder
 	b.WriteString("select * from CLUSTER_MEMBER where 1=1 ")
+
+	b.WriteString("and namespace = '")
+	b.WriteString(namespace)
+	b.WriteString("' ")
 
 	if cluster != "" {
 		b.WriteString("and cluster = '")
@@ -401,6 +434,7 @@ func ListPendingUser(cluster string) ([]util.ClusterMemberInfo, error) {
 		clusterMember := util.ClusterMemberInfo{}
 		rows.Scan(
 			&clusterMember.Id,
+			&clusterMember.Namespace,
 			&clusterMember.Cluster,
 			&clusterMember.MemberId,
 			&clusterMember.MemberName,
@@ -468,7 +502,10 @@ func UpdateStatus(item util.ClusterMemberInfo) error {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(UPDATE_STATUS_QUERY, item.Cluster, item.MemberId, item.Attribute, time.Now())
+	klog.Infoln("Query: " + UPDATE_STATUS_QUERY)
+	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
+
+	_, err = db.Exec(UPDATE_STATUS_QUERY, item.Namespace, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -486,8 +523,10 @@ func UpdateRole(item util.ClusterMemberInfo) error {
 	defer db.Close()
 
 	query := strings.Replace(UPDATE_ROLE_QUERY, "@@ROLE@@", item.Role, -1)
+	klog.Infoln("Query: " + query)
+	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
-	_, err = db.Exec(query, item.Cluster, item.MemberId, item.Attribute, time.Now())
+	_, err = db.Exec(query, item.Namespace, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -504,7 +543,10 @@ func Delete(item util.ClusterMemberInfo) error {
 	}
 	defer db.Close()
 
-	_, err = db.Exec(DELETE_QUERY, item.Cluster, item.MemberId, item.Attribute)
+	klog.Infoln("Query: " + DELETE_QUERY)
+	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
+
+	_, err = db.Exec(DELETE_QUERY, item.Namespace, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
 		klog.Error(err)
 		return err

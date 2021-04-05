@@ -77,7 +77,7 @@ func makeCost(req *http.Request, account string) (*costexplorer.GetCostAndUsageO
 	var startTime int64
 	var endTime int64
 	startUnix := queryParams.Get(util.QUERY_PARAMETER_STARTTIME)
-	endUnix := queryParams.Get(util.QEURY_PARAMETER_ENDTIME)
+	endUnix := queryParams.Get(util.QUERY_PARAMETER_ENDTIME)
 	if startUnix == "" || endUnix == "" {
 		klog.Errorln("Must pass both of startTime and endTime")
 		return nil, errors.New("Time parameter error")

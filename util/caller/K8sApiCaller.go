@@ -10,13 +10,10 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/tmax-cloud/hypercloud-api-server/util"
-	"k8s.io/client-go/tools/remotecommand"
-	"k8s.io/utils/pointer"
-
 	configv1alpha1 "github.com/tmax-cloud/efk-operator/api/v1alpha1"
 	alertModel "github.com/tmax-cloud/hypercloud-api-server/alert/model"
 	client "github.com/tmax-cloud/hypercloud-api-server/client"
+	"github.com/tmax-cloud/hypercloud-api-server/util"
 	clusterDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/cluster"
 	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
 	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
@@ -29,8 +26,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/scheme"
+	"k8s.io/utils/pointer"
 )
 
 var Clientset *kubernetes.Clientset
@@ -557,7 +556,7 @@ func CreateSubjectAccessReview(userId string, userGroups []string, group string,
 
 func AdmitClusterClaim(userId string, userGroups []string, clusterClaim *claimsv1alpha1.ClusterClaim, admit bool, reason string) (*claimsv1alpha1.ClusterClaim, string, int) {
 
-	clusterClaimStatusUpdateRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims/status", "", "", "update")
+	clusterClaimStatusUpdateRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims/status", clusterClaim.Namespace, clusterClaim.Name, "update")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -582,7 +581,7 @@ func AdmitClusterClaim(userId string, userGroups []string, clusterClaim *claimsv
 			}
 		}
 
-		result, err := customClientset.ClaimsV1alpha1().ClusterClaims().
+		result, err := customClientset.ClaimsV1alpha1().ClusterClaims(clusterClaim.Namespace).
 			UpdateStatus(context.TODO(), clusterClaim, metav1.UpdateOptions{})
 		if err != nil {
 			klog.Errorln("Update ClusterClaim [ " + clusterClaim.Name + " ] Failed")
@@ -599,18 +598,18 @@ func AdmitClusterClaim(userId string, userGroups []string, clusterClaim *claimsv
 	}
 }
 
-func GetClusterClaim(userId string, userGroups []string, clusterClaimName string) (*claimsv1alpha1.ClusterClaim, string, int) {
+func GetClusterClaim(userId string, userGroups []string, clusterClaimName string, clusterClaimNamespace string) (*claimsv1alpha1.ClusterClaim, string, int) {
 
 	var clusterClaim = &claimsv1alpha1.ClusterClaim{}
 
-	clusterClaimGetRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", "", clusterClaimName, "get")
+	clusterClaimGetRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", clusterClaimNamespace, clusterClaimName, "get")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
 	if clusterClaimGetRuleResult.Status.Allowed {
-		clusterClaim, err = customClientset.ClaimsV1alpha1().ClusterClaims().Get(context.TODO(), clusterClaimName, metav1.GetOptions{})
+		clusterClaim, err = customClientset.ClaimsV1alpha1().ClusterClaims(clusterClaimNamespace).Get(context.TODO(), clusterClaimName, metav1.GetOptions{})
 		if err != nil {
 			klog.Errorln(err)
 			return nil, err.Error(), http.StatusInternalServerError
@@ -624,7 +623,7 @@ func GetClusterClaim(userId string, userGroups []string, clusterClaimName string
 	return clusterClaim, "Get claim success", http.StatusOK
 }
 
-func ListAccessibleClusterClaims(userId string, userGroups []string) (*claimsv1alpha1.ClusterClaimList, string, int) {
+func ListAllClusterClaims(userId string, userGroups []string) (*claimsv1alpha1.ClusterClaimList, string, int) {
 	var clusterClaimList = &claimsv1alpha1.ClusterClaimList{}
 
 	clusterClaimListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", "", "", "list")
@@ -633,7 +632,7 @@ func ListAccessibleClusterClaims(userId string, userGroups []string) (*claimsv1a
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
-	clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims().List(context.TODO(), metav1.ListOptions{})
+	clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -647,48 +646,55 @@ func ListAccessibleClusterClaims(userId string, userGroups []string) (*claimsv1a
 		if len(clusterClaimList.Items) == 0 {
 			msg := "No ClusterClaim was Found."
 			klog.Infoln(msg)
+			return clusterClaimList, msg, http.StatusOK
 		}
 		return clusterClaimList, msg, http.StatusOK
 	} else {
-		klog.Infoln(" User [ " + userId + " ] has No ClusterClaim List Role, Check If user has ClusterClaim Get Role & has Owner Annotation on certain ClusterClaim")
-		_clusterClaimList := []claimsv1alpha1.ClusterClaim{}
-		// var wg sync.WaitGroup
-		// wg.Add(len(clusterClaimList.Items))
-		for _, clusterClaim := range clusterClaimList.Items {
-			// go func(clusterClaim claimsv1alpha1.ClusterClaim, userId string, _clusterClaimList []claimsv1alpha1.ClusterClaim) {
-			// defer wg.Done()
-			if clusterClaim.Annotations["creator"] == userId {
-				klog.Infoln(" User [ " + userId + " ] has owner annotation in ClusterClaim [ " + clusterClaim.Name + " ]")
-				_clusterClaimList = append(_clusterClaimList, clusterClaim)
-			}
-			// }(clusterClaim, userId, _clusterClaimList)
-		}
-		// wg.Wait()
+		msg := "User [ " + userId + " ] has No permission to list clusterclaims on all namespaces"
+		klog.Infoln(msg)
+		clusterClaimList.Items = []claimsv1alpha1.ClusterClaim{}
+		return clusterClaimList, msg, http.StatusForbidden
+	}
+}
 
-		clusterClaimList.Items = _clusterClaimList
+func ListAccessibleClusterClaims(userId string, userGroups []string, clusterClaimNamespace string) (*claimsv1alpha1.ClusterClaimList, string, int) {
+	var clusterClaimList = &claimsv1alpha1.ClusterClaimList{}
 
+	clusterClaimList.Kind = "ClusterClaimList"
+	clusterClaimList.APIVersion = "claims.tmax.io/v1alpha1"
+
+	clusterClaimListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", clusterClaimNamespace, "", "list")
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+	if clusterClaimListRuleResult.Status.Allowed {
+		clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims(clusterClaimNamespace).List(context.TODO(), metav1.ListOptions{})
+		msg := "Success list clusterclaim in namespace [ " + clusterClaimNamespace + " ]"
 		if len(clusterClaimList.Items) == 0 {
 			msg := " User [ " + userId + " ] has No ClusterClaim"
 			klog.Infoln(msg)
-			return clusterClaimList, msg, http.StatusOK
 		}
+		return clusterClaimList, msg, http.StatusOK
+	} else {
+		msg := "User [ " + userId + " ] has No permission in namespace  [ " + clusterClaimNamespace + " ]"
+		klog.Infoln(msg)
+		clusterClaimList.Items = []claimsv1alpha1.ClusterClaim{}
+		return clusterClaimList, msg, http.StatusOK
 	}
-	msg := "Success to get ClusterClaim for User [ " + userId + " ]"
-	klog.Infoln(msg)
-	return clusterClaimList, msg, http.StatusOK
+
 }
 
-func ListCluster(userId string, userGroups []string, accessible bool) (*clusterv1alpha1.ClusterManagerList, string, int) {
-
+func ListAllCluster(userId string, userGroups []string, accessible bool) (*clusterv1alpha1.ClusterManagerList, string, int) {
 	var clmList = &clusterv1alpha1.ClusterManagerList{}
 
-	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clusterclaims", "", "", "list")
+	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", "", "", "list")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
-	clmList, err = customClientset.ClusterV1alpha1().ClusterManagers().List(context.TODO(), metav1.ListOptions{})
+	clmList, err = customClientset.ClusterV1alpha1().ClusterManagers("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -705,10 +711,45 @@ func ListCluster(userId string, userGroups []string, accessible bool) (*clusterv
 		}
 		return clmList, msg, http.StatusOK
 	} else {
-		klog.Infoln("User [ " + userId + " ] has No ClusterManager List Role or acessible is true")
+		msg := "User [ " + userId + " ] has No permission to list clusterclaims on all namespaces"
+		klog.Infoln(msg)
+		clmList.Items = []clusterv1alpha1.ClusterManager{}
+		return clmList, msg, http.StatusForbidden
+	}
+}
 
+func ListAccessibleCluster(userId string, userGroups []string, clusterManagerNamespace string) (*clusterv1alpha1.ClusterManagerList, string, int) {
+
+	var clmList = &clusterv1alpha1.ClusterManagerList{}
+
+	clmList.Kind = "ClusterManagerList"
+	clmList.APIVersion = "cluster.tmax.io/v1alpha1"
+
+	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clusterclaims", clusterManagerNamespace, "", "list")
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+
+	clmList, err = customClientset.ClusterV1alpha1().ClusterManagers(clusterManagerNamespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+
+	if clmListRuleResult.Status.Allowed {
+		if len(clmList.Items) == 0 {
+			msg := " User [ " + userId + " ] has No clusterManager"
+			klog.Infoln(msg)
+			return clmList, msg, http.StatusOK
+		}
+		msg := "Success list cluster in a namespace [ " + clusterManagerNamespace + " ]"
+		klog.Infoln(msg)
+		return clmList, msg, http.StatusOK
+	} else {
+		// ns에 list 권한 없으면 db에서 속한것만 찾아서 반환!
 		// db에서 읽어온다.
-		clusterNameList, err := clusterDataFactory.ListAceesibleCluster(userId, userGroups)
+		clusterNameList, err := clusterDataFactory.ListAceesibleClusterInNamespace(userId, userGroups, clusterManagerNamespace)
 		if err != nil {
 			klog.Errorln(err)
 			return nil, err.Error(), http.StatusInternalServerError
@@ -720,7 +761,6 @@ func ListCluster(userId string, userGroups []string, accessible bool) (*clusterv
 			}
 		}
 		clmList.Items = _clmList
-
 		if len(clmList.Items) == 0 {
 			msg := " User [ " + userId + " ] has No Clusters"
 			klog.Infoln(msg)
@@ -730,19 +770,20 @@ func ListCluster(userId string, userGroups []string, accessible bool) (*clusterv
 		klog.Infoln(msg)
 		return clmList, msg, http.StatusOK
 	}
+
 }
 
-func GetCluster(userId string, userGroups []string, clusterName string) (*clusterv1alpha1.ClusterManager, string, int) {
+func GetCluster(userId string, userGroups []string, clusterName string, clusterManagerNamespace string) (*clusterv1alpha1.ClusterManager, string, int) {
 
 	var clm = &clusterv1alpha1.ClusterManager{}
-	clusterGetRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", "", clusterName, "get")
+	clusterGetRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", clusterManagerNamespace, clusterName, "get")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
 	if clusterGetRuleResult.Status.Allowed {
-		clm, err = customClientset.ClusterV1alpha1().ClusterManagers().Get(context.TODO(), clusterName, metav1.GetOptions{})
+		clm, err = customClientset.ClusterV1alpha1().ClusterManagers(clusterManagerNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
 		if err != nil {
 			klog.Errorln(err)
 			return nil, err.Error(), http.StatusInternalServerError
@@ -764,7 +805,7 @@ func UpdateClusterManager(userId string, userGroups []string, clm *clusterv1alph
 	}
 
 	if clmUpdateRuleResult.Status.Allowed {
-		result, err := customClientset.ClusterV1alpha1().ClusterManagers().UpdateStatus(context.TODO(), clm, metav1.UpdateOptions{})
+		result, err := customClientset.ClusterV1alpha1().ClusterManagers(clm.Namespace).UpdateStatus(context.TODO(), clm, metav1.UpdateOptions{})
 		if err != nil {
 			klog.Errorln("Update member list in cluster [ " + clm.Name + " ] Failed")
 			return nil, err.Error(), http.StatusInternalServerError
@@ -781,12 +822,151 @@ func UpdateClusterManager(userId string, userGroups []string, clm *clusterv1alph
 }
 
 func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) (string, int) {
+	var roleName string
+	var roleBindingName string
+	roleBinding := &rbacApi.RoleBinding{}
+	if attribute == "user" {
+		roleName = subject + "-user-" + clusterManager.Name + "-clm-role"
+		roleBindingName = subject + "-user-" + clusterManager.Name + "-clm-rolebinding"
+		roleBinding.Subjects = []rbacApi.Subject{
+			{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "User",
+				Name:     subject,
+			},
+		}
+	} else {
+		roleName = subject + "-group-" + clusterManager.Name + "-clm-role"
+		roleBindingName = subject + "-group-" + clusterManager.Name + "-clm-rolebinding"
+		roleBinding.Subjects = []rbacApi.Subject{
+			{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "Group",
+				Name:     subject,
+			},
+		}
+	}
+
+	role := &rbacApi.Role{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      roleName,
+			Namespace: clusterManager.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				metav1.OwnerReference{
+					APIVersion:         util.CLUSTER_API_GROUP_VERSION,
+					Kind:               util.CLUSTER_API_Kind,
+					Name:               clusterManager.GetName(),
+					UID:                clusterManager.GetUID(),
+					BlockOwnerDeletion: pointer.BoolPtr(true),
+					Controller:         pointer.BoolPtr(true),
+				},
+			},
+		},
+		Rules: []rbacApi.PolicyRule{
+			{APIGroups: []string{util.CLUSTER_API_GROUP}, Resources: []string{"clustermanagers"},
+				ResourceNames: []string{clusterManager.Name}, Verbs: []string{"get"}},
+			{APIGroups: []string{util.CLUSTER_API_GROUP}, Resources: []string{"clustermanagers/status"},
+				ResourceNames: []string{clusterManager.Name}, Verbs: []string{"get"}},
+		},
+	}
+
+	if _, err := Clientset.RbacV1().Roles(clusterManager.Namespace).Create(context.TODO(), role, metav1.CreateOptions{}); err != nil {
+		klog.Errorln(err)
+		return err.Error(), http.StatusInternalServerError
+	}
+
+	roleBinding.ObjectMeta = metav1.ObjectMeta{
+		Name:      roleBindingName,
+		Namespace: clusterManager.Namespace,
+		OwnerReferences: []metav1.OwnerReference{
+			metav1.OwnerReference{
+				APIVersion:         util.CLUSTER_API_GROUP_VERSION,
+				Kind:               util.CLUSTER_API_Kind,
+				Name:               clusterManager.GetName(),
+				UID:                clusterManager.GetUID(),
+				BlockOwnerDeletion: pointer.BoolPtr(true),
+				Controller:         pointer.BoolPtr(true),
+			},
+		},
+	}
+	roleBinding.RoleRef = rbacApi.RoleRef{
+		APIGroup: "rbac.authorization.k8s.io",
+		Kind:     "Role",
+		Name:     roleName,
+	}
+
+	if _, err := Clientset.RbacV1().RoleBindings(clusterManager.Namespace).Create(context.TODO(), roleBinding, metav1.CreateOptions{}); err != nil {
+		klog.Errorln(err)
+		return err.Error(), http.StatusInternalServerError
+	}
+	msg := "ClusterMnager role [" + roleName + "] and rolebinding [ " + roleBindingName + "]  is created"
+	klog.Infoln(msg)
+
+	return msg, http.StatusOK
+}
+
+func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) (string, int) {
+
+	var roleName string
+	var roleBindingName string
+	if attribute == "user" {
+		roleName = subject + "-user-" + clusterManager.Name + "-clm-role"
+		roleBindingName = subject + "-user-" + clusterManager.Name + "-clm-rolebinding"
+	} else {
+		roleName = subject + "-group-" + clusterManager.Name + "-clm-role"
+		roleBindingName = subject + "-group-" + clusterManager.Name + "-clm-rolebinding"
+	}
+
+	_, err := Clientset.RbacV1().Roles(clusterManager.Namespace).Get(context.TODO(), roleName, metav1.GetOptions{})
+	if err == nil {
+		if err := Clientset.RbacV1().Roles(clusterManager.Namespace).Delete(context.TODO(), roleName, metav1.DeleteOptions{}); err != nil {
+			klog.Errorln(err)
+			return err.Error(), http.StatusInternalServerError
+		}
+	} else if errors.IsNotFound(err) {
+		klog.Infoln("Role [" + roleName + "] is already deleted. pass")
+		return err.Error(), http.StatusOK
+	} else {
+		klog.Errorln("Error: Get clusterrole [" + roleName + "] is failed")
+		return err.Error(), http.StatusInternalServerError
+	}
+
+	_, err = Clientset.RbacV1().RoleBindings(clusterManager.Namespace).Get(context.TODO(), roleBindingName, metav1.GetOptions{})
+	if err == nil {
+		if err := Clientset.RbacV1().RoleBindings(clusterManager.Namespace).Delete(context.TODO(), roleBindingName, metav1.DeleteOptions{}); err != nil {
+			klog.Errorln(err)
+			return err.Error(), http.StatusInternalServerError
+		}
+	} else if errors.IsNotFound(err) {
+		klog.Infoln("Rolebinding [" + roleBindingName + "] is already deleted. pass")
+		return err.Error(), http.StatusOK
+	} else {
+		klog.Errorln("Error: Get clusterrole [" + roleName + "] is failed")
+		return err.Error(), http.StatusInternalServerError
+	}
+	msg := "ClusterMnager role [" + roleName + "] and rolebinding [ " + roleBindingName + "]  is deleted"
+	klog.Infoln(msg)
+
+	return msg, http.StatusOK
+}
+
+func GetConsoleService(namespace string, name string) (*coreApi.Service, error) {
+	result, err := Clientset.CoreV1().Services(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	return result, err
+}
+
+func GetFbc(namespace string, name string) (*configv1alpha1.FluentBitConfiguration, error) {
+	result, err := customClientset.ConfigV1alpha1().FluentBitConfigurations(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	return result, err
+}
+
+func CreateNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) (string, int) {
 	var clusterRoleName string
 	var clusterRoleBindingName string
 	clusterRoleBinding := &rbacApi.ClusterRoleBinding{}
 	if attribute == "user" {
-		clusterRoleName = subject + "-user-" + clusterManager.Name + "-clm-role"
-		clusterRoleBindingName = subject + "-user-" + clusterManager.Name + "-clm-rolebinding"
+		clusterRoleName = subject + "-user-" + clusterManager.Namespace + "-" + clusterManager.Name + "-clusterrole"
+		clusterRoleBindingName = subject + "-user-" + clusterManager.Namespace + "-" + clusterManager.Name + "-clusterrolebinding"
 		clusterRoleBinding.Subjects = []rbacApi.Subject{
 			{
 				APIGroup: "rbac.authorization.k8s.io",
@@ -795,8 +975,8 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 			},
 		}
 	} else {
-		clusterRoleName = subject + "-group-" + clusterManager.Name + "-clm-role"
-		clusterRoleBindingName = subject + "-group-" + clusterManager.Name + "-clm-rolebinding"
+		clusterRoleName = subject + "-group-" + clusterManager.Namespace + "-" + clusterManager.Name + "-clusterrole"
+		clusterRoleBindingName = subject + "-group-" + clusterManager.Namespace + "-" + clusterManager.Name + "-clusterrolebinding"
 		clusterRoleBinding.Subjects = []rbacApi.Subject{
 			{
 				APIGroup: "rbac.authorization.k8s.io",
@@ -821,10 +1001,10 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 			},
 		},
 		Rules: []rbacApi.PolicyRule{
-			{APIGroups: []string{util.CLUSTER_API_GROUP}, Resources: []string{"clustermanagers"},
-				ResourceNames: []string{clusterManager.Name}, Verbs: []string{"get"}},
-			{APIGroups: []string{util.CLUSTER_API_GROUP}, Resources: []string{"clustermanagers/status"},
-				ResourceNames: []string{clusterManager.Name}, Verbs: []string{"get"}},
+			{APIGroups: []string{""}, Resources: []string{"namespaces"},
+				ResourceNames: []string{clusterManager.Namespace}, Verbs: []string{"get"}},
+			{APIGroups: []string{util.CLUSTER_API_GROUP}, Resources: []string{"namespaces/status"},
+				ResourceNames: []string{clusterManager.Namespace}, Verbs: []string{"get"}},
 		},
 	}
 
@@ -856,22 +1036,22 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 		klog.Errorln(err)
 		return err.Error(), http.StatusInternalServerError
 	}
-	msg := "ClusterMnager role [" + clusterRoleName + "] and rolebinding [ " + clusterRoleBindingName + "]  is created"
+	msg := "Namespace Get Reole [" + clusterRoleName + "] and rolebinding [ " + clusterRoleBindingName + "]  is created"
 	klog.Infoln(msg)
 
 	return msg, http.StatusOK
 }
 
-func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) (string, int) {
+func DeleteNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) (string, int) {
 
 	var clusterRoleName string
 	var clusterRoleBindingName string
 	if attribute == "user" {
-		clusterRoleName = subject + "-user-" + clusterManager.Name + "-clm-role"
-		clusterRoleBindingName = subject + "-user-" + clusterManager.Name + "-clm-rolebinding"
+		clusterRoleName = subject + "-user-" + clusterManager.Namespace + "-" + clusterManager.Name + "-clusterrole"
+		clusterRoleBindingName = subject + "-user-" + clusterManager.Namespace + "-" + clusterManager.Name + "-clusterrolebinding"
 	} else {
-		clusterRoleName = subject + "-group-" + clusterManager.Name + "-clm-role"
-		clusterRoleBindingName = subject + "-group-" + clusterManager.Name + "-clm-rolebinding"
+		clusterRoleName = subject + "-group-" + clusterManager.Namespace + "-" + clusterManager.Name + "-clusterrole"
+		clusterRoleBindingName = subject + "-group-" + clusterManager.Namespace + "-" + clusterManager.Name + "-clusterrolebinding"
 	}
 
 	_, err := Clientset.RbacV1().ClusterRoles().Get(context.TODO(), clusterRoleName, metav1.GetOptions{})
@@ -898,107 +1078,10 @@ func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 		klog.Infoln("Rolebinding [" + clusterRoleBindingName + "] is already deleted. pass")
 		return err.Error(), http.StatusOK
 	} else {
-		klog.Errorln("Error: Get clusterrole [" + clusterRoleName + "] is failed")
+		klog.Errorln("Error: Get clusterrole [" + clusterRoleBindingName + "] is failed")
 		return err.Error(), http.StatusInternalServerError
 	}
 	msg := "ClusterMnager role [" + clusterRoleName + "] and rolebinding [ " + clusterRoleBindingName + "]  is deleted"
-	klog.Infoln(msg)
-
-	return msg, http.StatusOK
-}
-
-func GetFbc(namespace string, name string) (*configv1alpha1.FluentBitConfiguration, error) {
-	result, err := customClientset.ConfigV1alpha1().FluentBitConfigurations(namespace).Get(context.TODO(), name, metav1.GetOptions{})
-	return result, err
-}
-
-func GetConsoleService(namespace string, name string) (*coreApi.Service, error) {
-	result, err := Clientset.CoreV1().Services(namespace).Get(context.TODO(), name, metav1.GetOptions{})
-	return result, err
-}
-
-func CreateClusterClaim(userId string, userGroup []string, cc *claimsv1alpha1.ClusterClaim) (*claimsv1alpha1.ClusterClaim, string, int) {
-	if len(cc.Annotations) == 0 {
-		cc.Annotations = map[string]string{
-			"owner": userId,
-		}
-	} else {
-		cc.Annotations["owner"] = userId
-	}
-	result, err := customClientset.ClaimsV1alpha1().ClusterClaims().Create(context.TODO(), cc, metav1.CreateOptions{})
-	if err != nil {
-		klog.Errorln("Create ClusterClaim  [ " + cc.Name + " ] Failed")
-		return nil, err.Error(), http.StatusInternalServerError
-	}
-
-	msg := "Create ClusterClaim  [ " + cc.Name + " ] Success"
-	klog.Infoln(msg)
-	return result, msg, http.StatusOK
-
-}
-func CreateCCRole(userId string, userGroup []string, cc *claimsv1alpha1.ClusterClaim) (string, int) {
-	claimRoleName := userId + "-" + cc.Name + "-cc-role"
-	clusterRole := &rbacApi.ClusterRole{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: claimRoleName,
-			OwnerReferences: []metav1.OwnerReference{
-				metav1.OwnerReference{
-					APIVersion:         util.CLAIM_API_GROUP_VERSION,
-					Kind:               util.CLAIM_API_Kind,
-					Name:               cc.GetName(),
-					UID:                cc.GetUID(),
-					BlockOwnerDeletion: pointer.BoolPtr(true),
-					Controller:         pointer.BoolPtr(true),
-				},
-			},
-		},
-		Rules: []rbacApi.PolicyRule{
-			{APIGroups: []string{util.CLUSTER_API_GROUP}, Resources: []string{"clusterclaims"},
-				ResourceNames: []string{cc.Name}, Verbs: []string{"get"}},
-			{APIGroups: []string{util.CLUSTER_API_GROUP}, Resources: []string{"clusterclaims/status"},
-				ResourceNames: []string{cc.Name}, Verbs: []string{"get"}},
-		},
-	}
-
-	if _, err := Clientset.RbacV1().ClusterRoles().Create(context.TODO(), clusterRole, metav1.CreateOptions{}); err != nil {
-		klog.Errorln(err)
-		return err.Error(), http.StatusInternalServerError
-	}
-
-	claimRoleBindingName := userId + "-" + cc.Name + "-cc-rolebinding"
-	clusterRoleBinding := &rbacApi.ClusterRoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: claimRoleBindingName,
-			OwnerReferences: []metav1.OwnerReference{
-				metav1.OwnerReference{
-					APIVersion:         util.CLAIM_API_GROUP_VERSION,
-					Kind:               util.CLAIM_API_Kind,
-					Name:               cc.GetName(),
-					UID:                cc.GetUID(),
-					BlockOwnerDeletion: pointer.BoolPtr(true),
-					Controller:         pointer.BoolPtr(true),
-				},
-			},
-		},
-		RoleRef: rbacApi.RoleRef{
-			APIGroup: "rbac.authorization.k8s.io",
-			Kind:     "ClusterRole",
-			Name:     claimRoleName,
-		},
-		Subjects: []rbacApi.Subject{
-			{
-				APIGroup: "rbac.authorization.k8s.io",
-				Kind:     "User",
-				Name:     userId,
-			},
-		},
-	}
-
-	if _, err := Clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding, metav1.CreateOptions{}); err != nil {
-		klog.Errorln(err)
-		return err.Error(), http.StatusInternalServerError
-	}
-	msg := "ClusterClaim role [" + claimRoleName + "] and rolebinding [ " + claimRoleBindingName + "]  is created"
 	klog.Infoln(msg)
 
 	return msg, http.StatusOK
