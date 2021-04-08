@@ -129,7 +129,8 @@ func main() {
 		mux.HandleFunc("/clusterclaims", serveClusterClaim)                                                                                                    // List all clusterclaim
 		mux.HandleFunc("/namespaces/{namespace}/clusterclaims", serveClusterClaim)                                                                             // list all clusterclaim in a specific namespace
 		mux.HandleFunc("/namespaces/{namespace}/clusterclaims/{clusterclaim}", serveClusterClaim)                                                              // Admit clusterclaim request
-		mux.HandleFunc("/clustermanagers", serveCluster)                                                                                                       // list all clustermanager
+		mux.HandleFunc("/clustermanagers", serveCluster)                                                                                                       // list clustermanager for all namespaces (list page & all ns)
+		mux.HandleFunc("/clustermanagers/{access}", serveCluster)                                                                                              // list accessible clustermanager for all namespaces (lnb & all ns)
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster)                                                                                // list all clustermanager in a specific namespace
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member", serveClusterMember)                                                  // list all member
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation", serveClusterInvitation)                                   // list a pending status user
@@ -251,9 +252,16 @@ func serveClusterClaim(res http.ResponseWriter, req *http.Request) {
 
 func serveCluster(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	vars := gmux.Vars(req)
 	switch req.Method {
 	case http.MethodGet:
-		cluster.List(res, req)
+		if vars["access"] == "access" {
+			cluster.ListLNB(res, req)
+		} else if vars["access"] == "" {
+			cluster.ListPage(res, req)
+		} else {
+			// errror
+		}
 	case http.MethodPut:
 	default:
 	}

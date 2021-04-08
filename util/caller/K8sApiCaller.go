@@ -734,7 +734,7 @@ func ListAccessibleClusterClaims(userId string, userGroups []string, clusterClai
 
 }
 
-func ListAllCluster(userId string, userGroups []string, accessible bool) (*clusterv1alpha1.ClusterManagerList, string, int) {
+func ListAllCluster(userId string, userGroups []string) (*clusterv1alpha1.ClusterManagerList, string, int) {
 	var clmList = &clusterv1alpha1.ClusterManagerList{}
 
 	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", "", "", "list")
@@ -751,7 +751,7 @@ func ListAllCluster(userId string, userGroups []string, accessible bool) (*clust
 	clmList.Kind = "ClusterManagerList"
 	clmList.APIVersion = "cluster.tmax.io/v1alpha1"
 
-	if clmListRuleResult.Status.Allowed && !accessible {
+	if clmListRuleResult.Status.Allowed {
 		msg := "User [ " + userId + " ] has ClusterManager List Role, Can Access All ClusterManager"
 		klog.Infoln(msg)
 		if len(clmList.Items) == 0 {
@@ -760,14 +760,50 @@ func ListAllCluster(userId string, userGroups []string, accessible bool) (*clust
 		}
 		return clmList, msg, http.StatusOK
 	} else {
-		msg := "User [ " + userId + " ] has No permission to list clusterclaims on all namespaces"
+		msg := "User [ " + userId + " ] has No permission to list ClusterManager on all namespaces"
 		klog.Infoln(msg)
 		clmList.Items = []clusterv1alpha1.ClusterManager{}
 		return clmList, msg, http.StatusForbidden
 	}
 }
 
-func ListAccessibleCluster(userId string, userGroups []string, clusterManagerNamespace string) (*clusterv1alpha1.ClusterManagerList, string, int) {
+func ListAccesibleCluster(userId string, userGroups []string) (*clusterv1alpha1.ClusterManagerList, string, int) {
+
+	var clmList = &clusterv1alpha1.ClusterManagerList{}
+
+	clmList.Kind = "ClusterManagerList"
+	clmList.APIVersion = "cluster.tmax.io/v1alpha1"
+
+	clmList, err := customClientset.ClusterV1alpha1().ClusterManagers("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+
+	clusterNameList, err := clusterDataFactory.ListClusterAllNamespace(userId, userGroups)
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+	_clmList := []clusterv1alpha1.ClusterManager{}
+	for _, clm := range clmList.Items {
+		if util.Contains(clusterNameList, clm.Name) && clm.Status.Phase == "Provisioned" {
+			_clmList = append(_clmList, clm)
+		}
+	}
+	clmList.Items = _clmList
+	if len(clmList.Items) == 0 {
+		msg := " User [ " + userId + " ] has No Clusters"
+		klog.Infoln(msg)
+		return clmList, msg, http.StatusOK
+	}
+	msg := " User [ " + userId + " ] has Clusters"
+	klog.Infoln(msg)
+	return clmList, msg, http.StatusOK
+
+}
+
+func ListClusterInNamespace(userId string, userGroups []string, clusterManagerNamespace string) (*clusterv1alpha1.ClusterManagerList, string, int) {
 
 	var clmList = &clusterv1alpha1.ClusterManagerList{}
 
@@ -798,7 +834,7 @@ func ListAccessibleCluster(userId string, userGroups []string, clusterManagerNam
 	} else {
 		// ns에 list 권한 없으면 db에서 속한것만 찾아서 반환!
 		// db에서 읽어온다.
-		clusterNameList, err := clusterDataFactory.ListAceesibleClusterInNamespace(userId, userGroups, clusterManagerNamespace)
+		clusterNameList, err := clusterDataFactory.ListClusterInNamespace(userId, userGroups, clusterManagerNamespace)
 		if err != nil {
 			klog.Errorln(err)
 			return nil, err.Error(), http.StatusInternalServerError

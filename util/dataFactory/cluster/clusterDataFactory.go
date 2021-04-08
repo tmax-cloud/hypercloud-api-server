@@ -301,7 +301,7 @@ func ListAllClusterGroup(cluster string, namespace string) ([]util.ClusterMember
 	return clusterMemberList, nil
 }
 
-func ListAceesibleClusterInNamespace(userId string, userGroups []string, namespace string) ([]string, error) {
+func ListClusterInNamespace(userId string, userGroups []string, namespace string) ([]string, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -316,6 +316,51 @@ func ListAceesibleClusterInNamespace(userId string, userGroups []string, namespa
 	b.WriteString("and namespace = '")
 	b.WriteString(namespace)
 	b.WriteString("' ")
+
+	b.WriteString("and member_id = '")
+	b.WriteString(userId)
+	b.WriteString("' ")
+
+	for _, userGroup := range userGroups {
+		b.WriteString("or member_id = '")
+		b.WriteString(userGroup)
+		b.WriteString("' ")
+	}
+
+	b.WriteString("and status not in ('pending') ")
+
+	b.WriteString("group by cluster")
+
+	query := b.String()
+	klog.Infoln("Query: " + query)
+	rows, err := db.Query(query)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var clusterNmae string
+		rows.Scan(
+			&clusterNmae,
+		)
+		clusterNameList = append(clusterNameList, clusterNmae)
+	}
+	return clusterNameList, nil
+}
+
+func ListClusterAllNamespace(userId string, userGroups []string) ([]string, error) {
+	db, err := sql.Open("postgres", pg_con_info)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	defer db.Close()
+	clusterNameList := []string{}
+	var b strings.Builder
+
+	b.WriteString("select cluster from CLUSTER_MEMBER where 1=1 ")
 
 	b.WriteString("and member_id = '")
 	b.WriteString(userId)
