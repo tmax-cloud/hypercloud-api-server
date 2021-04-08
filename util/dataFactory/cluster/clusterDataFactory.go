@@ -263,7 +263,15 @@ func ListAllClusterGroup(cluster string, namespace string) ([]util.ClusterMember
 	b.WriteString("' ")
 
 	b.WriteString("and attribute = 'group'")
-	b.WriteString("or status = 'owner'")
+	b.WriteString("or status = 'owner' ")
+
+	b.WriteString("and namespace = '")
+	b.WriteString(namespace)
+	b.WriteString("' ")
+
+	b.WriteString("and cluster = '")
+	b.WriteString(cluster)
+	b.WriteString("' ")
 
 	query := b.String()
 	klog.Infoln("Query: " + query)

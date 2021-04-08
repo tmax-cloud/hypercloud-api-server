@@ -48,6 +48,7 @@ func List(res http.ResponseWriter, req *http.Request) {
 		}
 		clmList, msg, status := caller.ListAllCluster(userId, userGroups, accessOnlyBool)
 		util.SetResponse(res, msg, clmList, status)
+		return
 	} else {
 		clusterClaimList, msg, status := caller.ListAccessibleCluster(userId, userGroups, clusterNamespace)
 		util.SetResponse(res, msg, clusterClaimList, status)
