@@ -2,6 +2,7 @@ package admission
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	jsonpatch "github.com/evanphx/json-patch"
@@ -44,12 +45,8 @@ func AddResourceMeta(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		}
 	}
 
-	if denyReq(ms, diff, operation) {
-		return &v1beta1.AdmissionResponse{
-			Result: &metav1.Status{
-				Message: "Can not create/update resource metadata.",
-			},
-		}
+	if err := denyReq(ms, diff, operation); err != nil {
+		return ToAdmissionResponse(err) //msg: error
 	}
 
 	var patch []patchOps
@@ -87,30 +84,26 @@ func AddResourceMeta(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	return &reviewResponse
 }
 
-func denyReq(ms, diff Meta, op string) bool {
+func denyReq(ms, diff Meta, op string) error {
 	if op == "CREATE" {
 		if _, ok := ms.Annotations["creator"]; ok {
-			return true
+			return errors.New("Cannot create resource with creator annotation")
 		} else if _, ok := ms.Annotations["createdTime"]; ok {
-			return true
+			return errors.New("Cannot create resource with createdTime annotation")
 		} else if _, ok := ms.Annotations["updater"]; ok {
-			return true
+			return errors.New("Cannot create resource with updater annotation")
 		} else if _, ok := ms.Annotations["updatedTime"]; ok {
-			return true
+			return errors.New("Cannot create resource with updatedTime annotation")
 		}
 	}
 
 	if op == "UPDATE" {
 		if _, ok := diff.Annotations["creator"]; ok {
-			return true
+			return errors.New("Cannot update resource with creator annotation")
 		} else if _, ok := diff.Annotations["createdTime"]; ok {
-			return true
-		} else if _, ok := diff.Annotations["updater"]; ok {
-			return true
-		} else if _, ok := diff.Annotations["updatedTime"]; ok {
-			return true
+			return errors.New("Cannot update resource with createdTime annotation")
 		}
 	}
 
-	return false
+	return nil
 }
