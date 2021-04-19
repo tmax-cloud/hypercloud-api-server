@@ -1,6 +1,25 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.6.0 start -------------------->
+
+## Hypercloud-api-server 5.0.6.0 (Thu Apr  8 09:39:24 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] seperate cluster list api by chosangwon93
+  - [mod] bugfix sql query by chosangwon93
+  - [mod] api url by chosangwon93
+  - [mod] api url by chosangwon93
+  - [mod] change resource scope by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.5.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.5.1 (Mon Apr  5 02:57:55 KST 2021)
