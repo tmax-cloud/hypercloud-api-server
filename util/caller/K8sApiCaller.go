@@ -615,7 +615,7 @@ func AdmitClusterClaim(userId string, userGroups []string, clusterClaim *claimsv
 		klog.Infoln(" User [ " + userId + " ] has ClusterClaims/status Update Role, Can Update ClusterClaims")
 
 		if admit == true {
-			clusterClaim.Status.Phase = "Admitted"
+			clusterClaim.Status.Phase = "Success"
 			if reason == "" {
 				clusterClaim.Status.Reason = "Administrator approve the claim"
 			} else {
@@ -1170,4 +1170,36 @@ func DeleteNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 	klog.Infoln(msg)
 
 	return msg, http.StatusOK
+}
+
+func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1alpha1.ClusterManager, string, int) {
+	clm := &clusterv1alpha1.ClusterManager{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      clusterClaim.Spec.ClusterName,
+			Namespace: clusterClaim.Namespace,
+			Annotations: map[string]string{
+				"owner": clusterClaim.Annotations["creator"],
+			},
+		},
+		FakeObjectMeta: clusterv1alpha1.FakeObjectMeta{
+			FakeName: clusterClaim.Spec.ClusterName,
+		},
+		Spec: clusterv1alpha1.ClusterManagerSpec{
+			Provider:   clusterClaim.Spec.Provider,
+			Version:    clusterClaim.Spec.Version,
+			Region:     clusterClaim.Spec.Region,
+			SshKey:     clusterClaim.Spec.SshKey,
+			MasterNum:  clusterClaim.Spec.MasterNum,
+			MasterType: clusterClaim.Spec.MasterType,
+			WorkerNum:  clusterClaim.Spec.WorkerNum,
+			WorkerType: clusterClaim.Spec.WorkerType,
+		},
+	}
+	clm, err := customClientset.ClusterV1alpha1().ClusterManagers(clusterClaim.Namespace).Create(context.TODO(), clm, metav1.CreateOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err.Error(), http.StatusInternalServerError
+	}
+	msg := "ClusterMnager is created"
+	return clm, msg, http.StatusOK
 }

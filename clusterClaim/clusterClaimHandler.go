@@ -22,43 +22,6 @@ const (
 	QUERY_PARAMETER_CLUSTER_CLAIM_ADMIT_REASON = "reason"
 )
 
-// func Post(res http.ResponseWriter, req *http.Request) {
-// 	var body []byte
-// 	if req.Body != nil {
-// 		if data, err := ioutil.ReadAll(req.Body); err == nil {
-// 			body = data
-// 		}
-// 	}
-
-// 	cc := &claimsv1alpha1.ClusterClaim{}
-// 	if err := json.Unmarshal(body, cc); err != nil {
-// 		klog.Error(err)
-// 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	queryParams := req.URL.Query()
-// 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
-// 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
-
-// 	if userId == "" {
-// 		msg := "UserId is empty."
-// 		klog.Infoln(msg)
-// 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	result, msg, status := caller.CreateClusterClaim(userId, userGroups, cc)
-// 	if cc == nil {
-// 		util.SetResponse(res, msg, nil, status)
-// 		return
-// 	}
-
-// 	msg, status = caller.CreateCCRole(userId, userGroups, result)
-// 	util.SetResponse(res, msg, result, status)
-// 	return
-// }
-
 func Put(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
@@ -97,14 +60,28 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	updatedClusterClaim, msg, status := caller.AdmitClusterClaim(userId, userGroups, cc, admitBool, reason)
+	if updatedClusterClaim == nil {
+		klog.Errorln(msg)
+		util.SetResponse(res, msg, nil, http.StatusInternalServerError)
+		return
+	}
+
 	clusterMember := util.ClusterMemberInfo{}
 	clusterMember.Namespace = cc.Namespace
-	clusterMember.Cluster = cc.Spec.ClusterName
+	clusterMember.Cluster = cc.Name
 	clusterMember.Role = "admin"
 	clusterMember.MemberId = cc.Annotations["creator"]
 	clusterMember.MemberName = memberName
 	clusterMember.Attribute = "user"
 	clusterMember.Status = "owner"
+
+	clm, msg, status := caller.CreateClusterManager(updatedClusterClaim)
+	if clm == nil {
+		klog.Errorln(msg)
+		util.SetResponse(res, msg, nil, http.StatusInternalServerError)
+		return
+	}
 
 	if err := clusterDataFactory.Insert(clusterMember); err != nil {
 		klog.Errorln(err)
@@ -112,18 +89,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	updatedClusterClaim, msg, status := caller.AdmitClusterClaim(userId, userGroups, cc, admitBool, reason)
-	if updatedClusterClaim == nil {
-		klog.Errorln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		if err := clusterDataFactory.Delete(clusterMember); err != nil {
-			klog.Errorln(err)
-			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		}
-		return
-	}
-
-	util.SetResponse(res, msg, updatedClusterClaim, status)
+	util.SetResponse(res, "Succes", updatedClusterClaim, http.StatusOK)
 	return
 }
 

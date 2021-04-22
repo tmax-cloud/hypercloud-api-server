@@ -303,12 +303,14 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	// 초대할 권한이 있는지 확인
 	var clusterOwner string
 	var pendingUser string
+	var pendingUserRole string
 	for _, val := range clusterMemberList {
 		if val.Status == "owner" {
 			clusterOwner = val.MemberId
 			//existGroup = append(existGroup, val.MemberId)
 		} else if val.Status == "pending" && val.MemberId == memberId {
 			pendingUser = val.MemberId
+			pendingUserRole = val.Role
 		}
 	}
 
@@ -326,7 +328,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	clusterMember.Role = clusterMemberList[0].Role
+	clusterMember.Role = pendingUserRole
 
 	clm, msg, status := caller.GetCluster(userId, userGroups, cluster, clusterManagerNamespace)
 	if clm == nil {
@@ -408,7 +410,7 @@ func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// 초대할 권한이 있는지 확인
+	// 거절 할 권한이 있는지 확인
 	var clusterOwner string
 	var pendingUser string
 	for _, val := range clusterMemberList {
