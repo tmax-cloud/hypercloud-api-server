@@ -62,7 +62,11 @@ package consumer
 // 	}
 
 // 	ctx, cancel := context.WithCancel(context.Background())
-// 	client, err := sarama.NewConsumerGroup([]string{"kafka-1.hyperauth:9092", "kafka-2.hyperauth:9092", "kafka-3.hyperauth:9092"}, consumerGroupId, consumerConfig)
+// if os.env("kafka1_addr" ) &&  os.env("kafka2_addr" ) && os.env("kafka3_addr" ) {
+//   kafka_bootstrap_server = os.env("kafka1_addr" ) &&  os.env("kafka2_addr" ) && os.env("kafka3_addr" );
+// }
+//  kafka_bootstrap_server := "kafka-1.hyperauth:9092,kafka-2.hyperauth:9092,kafka-3.hyperauth:9092"
+// 	client, err := sarama.NewConsumerGroup([]string{kafka_bootstrap_server}, consumerGroupId, consumerConfig)
 // 	if err != nil {
 // 		klog.Error("Error creating consumer group client: %v", err)
 // 	}
