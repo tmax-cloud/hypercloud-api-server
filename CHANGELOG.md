@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.8.0 start -------------------->
+
+## Hypercloud-api-server 5.0.8.0 (Fri Apr 30 08:56:29 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] kafka 주소 사용자에게 입력 받는 로직 by Seungwon Lee
+  - [mod] kafka 없어도 서버 다운 안되는 방어 로직 추가 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.7.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.7.0 (Thu Apr 22 10:29:21 KST 2021)
