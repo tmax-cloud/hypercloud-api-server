@@ -70,6 +70,7 @@ func HyperauthConsumer() {
 	client, err := sarama.NewConsumerGroup([]string{"172.22.6.2:31000", "172.22.6.2:31001", "172.22.6.2:31002"}, consumerGroupId, consumerConfig)
 	if err != nil {
 		klog.Error("Error creating consumer group client: %v", err)
+		return
 	}
 
 	wg := &sync.WaitGroup{}
