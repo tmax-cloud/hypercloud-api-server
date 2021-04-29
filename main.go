@@ -22,6 +22,7 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/namespaceClaim"
 	user "github.com/tmax-cloud/hypercloud-api-server/user"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
+	kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
 	version "github.com/tmax-cloud/hypercloud-api-server/version"
 	"k8s.io/api/admission/v1beta1"
 	"k8s.io/klog"
@@ -106,7 +107,7 @@ func main() {
 	cronJob.Start()
 
 	// Hyperauth Event Consumer
-	// go kafkaConsumer.HyperauthConsumer()
+	go kafkaConsumer.HyperauthConsumer()
 
 	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {

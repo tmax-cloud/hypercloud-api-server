@@ -29,6 +29,7 @@ func init() {
 	dat, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		klog.Errorln(err)
+		return
 	}
 	lines := strings.Split(string(dat), "\n")
 	reg := regexp.MustCompile("\\[.*\\]")

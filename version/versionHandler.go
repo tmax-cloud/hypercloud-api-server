@@ -32,6 +32,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	yamlFile, err := ioutil.ReadFile("/go/src/version/version.config")
 	if err != nil {
 		klog.Errorln(err)
+		return
 	}
 	err = yaml.Unmarshal(yamlFile, &conf)
 	if err != nil {
