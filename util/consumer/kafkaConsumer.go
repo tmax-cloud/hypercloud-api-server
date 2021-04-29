@@ -63,11 +63,21 @@ func HyperauthConsumer() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	// if os.env("kafka1_addr") && os.env("kafka2_addr") && os.env("kafka3_addr") {
-	// 	kafka_bootstrap_server = os.env("kafka1_addr") && os.env("kafka2_addr") && os.env("kafka3_addr")
-	// }
-	// kafka_bootstrap_server := "kafka-1.hyperauth:9092,kafka-2.hyperauth:9092,kafka-3.hyperauth:9092"
-	client, err := sarama.NewConsumerGroup([]string{"172.22.6.2:31000", "172.22.6.2:31001", "172.22.6.2:31002"}, consumerGroupId, consumerConfig)
+
+	var kafka1_addr string
+	var kafka2_addr string
+	var kafka3_addr string
+	if os.Getenv("kafka1_addr") != "DNS" {
+		kafka1_addr = os.Getenv("kafka1_addr")
+		kafka2_addr = os.Getenv("kafka2_addr")
+		kafka3_addr = os.Getenv("kafka3_addr")
+	} else {
+		kafka1_addr = "kafka-1.hyperauth:9092"
+		kafka2_addr = "kafka-2.hyperauth:9092"
+		kafka3_addr = "kafka-3.hyperauth:9092"
+	}
+
+	client, err := sarama.NewConsumerGroup([]string{kafka1_addr, kafka2_addr, kafka3_addr}, consumerGroupId, consumerConfig)
 	if err != nil {
 		klog.Error("Error creating consumer group client: %v", err)
 		return
