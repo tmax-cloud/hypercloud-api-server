@@ -177,14 +177,20 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 		switch topicEvent.Type {
 		case "USER_DELETE":
 			klog.Info("User [ " + topicEvent.UserName + " ] Deleted !")
-			// Delete NamespaceClaim with Creator Annotation
+			// Delete NamespaceClaim
 			k8sApiCaller.DeleteNSCWithUser(topicEvent.UserName)
 
-			// Delete ResourceQuotaClaim with Creator Annotation
+			// Delete ResourceQuotaClaim
 			k8sApiCaller.DeleteRQCWithUser(topicEvent.UserName)
 
-			// Delete RoleBindingClaim with Creator Annotation
+			// Delete RoleBindingClaim
 			k8sApiCaller.DeleteRBCWithUser(topicEvent.UserName)
+
+			// Delete ClusterRoleBinding
+			k8sApiCaller.DeleteCRBWithUser(topicEvent.UserName)
+
+			// Delete RoleBinding
+			k8sApiCaller.DeleteRBWithUser(topicEvent.UserName)
 
 			// 사용자에 대해서..
 			// cluster의 주인인 경우.. 클러스터와 관련된 모든걸 지운다.
