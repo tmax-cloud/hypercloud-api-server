@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.10.0 start -------------------->
+
+## Hypercloud-api-server 5.0.10.0 (Thu May 13 08:39:42 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] hyperauth 유저 탈퇴시, CRB/RB 삭제 함수 추가 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.9.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.9.0 (Thu May  6 09:35:09 KST 2021)
