@@ -104,6 +104,7 @@ func main() {
 
 	// Metering Cron Job
 	cronJob.AddFunc("0 */1 * ? * *", metering.MeteringJob)
+	cronJob.AddFunc("@hourly", audit.UpdateAuditResource)
 	cronJob.Start()
 
 	// Hyperauth Event Consumer
@@ -145,6 +146,7 @@ func main() {
 	mux.HandleFunc("/audit/member_suggestions", serveAuditMemberSuggestions)
 	mux.HandleFunc("/audit", serveAudit)
 	mux.HandleFunc("/audit/batch", serveAuditBatch)
+	mux.HandleFunc("/audit/resources", serveAuditResources)
 	mux.HandleFunc("/audit/websocket", serveAuditWss)
 	mux.HandleFunc("/inject/pod", serveSidecarInjectionForPod)
 	mux.HandleFunc("/inject/deployment", serveSidecarInjectionForDeploy)
@@ -374,6 +376,16 @@ func serveAudit(w http.ResponseWriter, r *http.Request) {
 		audit.AddAudit(w, r)
 	case http.MethodPut:
 	case http.MethodDelete:
+	default:
+		//error
+	}
+}
+
+func serveAuditResources(w http.ResponseWriter, r *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	switch r.Method {
+	case http.MethodGet:
+		audit.ListAuditResource(w, r)
 	default:
 		//error
 	}
