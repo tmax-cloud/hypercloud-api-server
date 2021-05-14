@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/websocket"
+	auditDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/audit"
 	"k8s.io/apiserver/pkg/apis/audit"
 	"k8s.io/klog"
 )
@@ -69,7 +70,7 @@ func (c *Client) readPump() {
 		}
 
 		query := queryBuilder(c.cond)
-		eventList, _ := get(query)
+		eventList, _ := auditDataFactory.Get(query)
 
 		respMsg, err := json.Marshal(eventList)
 

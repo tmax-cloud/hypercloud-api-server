@@ -9,14 +9,18 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	"github.com/tmax-cloud/hypercloud-api-server/util/caller"
-
-	"github.com/google/uuid"
+	auditDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/audit"
 	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/apis/audit"
 	"k8s.io/klog"
 )
+
+func init() {
+	caller.UpdateAuditResourceList()
+}
 
 type urlParam struct {
 	Search    string   `json:"search"`
@@ -40,7 +44,17 @@ type response struct {
 
 type MemberListResponse struct {
 	MemberList []string `json:"memberList"`
-	// RowsCount  int64    `json:"rowsCount"`
+}
+
+func ListAuditResource(w http.ResponseWriter, r *http.Request) {
+	util.SetResponse(w, "", caller.AuditResourceList, http.StatusOK)
+	return
+}
+
+func UpdateAuditResource() {
+	klog.Infoln("Update Audit resource list")
+	caller.UpdateAuditResourceList()
+	return
 }
 
 func AddAudit(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +83,7 @@ func AddAudit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	insert(eventList.Items)
+	auditDataFactory.Insert(eventList.Items)
 	if len(hub.clients) > 0 {
 		hub.broadcast <- eventList
 	}
@@ -139,7 +153,7 @@ func MemberSuggestions(res http.ResponseWriter, r *http.Request) {
 	}
 	query := b.String()
 	klog.Info("query: ", query)
-	memberList, _ := getMemberList(query)
+	memberList, _ := auditDataFactory.GetMemberList(query)
 
 	memberListResponse := MemberListResponse{
 		MemberList: memberList,
@@ -176,7 +190,7 @@ func GetAudit(res http.ResponseWriter, r *http.Request) {
 	urlParam.Status = r.URL.Query().Get("status")
 
 	query := queryBuilder(urlParam)
-	eventList, count := get(query)
+	eventList, count := auditDataFactory.Get(query)
 
 	response := response{
 		EventList: eventList,

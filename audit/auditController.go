@@ -5,6 +5,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	auditDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/audit"
 	"k8s.io/apiserver/pkg/apis/audit"
 )
 
@@ -60,7 +61,7 @@ func (b *buffer) run() {
 				b.wg.Add(1)
 				go func() {
 					defer b.wg.Done()
-					insert(eventList.Items)
+					auditDataFactory.Insert(eventList.Items)
 				}()
 
 				b.wg.Add(1)
