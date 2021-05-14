@@ -54,7 +54,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 			// If the moudle is HyperAuth,
 			// Ask to hyperauth using given URL
 			if mod.Name == "HyperAuth" {
-				url := "https://" + mod.ReadinessProbe.HTTPGet.Path + "/auth/realms/tmax/version/"
+				url := mod.ReadinessProbe.HTTPGet.Path + "/version"
 				http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // ignore certificate
 
 				client := http.Client{
