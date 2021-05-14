@@ -51,6 +51,36 @@ func Get(res http.ResponseWriter, req *http.Request) {
 			klog.Infoln("Module Name = ", mod.Name)
 			result[idx].Name = mod.Name
 
+			// If the moudle is HyperAuth,
+			// Ask to hyperauth using given URL
+			if mod.Name == "HyperAuth" {
+				url := "https://" + mod.ReadinessProbe.HTTPGet.Path + "/auth/realms/tmax/version/"
+				http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // ignore certificate
+
+				client := http.Client{
+					Timeout: 15 * time.Second,
+				}
+				response, err := client.Get(url)
+
+				if err != nil {
+					result[idx].Status = "Abnormal"
+					klog.Errorln(mod.Name, " HTTPS Error : ", err)
+				} else if response.StatusCode >= 200 && response.StatusCode < 300 {
+					result[idx].Status = "Normal"
+					bodyBytes, err := ioutil.ReadAll(response.Body)
+					if err != nil {
+						klog.Errorln(err)
+					} else {
+						bodyString := string(bodyBytes)
+						result[idx].Version = bodyString
+					}
+				} else {
+					result[idx].Status = "Abnormal"
+				}
+				defer response.Body.Close()
+				return
+			}
+
 			// 2. GET STATUS
 			var labels string
 			for i, label := range mod.Selector.MatchLabels.StatusLabel {
@@ -100,6 +130,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 						} else if response.StatusCode >= 200 && response.StatusCode < 400 {
 							ps.Data["Running"]++
 						}
+						defer response.Body.Close()
 					}
 				} else if mod.ReadinessProbe.TCPSocket.Port != "" {
 					// by Port
