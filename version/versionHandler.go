@@ -61,10 +61,10 @@ func Get(res http.ResponseWriter, req *http.Request) {
 					Timeout: 15 * time.Second,
 				}
 				response, err := client.Get(url)
-
 				if err != nil {
 					result[idx].Status = "Abnormal"
 					klog.Errorln(mod.Name, " HTTPS Error : ", err)
+					return
 				} else if response.StatusCode >= 200 && response.StatusCode < 300 {
 					result[idx].Status = "Normal"
 					bodyBytes, err := ioutil.ReadAll(response.Body)
