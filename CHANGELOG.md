@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.11.0 start -------------------->
+
+## Hypercloud-api-server 5.0.11.0 (Thu May 20 08:19:45 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] version API가 잘못된 hyperauth 콜을 부를 경우 crash나던 현상 수정 by Seungwon Lee
+  - [mod] hyperauth 정보 얻어오는 로직 추가 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.10.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.10.0 (Thu May 13 08:39:42 KST 2021)
