@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.11.3 start -------------------->
+
+## Hypercloud-api-server 5.0.11.3 (Wed May 26 02:25:43 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] ClusterManager 객채 스키마 변경에 따른 생성 로직 수정 (fakename 삭제) by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.11.4 start -------------------->
 
 ## Hypercloud-api-server 5.0.11.4 (Tue May 25 05:09:20 KST 2021)
