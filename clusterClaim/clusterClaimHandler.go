@@ -69,7 +69,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 
 	clusterMember := util.ClusterMemberInfo{}
 	clusterMember.Namespace = cc.Namespace
-	clusterMember.Cluster = cc.Name
+	clusterMember.Cluster = cc.Spec.ClusterName
 	clusterMember.Role = "admin"
 	clusterMember.MemberId = cc.Annotations["creator"]
 	clusterMember.MemberName = memberName
