@@ -284,13 +284,7 @@ func StringParameterException(userGroups []string, args ...string) error {
 		return errors.New(msg)
 	}
 
-	// empty map 
-	argMap := make(map[string]struct{}, len(args))
 	for _, arg := range args {
-		argMap[arg] = struct{}{}
-	}
-
-	for k, _ := range argMap {
 		if arg == "" {
 			msg := arg + "Something is empty."
 			klog.Infoln(msg)
