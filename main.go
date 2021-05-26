@@ -107,7 +107,7 @@ func main() {
 	cronJob.Start()
 
 	// Hyperauth Event Consumer
-	// go kafkaConsumer.HyperauthConsumer()
+	go kafkaConsumer.HyperauthConsumer()
 
 	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
