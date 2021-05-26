@@ -31,21 +31,16 @@ func ListPage(res http.ResponseWriter, req *http.Request) {
 	vars := gmux.Vars(req)
 	clusterNamespace := vars["namespace"]
 
-	if err := util.StringParameterException(userGroups, userId); err != nil {
+	if err := util.StringParameterException(userGroups, userId, clusterNamespace); err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
 
-	if clusterNamespace == "" {
-		clmList, msg, status := caller.ListAllCluster(userId, userGroups)
-		util.SetResponse(res, msg, clmList, status)
-		return
-	} else {
-		clusterClaimList, msg, status := caller.ListClusterInNamespace(userId, userGroups, clusterNamespace)
-		util.SetResponse(res, msg, clusterClaimList, status)
-		return
-	}
+	clusterClaimList, msg, status := caller.ListClusterInNamespace(userId, userGroups, clusterNamespace)
+	util.SetResponse(res, msg, clusterClaimList, status)
+	return
+
 }
 
 func ListLNB(res http.ResponseWriter, req *http.Request) {

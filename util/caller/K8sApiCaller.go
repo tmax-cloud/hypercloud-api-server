@@ -810,7 +810,7 @@ func ListClusterInNamespace(userId string, userGroups []string, clusterManagerNa
 	clmList.Kind = "ClusterManagerList"
 	clmList.APIVersion = "cluster.tmax.io/v1alpha1"
 
-	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clusterclaims", clusterManagerNamespace, "", "list")
+	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", clusterManagerNamespace, "", "list")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -842,7 +842,7 @@ func ListClusterInNamespace(userId string, userGroups []string, clusterManagerNa
 		_clmList := []clusterv1alpha1.ClusterManager{}
 
 		for _, clm := range clmList.Items {
-			if util.Contains(clusterNameList, clm.FakeName) {
+			if util.Contains(clusterNameList, clm.Name) {
 				_clmList = append(_clmList, clm)
 			}
 		}
@@ -892,6 +892,7 @@ func CheckClusterManagerDupliation(userId string, userGroups []string, clusterNa
 	} else {
 		return true, nil
 	}
+
 }
 
 func UpdateClusterManager(userId string, userGroups []string, clm *clusterv1alpha1.ClusterManager) (*clusterv1alpha1.ClusterManager, string, int) {
