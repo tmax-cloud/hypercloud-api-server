@@ -882,6 +882,18 @@ func GetCluster(userId string, userGroups []string, clusterName string, clusterM
 	return clm, "Get cluster success", http.StatusOK
 }
 
+func CheckClusterManagerDupliation(userId string, userGroups []string, clusterName string, clusterManagerNamespace string) (bool, error) {
+	if _, err := customClientset.ClusterV1alpha1().ClusterManagers(clusterManagerNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{}); err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		} else {
+			return true, err
+		}
+	} else {
+		return true, nil
+	}
+}
+
 func UpdateClusterManager(userId string, userGroups []string, clm *clusterv1alpha1.ClusterManager) (*clusterv1alpha1.ClusterManager, string, int) {
 
 	clmUpdateRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", "", clm.Name, "update")

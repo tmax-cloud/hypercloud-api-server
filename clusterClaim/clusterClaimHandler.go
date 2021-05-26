@@ -60,6 +60,18 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// name duplicate
+	exist, err := caller.CheckClusterManagerDupliation(userId, userGroups, clusterClaimName, clusterClaimNamespace)
+	if err != nil {
+		util.SetResponse(res, "", nil, http.StatusInternalServerError)
+		return
+	}
+
+	if exist {
+		util.SetResponse(res, "Cluster ["+cc.Spec.ClusterName+"] is existed.", nil, http.StatusBadRequest)
+		return
+	}
+
 	updatedClusterClaim, msg, status := caller.AdmitClusterClaim(userId, userGroups, cc, admitBool, reason)
 	if updatedClusterClaim == nil {
 		klog.Errorln(msg)
