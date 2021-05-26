@@ -37,7 +37,7 @@ func ListPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if clusterNamespace == "" {
+	if namespace == "" {
 		clmList, msg, status := caller.ListAllCluster(userId, userGroups)
 		util.SetResponse(res, msg, clmList, status)
 		return
