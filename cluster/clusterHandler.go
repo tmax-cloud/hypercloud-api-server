@@ -29,7 +29,7 @@ func ListPage(res http.ResponseWriter, req *http.Request) {
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 	// accessOnly := queryParams.Get(QUERY_PARAMETER_ACCESS_ONLY)
 	vars := gmux.Vars(req)
-	clusterNamespace := vars["namespace"]
+	clusterNamespace := vars["namespaces"]
 
 	if err := util.StringParameterException(userGroups, userId, clusterNamespace); err != nil {
 		klog.Errorln(err)
