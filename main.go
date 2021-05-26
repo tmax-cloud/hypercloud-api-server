@@ -30,7 +30,6 @@ import (
 	"net/http"
 
 	"github.com/robfig/cron"
-	//kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
 )
 
 type admitFunc func(v1beta1.AdmissionReview) *v1beta1.AdmissionResponse
@@ -128,10 +127,11 @@ func main() {
 
 	if hcMode != "single" {
 		// for multi mode only
-		mux.HandleFunc("/clusterclaims", serveClusterClaim)                                                                                                    // List all clusterclaim
-		mux.HandleFunc("/namespaces/{namespace}/clusterclaims", serveClusterClaim)                                                                             // list all clusterclaim in a specific namespace
-		mux.HandleFunc("/namespaces/{namespace}/clusterclaims/{clusterclaim}", serveClusterClaim)                                                              // Admit clusterclaim request
-		mux.HandleFunc("/clustermanagers", serveCluster)                                                                                                       // list clustermanager for all namespaces (list page & all ns)
+		mux.HandleFunc("/clusterclaims", serveClusterClaim)                                       // List all clusterclaim
+		mux.HandleFunc("/namespaces/{namespace}/clusterclaims", serveClusterClaim)                // list all clusterclaim in a specific namespace
+		mux.HandleFunc("/namespaces/{namespace}/clusterclaims/{clusterclaim}", serveClusterClaim) // Admit clusterclaim request
+		mux.HandleFunc("/clustermanagers", serveCluster)
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster)                                                                                // list clustermanager for all namespaces (list page & all ns)
 		mux.HandleFunc("/clustermanagers/{access}", serveCluster)                                                                                              // list accessible clustermanager for all namespaces (lnb & all ns)
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster)                                                                                // list all clustermanager in a specific namespace
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member", serveClusterMember)                                                  // list all member

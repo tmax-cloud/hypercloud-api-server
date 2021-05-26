@@ -813,7 +813,7 @@ func ListClusterInNamespace(userId string, userGroups []string, clusterManagerNa
 	clmList.Kind = "ClusterManagerList"
 	clmList.APIVersion = "cluster.tmax.io/v1alpha1"
 
-	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clusterclaims", clusterManagerNamespace, "", "list")
+	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", clusterManagerNamespace, "", "list")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -843,6 +843,7 @@ func ListClusterInNamespace(userId string, userGroups []string, clusterManagerNa
 			return nil, err.Error(), http.StatusInternalServerError
 		}
 		_clmList := []clusterv1alpha1.ClusterManager{}
+
 		for _, clm := range clmList.Items {
 			if util.Contains(clusterNameList, clm.Name) {
 				_clmList = append(_clmList, clm)
@@ -882,6 +883,19 @@ func GetCluster(userId string, userGroups []string, clusterName string, clusterM
 		return nil, msg, http.StatusForbidden
 	}
 	return clm, "Get cluster success", http.StatusOK
+}
+
+func CheckClusterManagerDupliation(userId string, userGroups []string, clusterName string, clusterManagerNamespace string) (bool, error) {
+	if _, err := customClientset.ClusterV1alpha1().ClusterManagers(clusterManagerNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{}); err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		} else {
+			return true, err
+		}
+	} else {
+		return true, nil
+	}
+
 }
 
 func UpdateClusterManager(userId string, userGroups []string, clm *clusterv1alpha1.ClusterManager) (*clusterv1alpha1.ClusterManager, string, int) {
@@ -1183,9 +1197,6 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 			Annotations: map[string]string{
 				"owner": clusterClaim.Annotations["creator"],
 			},
-		},
-		FakeObjectMeta: clusterv1alpha1.FakeObjectMeta{
-			FakeName: clusterClaim.Spec.ClusterName,
 		},
 		Spec: clusterv1alpha1.ClusterManagerSpec{
 			Provider:   clusterClaim.Spec.Provider,

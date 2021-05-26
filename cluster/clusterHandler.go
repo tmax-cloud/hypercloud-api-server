@@ -29,7 +29,7 @@ func ListPage(res http.ResponseWriter, req *http.Request) {
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 	// accessOnly := queryParams.Get(QUERY_PARAMETER_ACCESS_ONLY)
 	vars := gmux.Vars(req)
-	clusterNamespace := vars["namespace"]
+	namespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId); err != nil {
 		klog.Errorln(err)
@@ -37,12 +37,12 @@ func ListPage(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if clusterNamespace == "" {
+	if namespace == "" {
 		clmList, msg, status := caller.ListAllCluster(userId, userGroups)
 		util.SetResponse(res, msg, clmList, status)
 		return
 	} else {
-		clusterClaimList, msg, status := caller.ListClusterInNamespace(userId, userGroups, clusterNamespace)
+		clusterClaimList, msg, status := caller.ListClusterInNamespace(userId, userGroups, namespace)
 		util.SetResponse(res, msg, clusterClaimList, status)
 		return
 	}
