@@ -840,8 +840,9 @@ func ListClusterInNamespace(userId string, userGroups []string, clusterManagerNa
 			return nil, err.Error(), http.StatusInternalServerError
 		}
 		_clmList := []clusterv1alpha1.ClusterManager{}
+
 		for _, clm := range clmList.Items {
-			if util.Contains(clusterNameList, clm.Name) {
+			if util.Contains(clusterNameList, clm.FakeName) {
 				_clmList = append(_clmList, clm)
 			}
 		}
@@ -1180,9 +1181,6 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 			Annotations: map[string]string{
 				"owner": clusterClaim.Annotations["creator"],
 			},
-		},
-		FakeObjectMeta: clusterv1alpha1.FakeObjectMeta{
-			FakeName: clusterClaim.Spec.ClusterName,
 		},
 		Spec: clusterv1alpha1.ClusterManagerSpec{
 			Provider:   clusterClaim.Spec.Provider,
