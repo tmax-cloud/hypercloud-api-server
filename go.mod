@@ -3,6 +3,7 @@ module github.com/tmax-cloud/hypercloud-api-server
 go 1.15
 
 require (
+	github.com/Shopify/sarama v1.29.0
 	github.com/aws/aws-sdk-go v1.27.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/evanphx/json-patch v4.9.0+incompatible
