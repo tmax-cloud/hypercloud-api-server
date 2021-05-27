@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 -e 
+<!-------------------- v5.0.12.0 start -------------------->
+-e 
+## Hypercloud-api-server 5.0.12.0 (2021. 05. 27. (목) 14:58:18 KST)
+-e 
+### Added
+  - [feat] add resource list service for audit by chosangwon93
+-e 
+### Changed
+  - [mod] 네임스페이스 내에서 클러스터 이름 중복을 허용하지 않도록 정책이 변경됨에 따라 로직 수정 by chosangwon93
+-e 
+### Fixed
+-e 
+### CRD yaml
+-e 
+### Etc
+-e 
 <!-------------------- v5.0.11.8 start -------------------->
 -e 
 ## Hypercloud-api-server 5.0.11.8 (2021. 05. 26. (수) 18:10:12 KST)
