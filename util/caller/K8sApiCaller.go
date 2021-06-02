@@ -39,8 +39,6 @@ var customClientset *client.Clientset
 var AuditResourceList map[string][]string
 
 func init() {
-	AuditResourceList = make(map[string][]string)
-
 	// var kubeconfig *string
 	// if home := homedir.HomeDir(); home != "" {
 	// 	kubeconfig = flag.String("kubeconfig2", filepath.Join(home, ".kube", "config"), "/root/.kube")
@@ -1219,6 +1217,7 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 }
 
 func UpdateAuditResourceList() {
+	AuditResourceList = make(map[string][]string)
 	apiGroupList := &metav1.APIGroupList{}
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/").DoRaw(context.TODO())
 	if err != nil {

@@ -22,6 +22,7 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/namespaceClaim"
 	user "github.com/tmax-cloud/hypercloud-api-server/user"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
+	"github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
 	version "github.com/tmax-cloud/hypercloud-api-server/version"
 	"k8s.io/api/admission/v1beta1"
@@ -55,7 +56,7 @@ func main() {
 	// flag.StringVar(&util.TokenExpiredDate, "tokenExpiredDate", "24hours", "Token Expired Date")
 
 	go util.ReadFile()
-
+	caller.UpdateAuditResourceList()
 	// Get Hypercloud Operating Mode!!!
 	hcMode := os.Getenv("HC_MODE")
 	util.TokenExpiredDate = os.Getenv("INVITATION_TOKEN_EXPIRED_DATE")

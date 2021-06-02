@@ -18,10 +18,6 @@ import (
 	"k8s.io/klog"
 )
 
-func init() {
-	caller.UpdateAuditResourceList()
-}
-
 type urlParam struct {
 	Search    string   `json:"search"`
 	UserId    string   `json:"userId"`
