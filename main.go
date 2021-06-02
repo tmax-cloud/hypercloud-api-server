@@ -55,11 +55,12 @@ func main() {
 	flag.StringVar(&util.HtmlHomePath, "htmlPath", "/run/configs/html/", "Invite htlm path")
 	// flag.StringVar(&util.TokenExpiredDate, "tokenExpiredDate", "24hours", "Token Expired Date")
 
-	go util.ReadFile()
-	caller.UpdateAuditResourceList()
 	// Get Hypercloud Operating Mode!!!
 	hcMode := os.Getenv("HC_MODE")
 	util.TokenExpiredDate = os.Getenv("INVITATION_TOKEN_EXPIRED_DATE")
+
+	util.ReadFile()
+	caller.UpdateAuditResourceList()
 
 	// For Log file
 	klog.InitFlags(nil)

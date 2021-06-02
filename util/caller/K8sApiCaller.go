@@ -36,7 +36,7 @@ import (
 var Clientset *kubernetes.Clientset
 var config *restclient.Config
 var customClientset *client.Clientset
-var AuditResourceList map[string][]string
+var AuditResourceList []string
 
 func init() {
 	// var kubeconfig *string
@@ -1220,7 +1220,7 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 }
 
 func UpdateAuditResourceList() {
-	AuditResourceList = make(map[string][]string)
+	tmp := make(map[string]struct{})
 	apiGroupList := &metav1.APIGroupList{}
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/").DoRaw(context.TODO())
 	if err != nil {
@@ -1233,9 +1233,10 @@ func UpdateAuditResourceList() {
 	}
 
 	for _, apiGroup := range apiGroupList.Groups {
-		ListAPIResource(&apiGroup)
+		tmp = ListAPIResource(&apiGroup, tmp)
 	}
 
+	//corev1 group
 	apiResourceList := &metav1.APIResourceList{}
 	data, err = Clientset.RESTClient().Get().AbsPath("/api/v1").DoRaw(context.TODO())
 	if err != nil {
@@ -1248,17 +1249,21 @@ func UpdateAuditResourceList() {
 	}
 	for _, apiResource := range apiResourceList.APIResources {
 		if !strings.Contains(apiResource.Name, "/") {
-			AuditResourceList["core/v1"] = append(AuditResourceList["core/v1"], apiResource.Name)
+			tmp[apiResource.Name] = struct{}{}
 		}
+	}
+
+	// map to string
+
+	for k, _ := range tmp {
+		AuditResourceList = append(AuditResourceList, k)
 	}
 
 	// msg := "ClusterMnager is created"
 	// return clm, msg, http.StatusOK
 }
 
-func ListAPIResource(apiGroup *metav1.APIGroup) {
-	reverseMap := make(map[string]string)
-
+func ListAPIResource(apiGroup *metav1.APIGroup, tmp map[string]struct{}) map[string]struct{} {
 	// preference first
 	apiResourceList := &metav1.APIResourceList{}
 	preferredVersionPath := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", apiGroup.PreferredVersion.GroupVersion, -1)
@@ -1274,7 +1279,7 @@ func ListAPIResource(apiGroup *metav1.APIGroup) {
 
 	for _, apiResource := range apiResourceList.APIResources {
 		if !strings.Contains(apiResource.Name, "/") {
-			reverseMap[apiResource.Name] = apiGroup.PreferredVersion.GroupVersion
+			tmp[apiResource.Name] = struct{}{}
 		}
 	}
 
@@ -1297,16 +1302,101 @@ func ListAPIResource(apiGroup *metav1.APIGroup) {
 
 		for _, apiResource := range apiResourceList.APIResources {
 			if !strings.Contains(apiResource.Name, "/") {
-				if _, ok := reverseMap[apiResource.Name]; !ok {
-					reverseMap[apiResource.Name] = version.GroupVersion
-				}
+				tmp[apiResource.Name] = struct{}{}
 			}
 		}
 	}
-
-	// reverse
-	for k, v := range reverseMap {
-		AuditResourceList[v] = append(AuditResourceList[v], k)
-	}
-
+	return tmp
 }
+
+// func UpdateAuditResourceList() {
+// 	AuditResourceList = make(map[string][]string)
+// 	apiGroupList := &metav1.APIGroupList{}
+// 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/").DoRaw(context.TODO())
+// 	if err != nil {
+// 		klog.Errorln(err)
+// 		panic(err)
+// 	}
+// 	if err := json.Unmarshal(data, apiGroupList); err != nil {
+// 		klog.Errorln(err)
+// 		panic(err)
+// 	}
+
+// 	for _, apiGroup := range apiGroupList.Groups {
+// 		ListAPIResource(&apiGroup)
+// 	}
+
+// 	apiResourceList := &metav1.APIResourceList{}
+// 	data, err = Clientset.RESTClient().Get().AbsPath("/api/v1").DoRaw(context.TODO())
+// 	if err != nil {
+// 		klog.Errorln(err)
+// 		panic(err)
+// 	}
+// 	if err := json.Unmarshal(data, apiResourceList); err != nil {
+// 		klog.Errorln(err)
+// 		panic(err)
+// 	}
+// 	for _, apiResource := range apiResourceList.APIResources {
+// 		if !strings.Contains(apiResource.Name, "/") {
+// 			AuditResourceList["core/v1"] = append(AuditResourceList["core/v1"], apiResource.Name)
+// 		}
+// 	}
+
+// 	// msg := "ClusterMnager is created"
+// 	// return clm, msg, http.StatusOK
+// }
+
+// func ListAPIResource(apiGroup *metav1.APIGroup) {
+// 	reverseMap := make(map[string]string)
+
+// 	// preference first
+// 	apiResourceList := &metav1.APIResourceList{}
+// 	preferredVersionPath := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", apiGroup.PreferredVersion.GroupVersion, -1)
+// 	data, err := Clientset.RESTClient().Get().AbsPath(preferredVersionPath).DoRaw(context.TODO())
+// 	if err != nil {
+// 		klog.Errorln(err)
+// 		panic(err)
+// 	}
+// 	if err := json.Unmarshal(data, apiResourceList); err != nil {
+// 		klog.Errorln(err)
+// 		panic(err)
+// 	}
+
+// 	for _, apiResource := range apiResourceList.APIResources {
+// 		if !strings.Contains(apiResource.Name, "/") {
+// 			reverseMap[apiResource.Name] = apiGroup.PreferredVersion.GroupVersion
+// 		}
+// 	}
+
+// 	// another version
+// 	for _, version := range apiGroup.Versions {
+// 		if version.GroupVersion == apiGroup.PreferredVersion.GroupVersion {
+// 			continue
+// 		}
+// 		apiResourceList := &metav1.APIResourceList{}
+// 		path := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", version.GroupVersion, -1)
+// 		data, err := Clientset.RESTClient().Get().AbsPath(path).DoRaw(context.TODO())
+// 		if err != nil {
+// 			klog.Errorln(err)
+// 			panic(err)
+// 		}
+// 		if err := json.Unmarshal(data, apiResourceList); err != nil {
+// 			klog.Errorln(err)
+// 			panic(err)
+// 		}
+
+// 		for _, apiResource := range apiResourceList.APIResources {
+// 			if !strings.Contains(apiResource.Name, "/") {
+// 				if _, ok := reverseMap[apiResource.Name]; !ok {
+// 					reverseMap[apiResource.Name] = version.GroupVersion
+// 				}
+// 			}
+// 		}
+// 	}
+
+// 	// reverse
+// 	for k, v := range reverseMap {
+// 		AuditResourceList[v] = append(AuditResourceList[v], k)
+// 	}
+
+// }
