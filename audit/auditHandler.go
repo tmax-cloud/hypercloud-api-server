@@ -173,7 +173,7 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
-
+	// ns get줘도 감사기록은 안보이게..
 	nsListSAR, err := caller.CreateSubjectAccessReview(userId, userGroups, "", "namespaces", "", "", "list")
 	if err != nil {
 		klog.Errorln(err)
@@ -182,9 +182,23 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if !nsListSAR.Status.Allowed {
+		if queryParams.Get("namespace") == "" {
+			util.SetResponse(res, "Non-admin users should select namespace.", nil, http.StatusBadRequest)
+			return
+		}
+		tmp := []string{}
 		// list ns w/ labelselector
 		if nsList = caller.GetAccessibleNS(userId, "", userGroups); len(nsList.Items) == 0 {
 			util.SetResponse(res, "no ns", nil, http.StatusOK)
+			return
+		}
+		for _, item := range nsList.Items {
+			if item.Annotations["owner"] == userId {
+				tmp = append(tmp, item.Name)
+			}
+		}
+		if !util.Contains(tmp, queryParams.Get("namespace")) {
+			util.SetResponse(res, "Not authorized", nil, http.StatusForbidden)
 			return
 		}
 	}
@@ -218,7 +232,7 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 }
 
 func queryBuilder(param urlParam) string {
-	search := param.Search
+	// search := param.Search
 	// userId := param.UserId
 	namespace := param.Namespace
 	resource := param.Resource
@@ -230,40 +244,28 @@ func queryBuilder(param urlParam) string {
 	verb := param.Verb
 	sort := param.Sort
 	status := param.Status
-	nsList := param.NamespaceList
+	// nsList := param.NamespaceList
 
 	var b strings.Builder
-	b.WriteString("select *, count(*) over() as full_count from (select * from audit where 1=1 ")
+	b.WriteString("select *, count(*) over() as full_count from audit where 1=1 ")
 
-	if startTime != "" && endTime != "" {
-		b.WriteString("and stagetimestamp between to_timestamp(")
-		b.WriteString(startTime)
-		b.WriteString(") and to_timestamp(")
-		b.WriteString(endTime)
-		b.WriteString(")")
-	}
-
-	for i, ns := range nsList.Items {
-		if i == 0 {
-			b.WriteString("and namespace = '")
-			b.WriteString(ns.Name)
-			b.WriteString("'")
-		} else {
-			b.WriteString("or namespace = '")
-			b.WriteString(ns.Name)
-			b.WriteString("'")
-		}
-	}
+	// if startTime != "" && endTime != "" {
+	// 	b.WriteString("and stagetimestamp between to_timestamp(")
+	// 	b.WriteString(startTime)
+	// 	b.WriteString(") and to_timestamp(")
+	// 	b.WriteString(endTime)
+	// 	b.WriteString(")")
+	// }
 
 	////////////////////////////////////////////////////////////////////////////////////////
-	b.WriteString(") as sub where 1=1 ")
+	// b.WriteString(") as sub where 1=1 ")
 
-	if search != "" {
-		parsedSearch := strings.Replace(search, "_", "\\_", -1)
-		b.WriteString("and username like '")
-		b.WriteString(parsedSearch)
-		b.WriteString("%' ")
-	}
+	// if search != "" {
+	// 	parsedSearch := strings.Replace(search, "_", "\\_", -1)
+	// 	b.WriteString("and username like '")
+	// 	b.WriteString(parsedSearch)
+	// 	b.WriteString("%' ")
+	// }
 
 	if startTime != "" && endTime != "" {
 		b.WriteString("and stagetimestamp between to_timestamp(")

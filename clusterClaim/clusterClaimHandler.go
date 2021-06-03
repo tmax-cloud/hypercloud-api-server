@@ -75,7 +75,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	updatedClusterClaim, msg, status := caller.AdmitClusterClaim(userId, userGroups, cc, admitBool, reason)
 	if updatedClusterClaim == nil {
 		klog.Errorln(msg)
-		util.SetResponse(res, msg, nil, http.StatusInternalServerError)
+		util.SetResponse(res, msg, nil, status)
 		return
 	}
 
