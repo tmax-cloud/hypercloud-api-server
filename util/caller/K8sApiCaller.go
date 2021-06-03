@@ -1265,23 +1265,23 @@ func UpdateAuditResourceList() {
 
 func ListAPIResource(apiGroup *metav1.APIGroup, tmp map[string]struct{}) map[string]struct{} {
 	// preference first
-	apiResourceList := &metav1.APIResourceList{}
-	preferredVersionPath := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", apiGroup.PreferredVersion.GroupVersion, -1)
-	data, err := Clientset.RESTClient().Get().AbsPath(preferredVersionPath).DoRaw(context.TODO())
-	if err != nil {
-		klog.Errorln(err)
-		panic(err)
-	}
-	if err := json.Unmarshal(data, apiResourceList); err != nil {
-		klog.Errorln(err)
-		panic(err)
-	}
+	// apiResourceList := &metav1.APIResourceList{}
+	// preferredVersionPath := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", apiGroup.PreferredVersion.GroupVersion, -1)
+	// data, err := Clientset.RESTClient().Get().AbsPath(preferredVersionPath).DoRaw(context.TODO())
+	// if err != nil {
+	// 	klog.Errorln(err)
+	// 	panic(err)
+	// }
+	// if err := json.Unmarshal(data, apiResourceList); err != nil {
+	// 	klog.Errorln(err)
+	// 	panic(err)
+	// }
 
-	for _, apiResource := range apiResourceList.APIResources {
-		if !strings.Contains(apiResource.Name, "/") {
-			tmp[apiResource.Name] = struct{}{}
-		}
-	}
+	// for _, apiResource := range apiResourceList.APIResources {
+	// 	if !strings.Contains(apiResource.Name, "/") {
+	// 		tmp[apiResource.Name] = struct{}{}
+	// 	}
+	// }
 
 	// another version
 	for _, version := range apiGroup.Versions {
