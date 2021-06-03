@@ -1,5 +1,20 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
+
+<!-------------------- v5.0.13.1 start -------------------->
+
+## Hypercloud-api-server 5.0.13.1 (2021. 06. 03. (목) 18:53:50 KST)
+
+### Added
+
+### Changed
+  - [mod] audit 리소스 리스트 서비스 및 리스트 시 인가 기능 추가 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
 -e 
 <!-------------------- v5.0.11.8 start -------------------->
 -e 
