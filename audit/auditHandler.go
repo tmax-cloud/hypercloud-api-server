@@ -13,24 +13,26 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	"github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	auditDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/audit"
+	corev1 "k8s.io/api/core/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/apis/audit"
 	"k8s.io/klog"
 )
 
 type urlParam struct {
-	Search    string   `json:"search"`
-	UserId    string   `json:"userId"`
-	Namespace string   `json:"namespace"`
-	Resource  string   `json:"resource"`
-	StartTime string   `json:"startTime"`
-	EndTime   string   `json:"endTime"`
-	Limit     string   `json:"limit"`
-	Offset    string   `json:"offset"`
-	Code      string   `json:"code"`
-	Verb      string   `json:"verb"`
-	Status    string   `json:"status"`
-	Sort      []string `json:"sort"`
+	Search        string               `json:"search"`
+	UserId        string               `json:"userId"`
+	Namespace     string               `json:"namespace"`
+	NamespaceList corev1.NamespaceList `json:"namespaceList"`
+	Resource      string               `json:"resource"`
+	StartTime     string               `json:"startTime"`
+	EndTime       string               `json:"endTime"`
+	Limit         string               `json:"limit"`
+	Offset        string               `json:"offset"`
+	Code          string               `json:"code"`
+	Verb          string               `json:"verb"`
+	Status        string               `json:"status"`
+	Sort          []string             `json:"sort"`
 }
 
 type response struct {
@@ -159,9 +161,11 @@ func MemberSuggestions(res http.ResponseWriter, r *http.Request) {
 	util.SetResponse(res, "", memberListResponse, http.StatusOK)
 }
 
-func GetAudit(res http.ResponseWriter, r *http.Request) {
-
-	userId := r.URL.Query().Get("userId")
+func GetAudit(res http.ResponseWriter, req *http.Request) {
+	var nsList corev1.NamespaceList
+	queryParams := req.URL.Query()
+	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 
 	if userId == "" {
 		msg := "UserId is empty."
@@ -169,21 +173,38 @@ func GetAudit(res http.ResponseWriter, r *http.Request) {
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
+
+	nsListSAR, err := caller.CreateSubjectAccessReview(userId, userGroups, "", "namespaces", "", "", "list")
+	if err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, "", nil, http.StatusInternalServerError)
+		return
+	}
+
+	if !nsListSAR.Status.Allowed {
+		// list ns w/ labelselector
+		if nsList = caller.GetAccessibleNS(userId, "", userGroups); len(nsList.Items) == 0 {
+			util.SetResponse(res, "no ns", nil, http.StatusOK)
+			return
+		}
+	}
+
 	// search := r.URL.Query().Get("search")
 
 	urlParam := urlParam{}
-	urlParam.Search = r.URL.Query().Get("search")
+	urlParam.Search = queryParams.Get("search")
 	urlParam.UserId = userId
-	urlParam.Namespace = r.URL.Query().Get("namespace")
-	urlParam.Resource = r.URL.Query().Get("resource")
-	urlParam.Limit = r.URL.Query().Get("limit")
-	urlParam.Offset = r.URL.Query().Get("offset")
-	urlParam.Code = r.URL.Query().Get("code")
-	urlParam.Verb = r.URL.Query().Get("verb")
-	urlParam.Sort = r.URL.Query()["sort"]
-	urlParam.StartTime = r.URL.Query().Get("startTime")
-	urlParam.EndTime = r.URL.Query().Get("endTime")
-	urlParam.Status = r.URL.Query().Get("status")
+	urlParam.Namespace = queryParams.Get("namespace")
+	urlParam.Resource = queryParams.Get("resource")
+	urlParam.Limit = queryParams.Get("limit")
+	urlParam.Offset = queryParams.Get("offset")
+	urlParam.Code = queryParams.Get("code")
+	urlParam.Verb = queryParams.Get("verb")
+	urlParam.Sort = queryParams["sort"]
+	urlParam.StartTime = queryParams.Get("startTime")
+	urlParam.EndTime = queryParams.Get("endTime")
+	urlParam.Status = queryParams.Get("status")
+	urlParam.NamespaceList = nsList
 
 	query := queryBuilder(urlParam)
 	eventList, count := auditDataFactory.Get(query)
@@ -197,9 +218,8 @@ func GetAudit(res http.ResponseWriter, r *http.Request) {
 }
 
 func queryBuilder(param urlParam) string {
-
 	search := param.Search
-	userId := param.UserId
+	// userId := param.UserId
 	namespace := param.Namespace
 	resource := param.Resource
 	startTime := param.StartTime
@@ -210,17 +230,34 @@ func queryBuilder(param urlParam) string {
 	verb := param.Verb
 	sort := param.Sort
 	status := param.Status
+	nsList := param.NamespaceList
 
 	var b strings.Builder
-	b.WriteString("select *, count(*) over() as full_count from audit where 1=1 ")
+	b.WriteString("select *, count(*) over() as full_count from (select * from audit where 1=1 ")
 
-	if sarResult, err := caller.CreateSubjectAccessReview(userId, nil, "", "namespaces", "", "", "list"); err != nil {
-		klog.Errorln(err)
-	} else if sarResult.Status.Allowed == false {
-		b.WriteString("and username = '")
-		b.WriteString(userId)
-		b.WriteString("' ")
+	if startTime != "" && endTime != "" {
+		b.WriteString("and stagetimestamp between to_timestamp(")
+		b.WriteString(startTime)
+		b.WriteString(") and to_timestamp(")
+		b.WriteString(endTime)
+		b.WriteString(")")
 	}
+
+	for i, ns := range nsList.Items {
+		if i == 0 {
+			b.WriteString("and namespace = '")
+			b.WriteString(ns.Name)
+			b.WriteString("'")
+		} else {
+			b.WriteString("or namespace = '")
+			b.WriteString(ns.Name)
+			b.WriteString("'")
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	b.WriteString(") as sub where 1=1 ")
+
 	if search != "" {
 		parsedSearch := strings.Replace(search, "_", "\\_", -1)
 		b.WriteString("and username like '")
