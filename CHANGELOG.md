@@ -132,6 +132,20 @@ All notable changes to this project will be documented in this file.
 
 ### Etc
 
+<!-------------------- v5.0.13.0 start -------------------->
+
+## Hypercloud-api-server 5.0.13.0 (2021. 06. 03. (목) 17:20:53 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.12.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.12.0 (2021. 05. 27. (목) 14:58:18 KST)
