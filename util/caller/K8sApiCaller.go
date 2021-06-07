@@ -625,7 +625,7 @@ func AdmitClusterClaim(userId string, userGroups []string, clusterClaim *claimsv
 		} else {
 			clusterClaim.Status.Phase = "Rejected"
 			if reason == "" {
-				clusterClaim.Status.Reason = "Administrator approve the claim"
+				clusterClaim.Status.Reason = "Administrator reject the claim"
 			} else {
 				clusterClaim.Status.Reason = reason
 			}
