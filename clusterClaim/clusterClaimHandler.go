@@ -79,6 +79,13 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if updatedClusterClaim.Status.Phase == "Rejected" {
+		msg = "ClusterClaim is rejected by admin"
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusOK)
+		return
+	}
+
 	clusterMember := util.ClusterMemberInfo{}
 	clusterMember.Namespace = cc.Namespace
 	clusterMember.Cluster = cc.Spec.ClusterName
