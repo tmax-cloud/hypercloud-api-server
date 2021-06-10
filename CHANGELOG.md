@@ -1,6 +1,29 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.14.0 start -------------------->
+
+## Hypercloud-api-server 5.0.14.0 (2021. 06. 10. (목) 20:17:17 KST)
+
+### Added
+  - [feat] audit 리스트 서비스에서 ns-owner인 사용자만 해당 NS에 대한 감사기록을 볼 수 있도록 인가 로직 추가 by chosangwon93
+
+### Changed
+  - [mod] multi-operator가 클러스터 삭제 시 클러스터 정보를 db에서 지우기 위한 api call 추가 by chosangwon93
+  - [mod] cluster에 사용자 초대하는 메일에 권한에 대한 부분 추가 by chosangwon93
+  - [mod] 클러스터 클레임 승인 시 클러스터 이름 중복체크하는 로직 버그 수정 by chosangwon93
+  - [mod] audit 리소스 목록을 apigroup/version과 상관없이 리소스 kind로만 반화도록 수정 by chosangwon93
+  - [mod] clustermanager가 어떤 클레임으로부터 생성되었는지 표시하기 위해서 clustermanager 생성 시 lable에 claim 이름을 추가 by chosangwon93
+  - [mod] audit resource 목록을 조회 할 때마다 중복으로 목록이 쌓이는 문제 해결 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] status code change by chosangwon93
+  - [etc] audit 불필요한 로직 제거 by chosangwon93
+
 <!-------------------- v5.0.13.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.13.1 (2021. 06. 03. (목) 18:53:50 KST)
