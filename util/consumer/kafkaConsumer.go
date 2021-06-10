@@ -191,18 +191,14 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 
 			// Delete RoleBinding
 			k8sApiCaller.DeleteRBWithUser(topicEvent.UserName)
-
-			// 사용자에 대해서..
-			// cluster의 주인인 경우.. 클러스터와 관련된 모든걸 지운다.
-			// 1. master에서 clm 지우면 됨 (+db)
-			// 2. claim 도 지움
-			// 3. fedresource도 지움...
-			// cluster의 멤버인 경우
-			// 1. db에서 해당 사용자에 대한것 모두 삭제
-			// 2. clm에 대한 rolebinding도 삭제
-			// 3. remote에서 rolebinding도 삭제
-
-			break
+		case "LOGIN":
+			klog.Info("User [ " + topicEvent.UserName + " ] Deleted !")
+			// Delete RoleBinding
+			k8sApiCaller.DeleteRBWithUser(topicEvent.UserName)
+		case "LOGOUT":
+			klog.Info("User [ " + topicEvent.UserName + " ] Deleted !")
+			// Delete RoleBinding
+			k8sApiCaller.DeleteRBWithUser(topicEvent.UserName)
 		default:
 			klog.Info("Unknown Event Published from Hyperauth, Do nothing!")
 		}
