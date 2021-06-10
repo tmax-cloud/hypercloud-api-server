@@ -26,6 +26,7 @@ type ClusterMemberInfo struct {
 	Namespace   string
 	Cluster     string
 	MemberId    string
+	Groups      []string
 	MemberName  string
 	Attribute   string
 	Role        string
@@ -47,6 +48,7 @@ var (
 	HtmlHomePath           string
 	TokenExpiredDate       string
 	ParsedTokenExpiredDate time.Duration
+	ValidTime              string
 )
 
 //Jsonpatch를 담을 수 있는 구조체
@@ -80,8 +82,8 @@ func ReadFile() {
 	password = string(content)
 
 	ParsedTokenExpiredDate = parseDate(TokenExpiredDate)
-
 }
+
 func parseDate(tokenExpiredDate string) time.Duration {
 	regex := regexp.MustCompile("[0-9]+")
 	num := regex.FindAllString(tokenExpiredDate, -1)[0]
@@ -94,12 +96,16 @@ func parseDate(tokenExpiredDate string) time.Duration {
 
 	switch unit {
 	case "minutes":
+		ValidTime = strconv.Itoa(parsedNum) + "분"
 		return time.Minute * time.Duration(parsedNum)
 	case "hours":
+		ValidTime = strconv.Itoa(parsedNum) + "시"
 		return time.Hour * time.Duration(parsedNum)
 	case "days":
+		ValidTime = strconv.Itoa(parsedNum) + "일"
 		return time.Hour * time.Duration(24) * time.Duration(parsedNum)
 	case "weeks":
+		ValidTime = strconv.Itoa(parsedNum) + "주"
 		return time.Hour * time.Duration(24) * time.Duration(7) * time.Duration(parsedNum)
 	default:
 		return time.Hour * time.Duration(24) * time.Duration(7) //1days
@@ -234,16 +240,18 @@ func MonthToInt(month time.Month) int {
 
 func SendEmail(from string, to []string, subject string, bodyParameter map[string]string) error {
 	// func SendEmail(from string, to []string, subject string, body string, imgPath string, imgCid string) error {
-	content, err := ioutil.ReadFile(HtmlHomePath + "invite.html")
+	content, err := ioutil.ReadFile(HtmlHomePath + "cluster-invitation.html")
 	if err != nil {
 		klog.Errorln(err)
 		return err
 	}
 	inviteMail = string(content)
 
+	inviteMail = strings.Replace(inviteMail, "@@LINK@@", bodyParameter["@@LINK@@"], -1)
 	for k, v := range bodyParameter {
 		inviteMail = strings.Replace(inviteMail, k, v, -1)
 	}
+
 	klog.Infoln(inviteMail)
 
 	m := gomail.NewMessage()
@@ -268,6 +276,7 @@ func CreateToken(clusterMember ClusterMemberInfo) (string, error) {
 	atClaims["cluster"] = clusterMember.Cluster
 	atClaims["user_id"] = clusterMember.MemberId
 	atClaims["user_name"] = clusterMember.MemberName
+	atClaims["user_groups"] = clusterMember.Groups
 	atClaims["exp"] = time.Now().Add(ParsedTokenExpiredDate).Unix()
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	token, err := at.SignedString([]byte(accessSecret))
@@ -337,24 +346,29 @@ func VerifyToken(r *http.Request) (*jwt.Token, error) {
 // 	return nil
 // }
 
-func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) error {
+func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) ([]string, error) {
 	var memberId string
 	var cluster string
 	var namespace string
+	var groups []string
 	token, err := VerifyToken(r)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if ok && token.Valid {
 		memberId, ok = claims["user_id"].(string)
 		cluster, ok = claims["cluster"].(string)
 		namespace, ok = claims["namespace"].(string)
+		tmp := claims["user_groups"].([]interface{})
+		groups = make([]string, len(tmp))
+		for i, v := range tmp {
+			groups[i] = fmt.Sprint(v)
+		}
 	}
 
 	if clusterMember.MemberId == memberId && clusterMember.Cluster == cluster && clusterMember.Namespace == namespace {
-		return nil
+		return groups, nil
 	}
-	return errors.New("Request user or target cluster does not match with token payload")
-
+	return nil, errors.New("Request user or target cluster does not match with token payload")
 }

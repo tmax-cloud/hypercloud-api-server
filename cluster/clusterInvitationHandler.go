@@ -3,6 +3,7 @@ package cluster
 // "encoding/json"
 import (
 	"net/http"
+	"strings"
 
 	gmux "github.com/gorilla/mux"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
@@ -14,11 +15,15 @@ import (
 	// "encoding/json"
 )
 
+const (
+	LINK = "https://@@CONSOLE_LB@@/api/hypercloud/namespaces/@@NAMESPACE@@/clustermanagers/@@CLUSTER_NAME@@/member_invitation/user/@@MEMBER_ID@@/accept?userId=@@OWNER_EMAIL@@&token=@@TOKEN@@"
+)
+
 func InviteUser(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
-	userName := queryParams.Get(QUERY_PARAMETER_USER_NAME)
+	// userName := queryParams.Get(QUERY_PARAMETER_USER_NAME)
 	remoteRole := queryParams.Get(QUERY_PARAMETER_REMOTE_ROLE)
 	memberName := queryParams.Get(QUERY_PARAMETER_MEMBER_NAME)
 	vars := gmux.Vars(req)
@@ -117,20 +122,27 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
+	var b strings.Builder
+	b.WriteString(LINK)
+	for _, userGroup := range userGroups {
+		b.WriteString("?userGroup=")
+		b.WriteString(userGroup)
+	}
+
 	to := []string{memberId}
 	from := "no-reply-tc@tmax.co.kr"
-	subject := userId + "(이)가 당신을 " + cluster + " kubernetes cluster에 초대하였습니다."
+	subject := userId + "(이)가 당신을 " + cluster + " cluster에 초대하였습니다."
 	bodyParameter := map[string]string{}
-	bodyParameter["%%TO%%"] = to[0]
-	bodyParameter["%%FROM%%"] = userId
-	bodyParameter["%%CLUSTER%%"] = cluster
-	bodyParameter["%%ATTRIBUTE%%"] = clusterMember.Attribute
-	bodyParameter["%%USER%%"] = clusterMember.MemberId
-	bodyParameter["%%IP%%"] = ConsoleLB
-	bodyParameter["%%TOKEN%%"] = token
-	bodyParameter["%%DAY%%"] = util.TokenExpiredDate
-	bodyParameter["%%USER_NAME%%"] = userName
-	bodyParameter["%%MEMBER_NAME%%"] = memberName
+	// bodyParameter["@@LINK@@"] = LINK
+	bodyParameter["@@LINK@@"] = "https://" + ConsoleLB + "/k8s/all-namespaces/clustermanagers"
+	bodyParameter["@@CLUSTER_NAME@@"] = cluster
+	bodyParameter["@@VALID_TIME@@"] = util.ValidTime
+	bodyParameter["@@OWNER_EMAIL@@"] = userId
+	bodyParameter["@@OWNER_NAME@@"] = userId
+	bodyParameter["@@CONSOLE_LB@@"] = ConsoleLB
+	bodyParameter["@@NAMESPACE@@"] = clusterMember.Namespace
+	bodyParameter["@@MEMBER_ID@@"] = clusterMember.MemberId
+	bodyParameter["@@TOKEN@@"] = token
 
 	if err := util.SendEmail(from, to, subject, bodyParameter); err != nil {
 		klog.Errorln(err)
@@ -277,6 +289,12 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	consoleService, err := caller.GetConsoleService("console-system", "console")
+	ConsoleLB := consoleService.Status.LoadBalancer.Ingress[0].IP
+	if err != nil {
+		klog.Infoln(err)
+	}
+
 	clusterMember := util.ClusterMemberInfo{}
 	clusterMember.Namespace = clusterManagerNamespace
 	clusterMember.Cluster = cluster
@@ -285,7 +303,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Status = "pending"
 
 	// token validation
-	if err := util.TokenValid(req, clusterMember); err != nil {
+	if _, err := util.TokenValid(req, clusterMember); err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
@@ -311,6 +329,12 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 		} else if val.Status == "pending" && val.MemberId == memberId {
 			pendingUser = val.MemberId
 			pendingUserRole = val.Role
+		} else if val.Status == "invited" && val.MemberId == memberId {
+			http.Redirect(res, req, "https://"+ConsoleLB, http.StatusSeeOther)
+			msg := "User [" + memberId + "] is already invtied to cluster [" + cluster + "]"
+			klog.Infoln(msg)
+			util.SetResponse(res, msg, nil, http.StatusOK)
+			return
 		}
 	}
 
@@ -365,11 +389,13 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	/// redirection
+	http.Redirect(res, req, "https://"+ConsoleLB, http.StatusSeeOther)
+
 	msg = "User [" + memberId + "] is added to cluster [" + cluster + "]"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, status)
 	return
-
 }
 
 func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
@@ -397,7 +423,7 @@ func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Status = "pending"
 
 	// token validation
-	if err := util.TokenValid(req, clusterMember); err != nil {
+	if _, err := util.TokenValid(req, clusterMember); err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return

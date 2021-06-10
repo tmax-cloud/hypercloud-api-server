@@ -313,7 +313,7 @@ func ListClusterInNamespace(userId string, userGroups []string, namespace string
 
 	b.WriteString("select cluster from CLUSTER_MEMBER where 1=1 ")
 
-	b.WriteString("and namespace = '")
+	b.WriteString("and (namespace = '")
 	b.WriteString(namespace)
 	b.WriteString("' ")
 
@@ -326,7 +326,7 @@ func ListClusterInNamespace(userId string, userGroups []string, namespace string
 		b.WriteString(userGroup)
 		b.WriteString("' ")
 	}
-
+	b.WriteString(") ")
 	b.WriteString("and status not in ('pending') ")
 
 	b.WriteString("group by cluster")
