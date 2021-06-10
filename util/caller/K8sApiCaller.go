@@ -1227,11 +1227,9 @@ func UpdateAuditResourceList() {
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/").DoRaw(context.TODO())
 	if err != nil {
 		klog.Errorln(err)
-		panic(err)
 	}
 	if err := json.Unmarshal(data, apiGroupList); err != nil {
 		klog.Errorln(err)
-		panic(err)
 	}
 
 	for _, apiGroup := range apiGroupList.Groups {
@@ -1241,11 +1239,9 @@ func UpdateAuditResourceList() {
 			data, err := Clientset.RESTClient().Get().AbsPath(path).DoRaw(context.TODO())
 			if err != nil {
 				klog.Errorln(err)
-				panic(err)
 			}
 			if err := json.Unmarshal(data, apiResourceList); err != nil {
 				klog.Errorln(err)
-				panic(err)
 			}
 
 			for _, apiResource := range apiResourceList.APIResources {
@@ -1264,11 +1260,9 @@ func UpdateAuditResourceList() {
 	data, err = Clientset.RESTClient().Get().AbsPath("/api/v1").DoRaw(context.TODO())
 	if err != nil {
 		klog.Errorln(err)
-		panic(err)
 	}
 	if err := json.Unmarshal(data, apiResourceList); err != nil {
 		klog.Errorln(err)
-		panic(err)
 	}
 	for _, apiResource := range apiResourceList.APIResources {
 		fullName[apiResource.Name] = struct{}{}
@@ -1276,8 +1270,6 @@ func UpdateAuditResourceList() {
 			if _, ok := tmp[apiResource.Name]; !ok {
 				tmp[apiResource.Name] = struct{}{}
 			}
-		} else {
-			klog.Info(apiResource.Name + " is a subresource")
 		}
 	}
 
