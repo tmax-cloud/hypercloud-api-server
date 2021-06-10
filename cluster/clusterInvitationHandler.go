@@ -143,6 +143,7 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	bodyParameter["@@NAMESPACE@@"] = clusterMember.Namespace
 	bodyParameter["@@MEMBER_ID@@"] = clusterMember.MemberId
 	bodyParameter["@@TOKEN@@"] = token
+	bodyParameter["@@ROLE@@"] = remoteRole
 
 	if err := util.SendEmail(from, to, subject, bodyParameter); err != nil {
 		klog.Errorln(err)
