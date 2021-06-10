@@ -883,7 +883,7 @@ func GetCluster(userId string, userGroups []string, clusterName string, clusterM
 	return clm, "Get cluster success", http.StatusOK
 }
 
-func CheckClusterManagerDupliation(userId string, userGroups []string, clusterName string, clusterManagerNamespace string) (bool, error) {
+func CheckClusterManagerDupliation(clusterName string, clusterManagerNamespace string) (bool, error) {
 	if _, err := customClientset.ClusterV1alpha1().ClusterManagers(clusterManagerNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{}); err != nil {
 		if errors.IsNotFound(err) {
 			return false, nil
@@ -1220,7 +1220,9 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 }
 
 func UpdateAuditResourceList() {
+	AuditResourceList = []string{}
 	tmp := make(map[string]struct{})
+	fullName := make(map[string]struct{})
 	apiGroupList := &metav1.APIGroupList{}
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/").DoRaw(context.TODO())
 	if err != nil {
@@ -1233,7 +1235,28 @@ func UpdateAuditResourceList() {
 	}
 
 	for _, apiGroup := range apiGroupList.Groups {
-		tmp = ListAPIResource(&apiGroup, tmp)
+		for _, version := range apiGroup.Versions {
+			apiResourceList := &metav1.APIResourceList{}
+			path := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", version.GroupVersion, -1)
+			data, err := Clientset.RESTClient().Get().AbsPath(path).DoRaw(context.TODO())
+			if err != nil {
+				klog.Errorln(err)
+				panic(err)
+			}
+			if err := json.Unmarshal(data, apiResourceList); err != nil {
+				klog.Errorln(err)
+				panic(err)
+			}
+
+			for _, apiResource := range apiResourceList.APIResources {
+				fullName[apiResource.Name] = struct{}{}
+				if !strings.Contains(apiResource.Name, "/") {
+					if _, ok := tmp[apiResource.Name]; !ok {
+						tmp[apiResource.Name] = struct{}{}
+					}
+				}
+			}
+		}
 	}
 
 	//corev1 group
@@ -1248,8 +1271,13 @@ func UpdateAuditResourceList() {
 		panic(err)
 	}
 	for _, apiResource := range apiResourceList.APIResources {
+		fullName[apiResource.Name] = struct{}{}
 		if !strings.Contains(apiResource.Name, "/") {
-			tmp[apiResource.Name] = struct{}{}
+			if _, ok := tmp[apiResource.Name]; !ok {
+				tmp[apiResource.Name] = struct{}{}
+			}
+		} else {
+			klog.Info(apiResource.Name + " is a subresource")
 		}
 	}
 
@@ -1259,54 +1287,6 @@ func UpdateAuditResourceList() {
 		AuditResourceList = append(AuditResourceList, k)
 	}
 
-	// msg := "ClusterMnager is created"
-	// return clm, msg, http.StatusOK
-}
-
-func ListAPIResource(apiGroup *metav1.APIGroup, tmp map[string]struct{}) map[string]struct{} {
-	// preference first
-	// apiResourceList := &metav1.APIResourceList{}
-	// preferredVersionPath := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", apiGroup.PreferredVersion.GroupVersion, -1)
-	// data, err := Clientset.RESTClient().Get().AbsPath(preferredVersionPath).DoRaw(context.TODO())
-	// if err != nil {
-	// 	klog.Errorln(err)
-	// 	panic(err)
-	// }
-	// if err := json.Unmarshal(data, apiResourceList); err != nil {
-	// 	klog.Errorln(err)
-	// 	panic(err)
-	// }
-
-	// for _, apiResource := range apiResourceList.APIResources {
-	// 	if !strings.Contains(apiResource.Name, "/") {
-	// 		tmp[apiResource.Name] = struct{}{}
-	// 	}
-	// }
-
-	// another version
-	for _, version := range apiGroup.Versions {
-		if version.GroupVersion == apiGroup.PreferredVersion.GroupVersion {
-			continue
-		}
-		apiResourceList := &metav1.APIResourceList{}
-		path := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", version.GroupVersion, -1)
-		data, err := Clientset.RESTClient().Get().AbsPath(path).DoRaw(context.TODO())
-		if err != nil {
-			klog.Errorln(err)
-			panic(err)
-		}
-		if err := json.Unmarshal(data, apiResourceList); err != nil {
-			klog.Errorln(err)
-			panic(err)
-		}
-
-		for _, apiResource := range apiResourceList.APIResources {
-			if !strings.Contains(apiResource.Name, "/") {
-				tmp[apiResource.Name] = struct{}{}
-			}
-		}
-	}
-	return tmp
 }
 
 // func UpdateAuditResourceList() {

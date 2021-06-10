@@ -173,6 +173,7 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
+
 	// ns get줘도 감사기록은 안보이게..
 	nsListSAR, err := caller.CreateSubjectAccessReview(userId, userGroups, "", "namespaces", "", "", "list")
 	if err != nil {
