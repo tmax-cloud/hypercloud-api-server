@@ -1193,7 +1193,8 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 			Name:      clusterClaim.Spec.ClusterName,
 			Namespace: clusterClaim.Namespace,
 			Labels: map[string]string{
-				"clusterclaim": clusterClaim.Name,
+				"type":   "created",
+				"parent": clusterClaim.Name,
 			},
 			Annotations: map[string]string{
 				"owner": clusterClaim.Annotations["creator"],
