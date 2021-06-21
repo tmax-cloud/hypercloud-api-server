@@ -1,0 +1,2 @@
+1. audit db를 ES로 변경
+2. metering & multi-clsuter는 timescaledb로 변경
