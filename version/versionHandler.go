@@ -48,7 +48,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	for idx, mod := range conf.Modules {
 		go func(idx int, mod versionModel.ModuleInfo) { // GoRoutine
 			defer wg.Done()
-			klog.Infoln("Module Name = ", mod.Name)
+			// klog.Infoln("Module Name = ", mod.Name)
 			result[idx].Name = mod.Name
 
 			// If the moudle is HyperAuth,
