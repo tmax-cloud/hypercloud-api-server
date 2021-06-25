@@ -1,6 +1,24 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.16.0 start -------------------->
+
+## Hypercloud-api-server 5.0.16.0 (2021. 06. 25. (금) 11:06:55 KST)
+
+### Added
+
+### Changed
+  - [mod] clusterclaim 수락을 통해 clustermanager 생성 시 label에 타입이 생성이라는 것을 나타내도록 수정 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] dockerfile 수정을 통해 이미지 용량 축소 by Seungwon Lee
+  - [etc]version API 로그 수정 by Seungwon Lee
+  - [etc] versionHandler 리팩토링 및 결과 로그 출력 by Seungwon Lee
+
 <!-------------------- v5.0.15.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.15.0 (2021. 06. 17. (목) 15:09:12 KST)
