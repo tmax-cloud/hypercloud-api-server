@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"net/http"
-	"strings"
-
 	"io"
+	"net/http"
 	"reflect"
+	"strings"
 	"sync"
 
 	configv1alpha1 "github.com/tmax-cloud/efk-operator/api/v1alpha1"
@@ -78,6 +77,8 @@ func init() {
 	if err != nil {
 		panic(err.Error())
 	}
+
+	///// get grafana api key
 
 }
 

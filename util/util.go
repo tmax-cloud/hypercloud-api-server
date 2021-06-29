@@ -21,6 +21,8 @@ import (
 	"k8s.io/klog"
 )
 
+var GrafanaKey string
+
 type ClusterMemberInfo struct {
 	Id          int64
 	Namespace   string
@@ -357,4 +359,72 @@ func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) error {
 	}
 	return errors.New("Request user or target cluster does not match with token payload")
 
+}
+
+type GrafanaUser struct {
+	Id       string `json:"id"`
+	Password string `json:"password"`
+}
+
+type GrafanaKeyBody struct {
+	Name          string `json:"name"`
+	Role          string `json:"role"`
+	SecondsToLive int    `json:"secondsToLive"`
+}
+
+/*func GetGrafanauser() (string, string) {
+	jsonFile, err := os.Open("/grafana/grafana-user.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Successfully Opened grafanausers.json")
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	var grafanaUser GrafanaUser
+
+	json.Unmarshal(byteValue, &grafanaUser)
+	return grafanaUser.Id, grafanaUser.Password
+}*/
+
+type Grafana_key struct {
+	Name string `json:"name"`
+	Key  string `json:"key"`
+}
+type Grafana_user struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Login    string `json:"login"`
+	Password string `json:"password"`
+}
+
+type Grafana_Dashboad_resp struct {
+	Id      int    `json:"id"`
+	Uid     string `json:"uid"`
+	Url     string `json:"url"`
+	Status  string `json:"status"`
+	Version string `json:"version"`
+	Slug    string `json:"slug"`
+}
+
+type Grafana_User_Get struct {
+	Id             int    `json:"id"`
+	Email          string `json:"email"`
+	Name           string `json:"name"`
+	Login          string `json:"login"`
+	Theme          string `json:"light"`
+	OrgId          string `json:"OrgId"`
+	IsGrafanaAdmin string `json:"isGrafanaAdmin"`
+	IsDisabled     string `json:"isDisabled"`
+	IsExternal     string `json:"isExternal"`
+	AuthLabels     string `json:"authLabels"`
+	UpdatedAt      string `json:"updatedAt"`
+	CreatedAt      string `json:"createdAt"`
+	AvatarUrl      string `json:"avatarUrl"`
+}
+
+type Grafana_Namespace struct {
+	Email     string `json:"email"`
+	Namespace string `json:"namespace"`
 }

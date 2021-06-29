@@ -123,6 +123,8 @@ func main() {
 	mux.HandleFunc("/metering", serveMetering)
 	mux.HandleFunc("/namespace", serveNamespace)
 	mux.HandleFunc("/alert", serveAlert)
+	mux.HandleFunc("/grafanaUser", serveGrafanaUser)
+	mux.HandleFunc("/grafanaDashboard", serveGrafanaDashboard)
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
 	mux.HandleFunc("/awscost", serveAwscost)
@@ -231,6 +233,25 @@ func serveAlert(res http.ResponseWriter, req *http.Request) {
 		alert.Post(res, req)
 	case http.MethodGet:
 		alert.Get(res, req)
+	default:
+		//error
+	}
+}
+func serveGrafanaUser(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodPost:
+		caller.CreateGrafanaUser("test12@tmax.co.kr")
+	default:
+		//error
+	}
+}
+
+func serveGrafanaDashboard(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodPost:
+		caller.CreateDashBoard(res, req)
 	default:
 		//error
 	}
