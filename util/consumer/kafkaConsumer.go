@@ -203,11 +203,14 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			// 1. db에서 해당 사용자에 대한것 모두 삭제
 			// 2. clm에 대한 rolebinding도 삭제
 			// 3. remote에서 rolebinding도 삭제
-
 			break
 		case "REGISTER":
 			k8sApiCaller.CreateGrafanaUser(topicEvent.UserName)
 			klog.Info("Grafana User [ " + topicEvent.UserName + " ] Created !")
+		case "LOGIN":
+
+		case "LOGOUT":
+
 		default:
 			klog.Info("Unknown Event Published from Hyperauth, Do nothing!")
 		}

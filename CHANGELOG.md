@@ -1,6 +1,62 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.16.0 start -------------------->
+
+## Hypercloud-api-server 5.0.16.0 (2021. 06. 25. (금) 11:06:55 KST)
+
+### Added
+
+### Changed
+  - [mod] clusterclaim 수락을 통해 clustermanager 생성 시 label에 타입이 생성이라는 것을 나타내도록 수정 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] dockerfile 수정을 통해 이미지 용량 축소 by Seungwon Lee
+  - [etc]version API 로그 수정 by Seungwon Lee
+  - [etc] versionHandler 리팩토링 및 결과 로그 출력 by Seungwon Lee
+
+<!-------------------- v5.0.15.0 start -------------------->
+
+## Hypercloud-api-server 5.0.15.0 (2021. 06. 17. (목) 15:09:12 KST)
+
+### Added
+
+### Changed
+  - [mod] version parsing 정규식 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.14.0 start -------------------->
+
+## Hypercloud-api-server 5.0.14.0 (2021. 06. 10. (목) 20:17:17 KST)
+
+### Added
+  - [feat] audit 리스트 서비스에서 ns-owner인 사용자만 해당 NS에 대한 감사기록을 볼 수 있도록 인가 로직 추가 by chosangwon93
+
+### Changed
+  - [mod] multi-operator가 클러스터 삭제 시 클러스터 정보를 db에서 지우기 위한 api call 추가 by chosangwon93
+  - [mod] cluster에 사용자 초대하는 메일에 권한에 대한 부분 추가 by chosangwon93
+  - [mod] 클러스터 클레임 승인 시 클러스터 이름 중복체크하는 로직 버그 수정 by chosangwon93
+  - [mod] audit 리소스 목록을 apigroup/version과 상관없이 리소스 kind로만 반화도록 수정 by chosangwon93
+  - [mod] clustermanager가 어떤 클레임으로부터 생성되었는지 표시하기 위해서 clustermanager 생성 시 lable에 claim 이름을 추가 by chosangwon93
+  - [mod] audit resource 목록을 조회 할 때마다 중복으로 목록이 쌓이는 문제 해결 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] status code change by chosangwon93
+  - [etc] audit 불필요한 로직 제거 by chosangwon93
+
 <!-------------------- v5.0.13.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.13.1 (2021. 06. 03. (목) 18:53:50 KST)
@@ -9,137 +65,6 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
   - [mod] audit 리소스 리스트 서비스 및 리스트 시 인가 기능 추가 by chosangwon93
-
-### Fixed
-
-### CRD yaml
-
-### Etc
--e 
-<!-------------------- v5.0.11.8 start -------------------->
--e 
-## Hypercloud-api-server 5.0.11.8 (2021. 05. 26. (수) 18:10:12 KST)
--e 
-### Added
--e 
-### Changed
--e 
-### Fixed
--e 
-### CRD yaml
--e 
-### Etc
--e 
-<!-------------------- v5.0.11.7 start -------------------->
--e 
-## Hypercloud-api-server 5.0.11.7 (2021. 05. 26. (수) 17:50:17 KST)
--e 
-### Added
--e 
-### Changed
--e 
-### Fixed
--e 
-### CRD yaml
--e 
-### Etc
--e 
-<!-------------------- v5.0.11.6 start -------------------->
--e 
-## Hypercloud-api-server 5.0.11.6 (2021. 05. 26. (수) 17:37:27 KST)
--e 
-### Added
--e 
-### Changed
-  - [mod] ClusterManager 객채 스키마 변경에 따른 생성 로직 수정 (fakename 삭제) by chosangwon93
--e 
-### Fixed
--e 
-### CRD yaml
--e 
-### Etc
-
-<!-------------------- v5.0.11.5 start -------------------->
-
-## Hypercloud-api-server 5.0.11.5 (Wed May 26 03:20:28 KST 2021)
-
-### Added
-
-### Changed
-  - [mod] ClusterManager 객채 스키마 변경에 따른 생성 로직 수정 (fakename 삭제) by chosangwon93
-
-### Fixed
-
-### CRD yaml
-
-### Etc
-
-<!-------------------- v5.0.11.3 start -------------------->
-
-## Hypercloud-api-server 5.0.11.3 (Wed May 26 02:25:43 KST 2021)
-
-### Added
-
-### Changed
-  - [mod] ClusterManager 객채 스키마 변경에 따른 생성 로직 수정 (fakename 삭제) by chosangwon93
-
-### Fixed
-
-### CRD yaml
-
-### Etc
-
-<!-------------------- v5.0.11.4 start -------------------->
-
-## Hypercloud-api-server 5.0.11.4 (Tue May 25 05:09:20 KST 2021)
-
-### Added
-
-### Changed
-
-### Fixed
-
-### CRD yaml
-
-### Etc
--e 
-<!-------------------- v5.0.11.2 start -------------------->
--e 
-## Hypercloud-api-server 5.0.11.2 (2021. 05. 21. (금) 16:58:56 KST)
--e 
-### Added
--e 
-### Changed
--e 
-### Fixed
--e 
-### CRD yaml
--e 
-### Etc
--e 
-<!-------------------- v5.0.11.1 start -------------------->
--e 
-## Hypercloud-api-server 5.0.11.1 (2021. 05. 21. (금) 16:11:23 KST)
--e 
-### Added
--e 
-### Changed
--e 
-### Fixed
--e 
-### CRD yaml
--e 
-### Etc
-
-<!-------------------- v5.0.11.0 start -------------------->
-
-## Hypercloud-api-server 5.0.11.0 (Thu May 20 08:19:45 KST 2021)
-
-### Added
-
-### Changed
-  - [mod] version API가 잘못된 hyperauth 콜을 부를 경우 crash나던 현상 수정 by Seungwon Lee
-  - [mod] hyperauth 정보 얻어오는 로직 추가 by Seungwon Lee
 
 ### Fixed
 
@@ -177,15 +102,29 @@ All notable changes to this project will be documented in this file.
 
 ### Etc
 
-<!-------------------- v5.0.11.0 start -------------------->
+<!-------------------- v5.0.11.6 start -------------------->
 
-## Hypercloud-api-server 5.0.11.0 (Thu May 20 08:19:45 KST 2021)
+## Hypercloud-api-server 5.0.11.6 (2021. 05. 26. (수) 17:37:27 KST)
+ 
+### Added
+ 
+### Changed
+  - [mod] ClusterManager 객채 스키마 변경에 따른 생성 로직 수정 (fakename 삭제) by chosangwon93
+ 
+### Fixed
+ 
+### CRD yaml
+ 
+### Etc
+
+<!-------------------- v5.0.11.5 start -------------------->
+
+## Hypercloud-api-server 5.0.11.5 (Wed May 26 03:20:28 KST 2021)
 
 ### Added
 
 ### Changed
-  - [mod] version API가 잘못된 hyperauth 콜을 부를 경우 crash나던 현상 수정 by Seungwon Lee
-  - [mod] hyperauth 정보 얻어오는 로직 추가 by Seungwon Lee
+  - [mod] ClusterManager 객채 스키마 변경에 따른 생성 로직 수정 (fakename 삭제) by chosangwon93
 
 ### Fixed
 
@@ -200,6 +139,21 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 ### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.11.3 start -------------------->
+
+## Hypercloud-api-server 5.0.11.3 (Wed May 26 02:25:43 KST 2021)
+
+### Added
+
+### Changed
+  - [mod] ClusterManager 객채 스키마 변경에 따른 생성 로직 수정 (fakename 삭제) by chosangwon93
 
 ### Fixed
 

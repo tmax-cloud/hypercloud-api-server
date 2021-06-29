@@ -135,9 +135,10 @@ func main() {
 		mux.HandleFunc("/namespaces/{namespace}/clusterclaims", serveClusterClaim)                // list all clusterclaim in a specific namespace
 		mux.HandleFunc("/namespaces/{namespace}/clusterclaims/{clusterclaim}", serveClusterClaim) // Admit clusterclaim request
 		mux.HandleFunc("/clustermanagers", serveCluster)
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster)                                                                                // list clustermanager for all namespaces (list page & all ns)
-		mux.HandleFunc("/clustermanagers/{access}", serveCluster)                                                                                              // list accessible clustermanager for all namespaces (lnb & all ns)
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster)                                                                                // list all clustermanager in a specific namespace
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster) // list clustermanager for all namespaces (list page & all ns)
+		mux.HandleFunc("/clustermanagers/{access}", serveCluster)               // list accessible clustermanager for all namespaces (lnb & all ns)
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster) // list all clustermanager in a specific namespace
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}", serveCluster)
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member", serveClusterMember)                                                  // list all member
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation", serveClusterInvitation)                                   // list a pending status user
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation/{attribute}/{member}", serveClusterInvitation)              // 추가 요청 (db + token 발급)
@@ -288,7 +289,8 @@ func serveCluster(res http.ResponseWriter, req *http.Request) {
 		} else {
 			// errror
 		}
-	case http.MethodPut:
+	case http.MethodPost:
+		cluster.DeleteCLM(res, req)
 	default:
 	}
 }

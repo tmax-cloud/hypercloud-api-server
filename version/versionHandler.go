@@ -48,36 +48,15 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	for idx, mod := range conf.Modules {
 		go func(idx int, mod versionModel.ModuleInfo) { // GoRoutine
 			defer wg.Done()
-			klog.Infoln("Module Name = ", mod.Name)
+			// klog.Infoln("Module Name = ", mod.Name)
 			result[idx].Name = mod.Name
 
 			// If the moudle is HyperAuth,
 			// Ask to hyperauth using given URL
 			if mod.Name == "HyperAuth" {
-				url := mod.ReadinessProbe.HTTPGet.Path + "/version"
-				http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // ignore certificate
-
-				client := http.Client{
-					Timeout: 15 * time.Second,
-				}
-				response, err := client.Get(url)
-				if err != nil {
-					result[idx].Status = "Abnormal"
-					klog.Errorln(mod.Name, " HTTPS Error : ", err)
-					return
-				} else if response.StatusCode >= 200 && response.StatusCode < 300 {
-					result[idx].Status = "Normal"
-					bodyBytes, err := ioutil.ReadAll(response.Body)
-					if err != nil {
-						klog.Errorln(err)
-					} else {
-						bodyString := string(bodyBytes)
-						result[idx].Version = bodyString
-					}
-				} else {
-					result[idx].Status = "Abnormal"
-				}
-				defer response.Body.Close()
+				hyperauth_status, hyperauth_version := AskToHyperAuth(mod)
+				result[idx].Status = hyperauth_status
+				result[idx].Version = hyperauth_version
 				return
 			}
 
@@ -208,6 +187,8 @@ func Get(res http.ResponseWriter, req *http.Request) {
 					}
 				}
 			}
+			klog.Infoln(mod.Name + " status = " + result[idx].Status)
+			klog.Infoln(mod.Name + " version = " + result[idx].Version)
 		}(idx, mod)
 	}
 	wg.Wait()
@@ -235,10 +216,42 @@ func ParsingVersion(str string) string {
 		return "latest"
 	}
 
-	r, err := regexp.Compile(":[a-z]*[A-Z]*[0-9]+(\\.[0-9]+)+")
+	r, err := regexp.Compile(":[a-z]*[A-Z]*[0-9]*(\\.[0-9]+)+")
 	if err != nil {
 		klog.Errorln(err)
 	}
 
 	return strings.TrimLeft(r.FindString(str), ":")
+}
+
+func AskToHyperAuth(mod versionModel.ModuleInfo) (string, string) {
+	var hyperauth_version string
+	var hyperauth_status string
+
+	url := mod.ReadinessProbe.HTTPGet.Path + "/version"
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // ignore certificate
+
+	client := http.Client{
+		Timeout: 15 * time.Second,
+	}
+	response, err := client.Get(url)
+	if err != nil {
+		hyperauth_status = "Abnormal"
+		klog.Errorln(mod.Name, " HTTPS Error : ", err)
+		return "", ""
+	} else if response.StatusCode >= 200 && response.StatusCode < 300 {
+		hyperauth_status = "Normal"
+		bodyBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			klog.Errorln(err)
+		} else {
+			bodyString := string(bodyBytes)
+			hyperauth_version = bodyString
+		}
+	} else {
+		hyperauth_status = "Abnormal"
+	}
+	defer response.Body.Close()
+
+	return hyperauth_status, hyperauth_version
 }

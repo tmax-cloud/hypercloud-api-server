@@ -6,7 +6,7 @@ import (
 	gmux "github.com/gorilla/mux"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
 	caller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
-
+	clusterDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/cluster"
 	"k8s.io/klog"
 	// "encoding/json"
 )
@@ -63,4 +63,28 @@ func ListLNB(res http.ResponseWriter, req *http.Request) {
 	util.SetResponse(res, msg, clmList, status)
 	return
 
+}
+
+func DeleteCLM(res http.ResponseWriter, req *http.Request) {
+	// queryParams := req.URL.Query()
+	vars := gmux.Vars(req)
+	namespace := vars["namespace"]
+	clustermanager := vars["clustermanager"]
+
+	if err := util.StringParameterException([]string{}, namespace, clustermanager); err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
+		return
+	}
+
+	if err := clusterDataFactory.DeleteALL(namespace, clustermanager); err != nil {
+		msg := "Failed to delete cluster info from db"
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusInternalServerError)
+		return
+	}
+	msg := "Success to delete cluster info from db"
+	klog.Infoln(msg)
+	util.SetResponse(res, msg, nil, http.StatusOK)
+	return
 }

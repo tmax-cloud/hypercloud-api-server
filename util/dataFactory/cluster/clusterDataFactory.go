@@ -22,8 +22,9 @@ const (
 	PORT                = 5432
 	INSERT_QUERY        = "INSERT INTO CLUSTER_MEMBER (namespace, cluster, member_id, member_name, attribute, role, status, createdTime, updatedTime) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 	DELETE_QUERY        = "DELETE FROM CLUSTER_MEMBER WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4"
-	UPDATE_STATUS_QUERY = "UPDATE CLUSTER_MEMBER SET STATUS = 'invited' WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4"
-	UPDATE_ROLE_QUERY   = "UPDATE CLUSTER_MEMBER SET ROLE = '@@ROLE@@' WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4"
+	DELETE_ALL_QUERY    = "DELETE FROM CLUSTER_MEMBER WHERE namespace = $1 and cluster = $2"
+	UPDATE_STATUS_QUERY = "UPDATE CLUSTER_MEMBER SET STATUS = 'invited' WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4 and updatedTime = $5"
+	UPDATE_ROLE_QUERY   = "UPDATE CLUSTER_MEMBER SET ROLE = '@@ROLE@@' WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4 and updatedTime = $5"
 )
 
 var pg_con_info string
@@ -313,7 +314,7 @@ func ListClusterInNamespace(userId string, userGroups []string, namespace string
 
 	b.WriteString("select cluster from CLUSTER_MEMBER where 1=1 ")
 
-	b.WriteString("and namespace = '")
+	b.WriteString("and (namespace = '")
 	b.WriteString(namespace)
 	b.WriteString("' ")
 
@@ -326,7 +327,7 @@ func ListClusterInNamespace(userId string, userGroups []string, namespace string
 		b.WriteString(userGroup)
 		b.WriteString("' ")
 	}
-
+	b.WriteString(") ")
 	b.WriteString("and status not in ('pending') ")
 
 	b.WriteString("group by cluster")
@@ -558,7 +559,7 @@ func UpdateStatus(item util.ClusterMemberInfo) error {
 	klog.Infoln("Query: " + UPDATE_STATUS_QUERY)
 	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
-	_, err = db.Exec(UPDATE_STATUS_QUERY, item.Namespace, item.Cluster, item.MemberId, item.Attribute)
+	_, err = db.Exec(UPDATE_STATUS_QUERY, item.Namespace, item.Cluster, item.MemberId, item.Attribute, time.Now())
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -579,7 +580,7 @@ func UpdateRole(item util.ClusterMemberInfo) error {
 	klog.Infoln("Query: " + query)
 	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
-	_, err = db.Exec(query, item.Namespace, item.Cluster, item.MemberId, item.Attribute)
+	_, err = db.Exec(query, item.Namespace, item.Cluster, item.MemberId, item.Attribute, time.Now())
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -600,6 +601,25 @@ func Delete(item util.ClusterMemberInfo) error {
 	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
 	_, err = db.Exec(DELETE_QUERY, item.Namespace, item.Cluster, item.MemberId, item.Attribute)
+	if err != nil {
+		klog.Error(err)
+		return err
+	}
+
+	return nil
+}
+func DeleteALL(namespace, cluster string) error {
+	db, err := sql.Open("postgres", pg_con_info)
+	if err != nil {
+		klog.Error(err)
+		return err
+	}
+	defer db.Close()
+
+	klog.Infoln("Query: " + DELETE_ALL_QUERY)
+	klog.Infoln("Paremeters: " + namespace + ", " + cluster)
+
+	_, err = db.Exec(DELETE_ALL_QUERY, namespace, cluster)
 	if err != nil {
 		klog.Error(err)
 		return err
