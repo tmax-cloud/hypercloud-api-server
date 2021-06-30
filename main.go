@@ -14,7 +14,7 @@ import (
 	admission "github.com/tmax-cloud/hypercloud-api-server/admission"
 	"github.com/tmax-cloud/hypercloud-api-server/alert"
 	audit "github.com/tmax-cloud/hypercloud-api-server/audit"
-	awscost "github.com/tmax-cloud/hypercloud-api-server/awscost"
+	cloudCredential "github.com/tmax-cloud/hypercloud-api-server/cloudCredential"
 	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
 	claim "github.com/tmax-cloud/hypercloud-api-server/clusterClaim"
 	metering "github.com/tmax-cloud/hypercloud-api-server/metering"
@@ -125,7 +125,7 @@ func main() {
 	mux.HandleFunc("/alert", serveAlert)
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
-	mux.HandleFunc("/awscost", serveAwscost)
+	mux.HandleFunc("/cloudCredential", serveCloudCredential)
 
 	if hcMode != "single" {
 		// for multi mode only
@@ -455,10 +455,10 @@ func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 	}
 }
 
-func serveAwscost(res http.ResponseWriter, req *http.Request) {
+func serveCloudCredential(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
-		awscost.Get(res, req)
+		cloudCredential.Get(res, req)
 	case http.MethodPut:
 	case http.MethodOptions:
 	default:
