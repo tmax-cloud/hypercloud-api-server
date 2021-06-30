@@ -176,12 +176,13 @@ func CreateGrafanaPermission(email string, userId int, dashboardId int) {
 func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 
 	body, err := ioutil.ReadAll(req.Body)
+	klog.Infof(string(body))
 	if err != nil {
 		panic(err)
 	}
 
 	var v util.Grafana_Namespace
-	json.Unmarshal([]byte(string(body)), &v)
+	json.Unmarshal([]byte(body), &v)
 	email := v.Email
 	namespace := v.Namespace
 	klog.Infof("Namespace Name is" + v.Namespace)
