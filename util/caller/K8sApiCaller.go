@@ -431,6 +431,24 @@ func DeleteCRBWithUser(userId string) {
 	}
 }
 
+func GetCRBAdmin() string {
+	crbList, err := Clientset.RbacV1().ClusterRoleBindings().List(
+		context.TODO(),
+		metav1.ListOptions{},
+	)
+	if err != nil {
+		klog.Errorln(err)
+	}
+	var adminemail string
+	for _, crb := range crbList.Items {
+		if crb.Name == "admin" {
+			adminemail = crb.Subjects[0].Name
+			klog.Infof("admin is " + adminemail)
+		}
+	}
+	return adminemail
+}
+
 func DeleteRBWithUser(userId string) {
 	rbList, err := Clientset.RbacV1().RoleBindings("").List(
 		context.TODO(),

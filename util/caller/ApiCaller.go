@@ -42,15 +42,16 @@ func GetGrafanaUser(email string) int {
 	body, err := ioutil.ReadAll(resp.Body)
 	json.Unmarshal([]byte(body), &GrafanaUserGet)
 	klog.Infof(string(body))
+	klog.Infof(strconv.Itoa(GrafanaUserGet.Id))
 	return GrafanaUserGet.Id
 }
 
 func CreateGrafanaUser(email string) {
-
+	grafanaId, grafanaPw = "admin", "admin"
 	httpposturl_user := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/admin/users"
 	// get grafana api key
 	klog.Infof("start to create grafana apikey")
-	grafanaId, grafanaPw = "admin", "admin"
+
 	httpposturl := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/auth/keys"
 	var GrafanaKeyBody util.GrafanaKeyBody
 
@@ -84,14 +85,14 @@ func CreateGrafanaUser(email string) {
 
 	var grafana_user_body util.Grafana_user
 	grafana_user_body.Email = email
-	grafana_user_body.Name = GrafanaKeyBody.Name
-	grafana_user_body.Login = GrafanaKeyBody.Name
+	grafana_user_body.Name = RandomString(8)
+	grafana_user_body.Login = RandomString(8)
 	grafana_user_body.Password = "1234"
 
 	json_body, _ = json.Marshal(grafana_user_body)
 
 	request, _ = http.NewRequest("POST", httpposturl_user, bytes.NewBuffer(json_body))
-
+	klog.Infof(string(json_body))
 	request.Header.Add("Content-Type", "application/json; charset=UTF-8")
 	//	request.Header.Add("Authorization", util.GrafanaKey)
 	client = &http.Client{}
@@ -183,6 +184,7 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 	json.Unmarshal([]byte(string(body)), &v)
 	email := v.Email
 	namespace := v.Namespace
+	klog.Infof("Namespace Name is" + v.Namespace)
 	grafanaId, grafanaPw = "admin", "admin"
 	klog.Infof("start to get api key")
 	httpposturl := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/auth/keys"
@@ -2700,10 +2702,7 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 
 	klog.Infof(string(dashbody))
 	json.Unmarshal([]byte(dashbody), &grafana_resp_dash)
-	klog.Infof(strconv.Itoa(grafana_resp_dash.Id))
-	klog.Infof(grafana_resp_dash.Slug)
-	klog.Infof(grafana_resp_dash.Uid)
-	klog.Infof(grafana_resp_dash.Version)
+
 	dashboardId := grafana_resp_dash.Id
 	klog.Infof("start to get grafana user info")
 	userId := GetGrafanaUser(email)
