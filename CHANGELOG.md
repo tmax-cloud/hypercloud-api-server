@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.17.0 start -------------------->
+
+## Hypercloud-api-server 5.0.17.0 (2021. 07. 01. (목) 17:37:48 KST)
+
+### Added
+  - [feat] 클러스터 등록 기능 추가 by chosangwon93
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.16.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.16.1 (2021. 07. 01. (목) 10:45:05 KST)
