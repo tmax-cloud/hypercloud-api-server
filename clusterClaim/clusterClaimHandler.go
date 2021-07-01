@@ -53,6 +53,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, msg, nil, status)
 		return
 	}
+
 	if cc.Status.Phase != "Awaiting" {
 		msg = "ClusterClaim is already admitted or rejected by admin"
 		klog.Infoln(msg)

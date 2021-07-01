@@ -4,11 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"net/http"
-	"strings"
-
 	"io"
+	"net/http"
 	"reflect"
+	"strings"
 	"sync"
 
 	configv1alpha1 "github.com/tmax-cloud/efk-operator/api/v1alpha1"
@@ -78,6 +77,8 @@ func init() {
 	if err != nil {
 		panic(err.Error())
 	}
+
+	///// get grafana api key
 
 }
 
@@ -428,6 +429,24 @@ func DeleteCRBWithUser(userId string) {
 			}
 		}
 	}
+}
+
+func GetCRBAdmin() string {
+	crbList, err := Clientset.RbacV1().ClusterRoleBindings().List(
+		context.TODO(),
+		metav1.ListOptions{},
+	)
+	if err != nil {
+		klog.Errorln(err)
+	}
+	var adminemail string
+	for _, crb := range crbList.Items {
+		if crb.Name == "admin" {
+			adminemail = crb.Subjects[0].Name
+			klog.Infof("admin is " + adminemail)
+		}
+	}
+	return adminemail
 }
 
 func DeleteRBWithUser(userId string) {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"flag"
@@ -8,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"time"
 
 	gmux "github.com/gorilla/mux"
@@ -123,6 +125,8 @@ func main() {
 	mux.HandleFunc("/metering", serveMetering)
 	mux.HandleFunc("/namespace", serveNamespace)
 	mux.HandleFunc("/alert", serveAlert)
+	mux.HandleFunc("/grafanaUser", serveGrafanaUser)
+	mux.HandleFunc("/grafanaDashboard", serveGrafanaDashboard)
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
 	mux.HandleFunc("/awscost", serveAwscost)
@@ -164,6 +168,27 @@ func main() {
 	// HTTP Server Start
 	klog.Info("Starting Hypercloud5-API server...")
 	klog.Flush()
+	klog.Info("Setiing Grafana Admin...")
+	hc_admin := caller.GetCRBAdmin()
+	caller.CreateGrafanaUser(hc_admin)
+	id := caller.GetGrafanaUser(hc_admin)
+	adminBody := `{"isGrafanaAdmin": true}`
+	grafanaId, grafanaPw := "admin", "admin"
+	httpgeturl := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/admin/users/" + strconv.Itoa(id) + "/permissions"
+
+	request, _ := http.NewRequest("PUT", httpgeturl, bytes.NewBuffer([]byte(adminBody)))
+
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		panic(err)
+
+	}
+	defer response.Body.Close()
+	resbody, err := ioutil.ReadAll(response.Body)
+	klog.Infof(string(resbody))
 
 	whsvr := &http.Server{
 		Addr:      fmt.Sprintf(":%d", port),
@@ -232,6 +257,25 @@ func serveAlert(res http.ResponseWriter, req *http.Request) {
 		alert.Post(res, req)
 	case http.MethodGet:
 		alert.Get(res, req)
+	default:
+		//error
+	}
+}
+func serveGrafanaUser(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodPost:
+		caller.CreateGrafanaUser("test12@tmax.co.kr")
+	default:
+		//error
+	}
+}
+
+func serveGrafanaDashboard(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodPost:
+		caller.CreateDashBoard(res, req)
 	default:
 		//error
 	}
