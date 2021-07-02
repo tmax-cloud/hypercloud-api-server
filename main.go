@@ -223,7 +223,7 @@ func main() {
 	adminorgBody := `{"role":"Admin"}`
 	request, _ = http.NewRequest("PATCH", httpgeturlorg, bytes.NewBuffer([]byte(adminorgBody)))
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	request.Header.Set("Authorization", util.GrafanaKey)
+	//request.Header.Set("Authorization", util.GrafanaKey)
 	client2 := &http.Client{}
 	response, err = client2.Do(request)
 	if err != nil {
