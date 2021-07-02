@@ -189,7 +189,86 @@ func main() {
 	defer response.Body.Close()
 	resbody, err := ioutil.ReadAll(response.Body)
 	klog.Infof(string(resbody))
+	//get grafana key
+	httpposturl := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/auth/keys"
+	var GrafanaKeyBody util.GrafanaKeyBody
 
+	GrafanaKeyBody.Name = caller.RandomString(8)
+	GrafanaKeyBody.Role = "Admin"
+	GrafanaKeyBody.SecondsToLive = 300
+	json_body, _ := json.Marshal(GrafanaKeyBody)
+	request, _ = http.NewRequest("POST", httpposturl, bytes.NewBuffer(json_body))
+
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	client = &http.Client{}
+	response, err = client.Do(request)
+	if err != nil {
+		panic(err)
+
+	}
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		panic(err)
+
+	}
+	klog.Infof(string(body))
+	var grafana_resp util.Grafana_key
+	json.Unmarshal([]byte(body), &grafana_resp)
+	util.GrafanaKey = "Bearer " + grafana_resp.Key
+	klog.Infof(util.GrafanaKey)
+	//org permission
+	httpgeturlorg := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/orgs/1/users/" + strconv.Itoa(id)
+	adminorgBody := `{"role":"Admin"}`
+	request, _ = http.NewRequest("PATCH", httpgeturlorg, bytes.NewBuffer([]byte(adminorgBody)))
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	request.Header.Set("Authorization", util.GrafanaKey)
+	client2 := &http.Client{}
+	response, err = client2.Do(request)
+	if err != nil {
+		panic(err)
+
+	}
+	defer response.Body.Close()
+	resbody, err = ioutil.ReadAll(response.Body)
+
+	klog.Infof(string(resbody))
+
+	//default dashboard permission to only admin
+
+	klog.Infof("default dashboard permission setting(admin)")
+	permBody := `{
+		"items": []
+	}`
+	httpposturl_per := "http://" + util.GRAFANA_URI + "api/dashboards/id/1/permissions"
+	request, _ = http.NewRequest("POST", httpposturl_per, bytes.NewBuffer([]byte(permBody)))
+
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	request.Header.Set("Authorization", util.GrafanaKey)
+	client = &http.Client{}
+	response, err = client.Do(request)
+	if err != nil {
+		panic(err)
+
+	}
+	defer response.Body.Close()
+	resbody, err = ioutil.ReadAll(response.Body)
+	klog.Infof(string(resbody))
+	httpposturl_per = "http://" + util.GRAFANA_URI + "api/dashboards/id/2/permissions"
+	request, _ = http.NewRequest("POST", httpposturl_per, bytes.NewBuffer([]byte(permBody)))
+
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	request.Header.Set("Authorization", util.GrafanaKey)
+	client = &http.Client{}
+	response, err = client.Do(request)
+	if err != nil {
+		panic(err)
+
+	}
+	defer response.Body.Close()
+	resbody, err = ioutil.ReadAll(response.Body)
+	klog.Infof(string(resbody))
 	whsvr := &http.Server{
 		Addr:      fmt.Sprintf(":%d", port),
 		Handler:   mux,
