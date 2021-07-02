@@ -53,6 +53,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, msg, nil, status)
 		return
 	}
+
 	if cc.Status.Phase != "Awaiting" {
 		msg = "ClusterClaim is already admitted or rejected by admin"
 		klog.Infoln(msg)
@@ -63,11 +64,14 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	// name duplicate
 	exist, err := caller.CheckClusterManagerDupliation(cc.Spec.ClusterName, clusterClaimNamespace)
 	if err != nil {
+		klog.Errorln(err.Error())
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
 	if exist {
+		msg := "Cluster [" + cc.Spec.ClusterName + "] is already existed."
+		klog.Infoln(msg)
 		util.SetResponse(res, "Cluster ["+cc.Spec.ClusterName+"] is already existed.", nil, http.StatusBadRequest)
 		return
 	}

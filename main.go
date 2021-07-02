@@ -392,6 +392,8 @@ func serveCluster(res http.ResponseWriter, req *http.Request) {
 			// errror
 		}
 	case http.MethodPost:
+		cluster.InsertCLM(res, req)
+	case http.MethodDelete:
 		cluster.DeleteCLM(res, req)
 	default:
 	}

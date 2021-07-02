@@ -10,7 +10,9 @@ import (
 
 	pq "github.com/lib/pq"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
+	"k8s.io/apimachinery/pkg/types"
 
+	// "k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
 )
 
@@ -351,17 +353,17 @@ func ListClusterInNamespace(userId string, userGroups []string, namespace string
 	return clusterNameList, nil
 }
 
-func ListClusterAllNamespace(userId string, userGroups []string) ([]string, error) {
+func ListClusterAllNamespace(userId string, userGroups []string) ([]types.NamespacedName, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
 	}
 	defer db.Close()
-	clusterNameList := []string{}
+	clusterManagerNamespacedNameList := []types.NamespacedName{}
 	var b strings.Builder
 
-	b.WriteString("select cluster from CLUSTER_MEMBER where 1=1 ")
+	b.WriteString("select namespace, cluster from CLUSTER_MEMBER where 1=1 ")
 
 	b.WriteString("and member_id = '")
 	b.WriteString(userId)
@@ -375,7 +377,7 @@ func ListClusterAllNamespace(userId string, userGroups []string) ([]string, erro
 
 	b.WriteString("and status not in ('pending') ")
 
-	b.WriteString("group by cluster")
+	b.WriteString("group by namespace, cluster")
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
@@ -387,13 +389,14 @@ func ListClusterAllNamespace(userId string, userGroups []string) ([]string, erro
 	defer rows.Close()
 
 	for rows.Next() {
-		var clusterNmae string
+		var clusterManagerNamespacedName types.NamespacedName
 		rows.Scan(
-			&clusterNmae,
+			&clusterManagerNamespacedName.Namespace,
+			&clusterManagerNamespacedName.Name,
 		)
-		clusterNameList = append(clusterNameList, clusterNmae)
+		clusterManagerNamespacedNameList = append(clusterManagerNamespacedNameList, clusterManagerNamespacedName)
 	}
-	return clusterNameList, nil
+	return clusterManagerNamespacedNameList, nil
 }
 
 func GetPendingUser(clusterMember util.ClusterMemberInfo) ([]util.ClusterMemberInfo, error) {

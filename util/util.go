@@ -15,9 +15,11 @@ import (
 
 	"regexp"
 
+	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	gomail "gopkg.in/gomail.v2"
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
 )
 
@@ -373,6 +375,23 @@ func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) ([]string, err
 		return groups, nil
 	}
 	return nil, errors.New("Request user or target cluster does not match with token payload")
+}
+
+func Search(NamespacedNameList []types.NamespacedName, clmList *clusterv1alpha1.ClusterManagerList) *clusterv1alpha1.ClusterManagerList {
+
+	ret := &clusterv1alpha1.ClusterManagerList{
+		Items: []clusterv1alpha1.ClusterManager{},
+	}
+
+	for _, namespacedName := range NamespacedNameList {
+		for _, clm := range clmList.Items {
+			if namespacedName.Namespace == clm.Namespace && namespacedName.Name == clm.Name && clm.Status.Ready {
+				ret.Items = append(ret.Items, clm)
+			}
+		}
+	}
+
+	return ret
 }
 
 type GrafanaUser struct {

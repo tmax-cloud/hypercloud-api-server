@@ -726,27 +726,27 @@ func ListAllClusterClaims(userId string, userGroups []string) (*claimsv1alpha1.C
 	}
 }
 
-func ListAccessibleClusterClaims(userId string, userGroups []string, clusterClaimNamespace string) (*claimsv1alpha1.ClusterClaimList, string, int) {
+func ListAccessibleClusterClaims(userId string, userGroups []string, namespace string) (*claimsv1alpha1.ClusterClaimList, string, int) {
 	var clusterClaimList = &claimsv1alpha1.ClusterClaimList{}
 
 	clusterClaimList.Kind = "ClusterClaimList"
 	clusterClaimList.APIVersion = "claims.tmax.io/v1alpha1"
 
-	clusterClaimListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", clusterClaimNamespace, "", "list")
+	clusterClaimListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", namespace, "", "list")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 	if clusterClaimListRuleResult.Status.Allowed {
-		clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims(clusterClaimNamespace).List(context.TODO(), metav1.ListOptions{})
-		msg := "Success list clusterclaim in namespace [ " + clusterClaimNamespace + " ]"
+		clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims(namespace).List(context.TODO(), metav1.ListOptions{})
+		msg := "Success list clusterclaim in namespace [ " + namespace + " ]"
 		if len(clusterClaimList.Items) == 0 {
 			msg := " User [ " + userId + " ] has No ClusterClaim"
 			klog.Infoln(msg)
 		}
 		return clusterClaimList, msg, http.StatusOK
 	} else {
-		msg := "User [ " + userId + " ] has No permission in namespace  [ " + clusterClaimNamespace + " ]"
+		msg := "User [ " + userId + " ] has No permission in namespace  [ " + namespace + " ]"
 		klog.Infoln(msg)
 		clusterClaimList.Items = []claimsv1alpha1.ClusterClaim{}
 		return clusterClaimList, msg, http.StatusOK
@@ -800,43 +800,38 @@ func ListAccesibleCluster(userId string, userGroups []string) (*clusterv1alpha1.
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
-	clusterNameList, err := clusterDataFactory.ListClusterAllNamespace(userId, userGroups)
+	NamespacedNameList, err := clusterDataFactory.ListClusterAllNamespace(userId, userGroups)
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
-	_clmList := []clusterv1alpha1.ClusterManager{}
-	for _, clm := range clmList.Items {
-		if util.Contains(clusterNameList, clm.Name) && clm.Status.Phase == "Provisioned" {
-			_clmList = append(_clmList, clm)
-		}
-	}
-	clmList.Items = _clmList
-	if len(clmList.Items) == 0 {
+
+	_clmList := util.Search(NamespacedNameList, clmList)
+
+	if len(_clmList.Items) == 0 {
 		msg := " User [ " + userId + " ] has No Clusters"
 		klog.Infoln(msg)
-		return clmList, msg, http.StatusOK
+		return _clmList, msg, http.StatusOK
 	}
 	msg := " User [ " + userId + " ] has Clusters"
 	klog.Infoln(msg)
-	return clmList, msg, http.StatusOK
-
+	return _clmList, msg, http.StatusOK
 }
 
-func ListClusterInNamespace(userId string, userGroups []string, clusterManagerNamespace string) (*clusterv1alpha1.ClusterManagerList, string, int) {
+func ListClusterInNamespace(userId string, userGroups []string, namespace string) (*clusterv1alpha1.ClusterManagerList, string, int) {
 
 	var clmList = &clusterv1alpha1.ClusterManagerList{}
 
 	clmList.Kind = "ClusterManagerList"
 	clmList.APIVersion = "cluster.tmax.io/v1alpha1"
 
-	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", clusterManagerNamespace, "", "list")
+	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", namespace, "", "list")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
-	clmList, err = customClientset.ClusterV1alpha1().ClusterManagers(clusterManagerNamespace).List(context.TODO(), metav1.ListOptions{})
+	clmList, err = customClientset.ClusterV1alpha1().ClusterManagers(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
@@ -848,13 +843,13 @@ func ListClusterInNamespace(userId string, userGroups []string, clusterManagerNa
 			klog.Infoln(msg)
 			return clmList, msg, http.StatusOK
 		}
-		msg := "Success list cluster in a namespace [ " + clusterManagerNamespace + " ]"
+		msg := "Success list cluster in a namespace [ " + namespace + " ]"
 		klog.Infoln(msg)
 		return clmList, msg, http.StatusOK
 	} else {
 		// ns에 list 권한 없으면 db에서 속한것만 찾아서 반환!
 		// db에서 읽어온다.
-		clusterNameList, err := clusterDataFactory.ListClusterInNamespace(userId, userGroups, clusterManagerNamespace)
+		clusterNameList, err := clusterDataFactory.ListClusterInNamespace(userId, userGroups, namespace)
 		if err != nil {
 			klog.Errorln(err)
 			return nil, err.Error(), http.StatusInternalServerError
@@ -879,17 +874,17 @@ func ListClusterInNamespace(userId string, userGroups []string, clusterManagerNa
 
 }
 
-func GetCluster(userId string, userGroups []string, clusterName string, clusterManagerNamespace string) (*clusterv1alpha1.ClusterManager, string, int) {
+func GetCluster(userId string, userGroups []string, clusterName string, namespace string) (*clusterv1alpha1.ClusterManager, string, int) {
 
 	var clm = &clusterv1alpha1.ClusterManager{}
-	clusterGetRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", clusterManagerNamespace, clusterName, "get")
+	clusterGetRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", namespace, clusterName, "get")
 	if err != nil {
 		klog.Errorln(err)
 		return nil, err.Error(), http.StatusInternalServerError
 	}
 
 	if clusterGetRuleResult.Status.Allowed {
-		clm, err = customClientset.ClusterV1alpha1().ClusterManagers(clusterManagerNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
+		clm, err = customClientset.ClusterV1alpha1().ClusterManagers(namespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
 		if err != nil {
 			klog.Errorln(err)
 			return nil, err.Error(), http.StatusInternalServerError
@@ -902,8 +897,8 @@ func GetCluster(userId string, userGroups []string, clusterName string, clusterM
 	return clm, "Get cluster success", http.StatusOK
 }
 
-func CheckClusterManagerDupliation(clusterName string, clusterManagerNamespace string) (bool, error) {
-	if _, err := customClientset.ClusterV1alpha1().ClusterManagers(clusterManagerNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{}); err != nil {
+func CheckClusterManagerDupliation(clusterName string, namespace string) (bool, error) {
+	if _, err := customClientset.ClusterV1alpha1().ClusterManagers(namespace).Get(context.TODO(), clusterName, metav1.GetOptions{}); err != nil {
 		if errors.IsNotFound(err) {
 			return false, nil
 		} else {
