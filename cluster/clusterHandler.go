@@ -41,13 +41,21 @@ func ListPage(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if namespace == "" {
-		clmList, msg, status := caller.ListAllCluster(userId, userGroups)
-		util.SetResponse(res, msg, clmList, status)
-		return
+		if clmList, err := caller.ListAllCluster(userId, userGroups); err != nil {
+			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+			return
+		} else {
+			util.SetResponse(res, "Success", clmList, http.StatusOK)
+			return
+		}
 	} else {
-		clusterClaimList, msg, status := caller.ListClusterInNamespace(userId, userGroups, namespace)
-		util.SetResponse(res, msg, clusterClaimList, status)
-		return
+		if clusterClaimList, err := caller.ListClusterInNamespace(userId, userGroups, namespace); err != nil {
+			util.SetResponse(res, err.Error(), clusterClaimList, http.StatusInternalServerError)
+			return
+		} else {
+			util.SetResponse(res, "Success", clusterClaimList, http.StatusOK)
+			return
+		}
 	}
 }
 
@@ -62,8 +70,8 @@ func ListLNB(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	clmList, msg, status := caller.ListAccesibleCluster(userId, userGroups)
-	util.SetResponse(res, msg, clmList, status)
+	clmList, err := caller.ListAccesibleCluster(userId, userGroups)
+	util.SetResponse(res, err.Error(), clmList, http.StatusInternalServerError)
 	return
 }
 

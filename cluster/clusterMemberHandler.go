@@ -8,6 +8,7 @@ import (
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
 	caller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	clusterDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/cluster"
+	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	"k8s.io/klog"
 	// "encoding/json"
 )
@@ -18,20 +19,20 @@ func ListClusterMember(res http.ResponseWriter, req *http.Request) {
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 	vars := gmux.Vars(req)
 	cluster := vars["clustermanager"]
-	clusterManagerNamespace := vars["namespace"]
+	namespace := vars["namespace"]
 
-	if err := util.StringParameterException(userGroups, userId, cluster, clusterManagerNamespace); err != nil {
+	if err := util.StringParameterException(userGroups, userId, cluster, namespace); err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
 
-	clm, msg, status := caller.GetCluster(userId, userGroups, cluster, clusterManagerNamespace)
-	if clm == nil {
-		util.SetResponse(res, msg, nil, status)
+	// cluster ready 인지 확인
+	var clm *clusterv1alpha1.ClusterManager
+	if clm, err := caller.GetCluster(userId, userGroups, cluster, namespace); err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
-	}
-	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	} else if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
@@ -39,24 +40,24 @@ func ListClusterMember(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if userId == clm.Annotations["owner"] {
-		clusterMemberList, err := clusterDataFactory.ListAllClusterMember(cluster, clusterManagerNamespace)
+		clusterMemberList, err := clusterDataFactory.ListAllClusterMember(cluster, namespace)
 		if err != nil {
 			klog.Errorln(err)
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 			return
 		}
-		msg = "List cluster success"
+		msg := "List cluster success"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
 		return
 	} else {
-		clusterMemberList, err := clusterDataFactory.ListClusterMemberWithOutPending(cluster, clusterManagerNamespace)
+		clusterMemberList, err := clusterDataFactory.ListClusterMemberWithOutPending(cluster, namespace)
 		if err != nil {
 			klog.Errorln(err)
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 			return
 		}
-		msg = "List cluster success"
+		msg := "List cluster success"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
 		return
@@ -72,20 +73,19 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	cluster := vars["clustermanager"]
 	attribute := vars["attribute"]
 	memberId := vars["member"]
-	clusterManagerNamespace := vars["namespace"]
+	namespace := vars["namespace"]
 
-	if err := util.StringParameterException(userGroups, userId, cluster, attribute, memberId, clusterManagerNamespace); err != nil {
+	if err := util.StringParameterException(userGroups, userId, cluster, attribute, memberId, namespace); err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
 
-	clm, msg, status := caller.GetCluster(userId, userGroups, cluster, clusterManagerNamespace)
-	if clm == nil {
-		util.SetResponse(res, msg, nil, status)
+	var clm *clusterv1alpha1.ClusterManager
+	if clm, err := caller.GetCluster(userId, userGroups, cluster, namespace); err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
-	}
-	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	} else if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
@@ -93,7 +93,7 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	}
 
 	clusterMember := util.ClusterMemberInfo{}
-	clusterMember.Namespace = clusterManagerNamespace
+	clusterMember.Namespace = namespace
 	clusterMember.Cluster = cluster
 	clusterMember.MemberId = memberId
 	clusterMember.Attribute = attribute
@@ -138,21 +138,21 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// role 삭제
-	if msg, status = caller.RemoveRoleFromRemote(clm, memberId, attribute); status != http.StatusOK {
-		util.SetResponse(res, msg, nil, status)
+	if err := caller.RemoveRoleFromRemote(clm, memberId, attribute); err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	if msg, status = caller.DeleteCLMRole(clm, memberId, attribute); status != http.StatusOK {
-		util.SetResponse(res, msg, nil, status)
+	if err := caller.DeleteCLMRole(clm, memberId, attribute); err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	if msg, status = caller.DeleteNSGetRole(clm, memberId, attribute); status != http.StatusOK {
-		util.SetResponse(res, msg, nil, status)
+	if err := caller.DeleteNSGetRole(clm, memberId, attribute); err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	msg = "User [" + memberId + "] is removed from cluster [" + clm.Name + "]"
+	msg := "User [" + memberId + "] is removed from cluster [" + clm.Name + "]"
 	klog.Infoln(msg)
-	util.SetResponse(res, msg, nil, status)
+	util.SetResponse(res, msg, nil, http.StatusOK)
 	return
 }
 
@@ -166,20 +166,19 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	cluster := vars["clustermanager"]
 	attribute := vars["attribute"]
 	memberId := vars["member"]
-	clusterManagerNamespace := vars["namespace"]
+	namespace := vars["namespace"]
 
-	if err := util.StringParameterException(userGroups, userId, cluster, attribute, memberId, remoteRole, clusterManagerNamespace); err != nil {
+	if err := util.StringParameterException(userGroups, userId, cluster, attribute, memberId, remoteRole, namespace); err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
 
-	clm, msg, status := caller.GetCluster(userId, userGroups, cluster, clusterManagerNamespace)
-	if clm == nil {
-		util.SetResponse(res, msg, nil, status)
+	var clm *clusterv1alpha1.ClusterManager
+	if clm, err := caller.GetCluster(userId, userGroups, cluster, namespace); err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
-	}
-	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	} else if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
@@ -187,7 +186,7 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	}
 
 	clusterMember := util.ClusterMemberInfo{}
-	clusterMember.Namespace = clusterManagerNamespace
+	clusterMember.Namespace = namespace
 	clusterMember.Cluster = cluster
 	clusterMember.MemberId = memberId
 	clusterMember.Role = remoteRole
@@ -233,17 +232,18 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// role 삭제 후 재 생성
-	if msg, status := caller.RemoveRoleFromRemote(clm, memberId, attribute); status != http.StatusOK {
-		util.SetResponse(res, msg, nil, status)
+	if err := caller.RemoveRoleFromRemote(clm, memberId, attribute); err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	if msg, status := caller.CreateRoleInRemote(clm, memberId, remoteRole, attribute); status != http.StatusOK {
-		util.SetResponse(res, msg, nil, status)
+
+	if err := caller.CreateRoleInRemote(clm, memberId, remoteRole, clusterMember.Attribute); err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	msg = attribute + " [" + memberId + "] role is updated to [" + remoteRole + "] in cluster [" + clm.Name + "]"
+	msg := attribute + " [" + memberId + "] role is updated to [" + remoteRole + "] in cluster [" + clm.Name + "]"
 	klog.Infoln(msg)
-	util.SetResponse(res, msg, nil, status)
+	util.SetResponse(res, msg, nil, http.StatusOK)
 	return
 
 }
