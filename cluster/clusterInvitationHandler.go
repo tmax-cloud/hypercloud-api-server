@@ -49,10 +49,12 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Status = "pending"
 
 	// cluster ready 인지 확인
-	if clm, err := caller.GetCluster(userId, userGroups, cluster, namespace); err != nil {
+	clm, err := caller.GetCluster(userId, userGroups, cluster, namespace)
+	if err != nil {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
-	} else if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	}
+	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
@@ -189,11 +191,12 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Status = "invited"
 
 	// cluster ready 인지 확인
-	var clm *clusterv1alpha1.ClusterManager
-	if clm, err := caller.GetCluster(userId, userGroups, cluster, namespace); err != nil {
+	clm, err := caller.GetCluster(userId, userGroups, cluster, namespace)
+	if err != nil {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
-	} else if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	}
+	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
@@ -465,10 +468,12 @@ func ListInvitation(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// cluster ready 인지 확인
-	if clm, err := caller.GetCluster(userId, userGroups, cluster, namespace); err != nil {
+	clm, err := caller.GetCluster(userId, userGroups, cluster, namespace)
+	if err != nil {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
-	} else if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	}
+	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)

@@ -1,5 +1,5 @@
 #!/bin/sh
-img=192.168.9.12:5000/hypercloud-api-server:v3.25
+img=192.168.9.12:5000/hypercloud-api-server:v3.28
 docker rmi $img 
 docker build -t $img  . 
 docker push $img 
