@@ -1063,7 +1063,7 @@ func CreateNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 
 	if attribute == "user" {
 		// clusterRoleName = subject + "-user-" + clusterManager.Namespace + "-" + clusterManager.Name + "-clusterrole"
-		roleBindingName = subject + "-user-ns-get-clusterrolebinding"
+		roleBindingName = subject + "-user-ns-get-rolebinding"
 		roleBinding.Subjects = []rbacApi.Subject{
 			{
 				APIGroup: "rbac.authorization.k8s.io",
@@ -1073,7 +1073,7 @@ func CreateNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 		}
 	} else {
 		// clusterRoleName = subject + "-group-" + clusterManager.Namespace + "-" + clusterManager.Name + "-clusterrole"
-		roleBindingName = subject + "-group-ns-get-clusterrolebinding"
+		roleBindingName = subject + "-group-ns-get-rolebinding"
 		roleBinding.Subjects = []rbacApi.Subject{
 			{
 				APIGroup: "rbac.authorization.k8s.io",
@@ -1123,9 +1123,9 @@ func CreateNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 func DeleteNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) error {
 	var roleBindingName string
 	if attribute == "user" {
-		roleBindingName = subject + "-user-ns-get-clusterrolebinding"
+		roleBindingName = subject + "-user-ns-get-rolebinding"
 	} else {
-		roleBindingName = subject + "-group-ns-get-clusterrolebinding"
+		roleBindingName = subject + "-group-ns-get-rolebinding"
 	}
 
 	// Subject가 해당 ns에 사용중인 클러스터가 남았다면 ns get rolebinding 삭제 안하고.. 없으면 삭제한다. (이전에 db에서 현재 요청에대한 클러스터는 삭제함)

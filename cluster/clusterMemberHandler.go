@@ -34,7 +34,7 @@ func ListClusterMember(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
@@ -88,7 +88,7 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
@@ -182,7 +182,7 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)

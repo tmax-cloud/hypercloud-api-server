@@ -8,7 +8,6 @@ import (
 
 	gmux "github.com/gorilla/mux"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
-	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 
 	// caller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	caller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
@@ -305,6 +304,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Namespace = namespace
 	clusterMember.Cluster = cluster
 	clusterMember.MemberId = userId
+	clusterMember.Attribute = "user"
 
 	// token validation
 	if _, err := util.TokenValid(req, clusterMember); err != nil {
@@ -342,13 +342,14 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var clm *clusterv1alpha1.ClusterManager
-	if clm, err = caller.GetClusterWithoutSAR(userId, userGroups, cluster, namespace); err != nil {
+	// var clm *clusterv1alpha1.ClusterManager
+	clm, err := caller.GetClusterWithoutSAR(userId, userGroups, cluster, namespace)
+	if err != nil {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
-	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
@@ -473,7 +474,7 @@ func ListInvitation(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)

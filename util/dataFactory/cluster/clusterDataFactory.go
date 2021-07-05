@@ -25,8 +25,8 @@ const (
 	INSERT_QUERY        = "INSERT INTO CLUSTER_MEMBER (namespace, cluster, member_id, member_name, attribute, role, status, createdTime, updatedTime) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 	DELETE_QUERY        = "DELETE FROM CLUSTER_MEMBER WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4"
 	DELETE_ALL_QUERY    = "DELETE FROM CLUSTER_MEMBER WHERE namespace = $1 and cluster = $2"
-	UPDATE_STATUS_QUERY = "UPDATE CLUSTER_MEMBER SET STATUS = 'invited' WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4 and updatedTime = $5"
-	UPDATE_ROLE_QUERY   = "UPDATE CLUSTER_MEMBER SET ROLE = '@@ROLE@@' WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4 and updatedTime = $5"
+	UPDATE_STATUS_QUERY = "UPDATE CLUSTER_MEMBER SET STATUS = 'invited', updatedTime = $1 WHERE namespace = $2 and cluster = $3 and member_id = $4 and attribute = $5 "
+	UPDATE_ROLE_QUERY   = "UPDATE CLUSTER_MEMBER SET ROLE = '@@ROLE@@', updatedTime = $1  WHERE namespace = $2 and cluster = $3 and member_id = $4 and attribute = $5 "
 )
 
 var pg_con_info string
@@ -561,7 +561,7 @@ func UpdateStatus(item *util.ClusterMemberInfo) error {
 	klog.Infoln("Query: " + UPDATE_STATUS_QUERY)
 	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
-	_, err = db.Exec(UPDATE_STATUS_QUERY, item.Namespace, item.Cluster, item.MemberId, item.Attribute, time.Now())
+	_, err = db.Exec(UPDATE_STATUS_QUERY, time.Now(), item.Namespace, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -582,7 +582,7 @@ func UpdateRole(item util.ClusterMemberInfo) error {
 	klog.Infoln("Query: " + query)
 	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
-	_, err = db.Exec(query, item.Namespace, item.Cluster, item.MemberId, item.Attribute, time.Now())
+	_, err = db.Exec(query, time.Now(), item.Namespace, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
 		klog.Error(err)
 		return err
