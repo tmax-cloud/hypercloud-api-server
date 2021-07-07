@@ -183,7 +183,7 @@ func main() {
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		panic(err)
+		klog.Errorln(err)
 
 	}
 	defer response.Body.Close()
@@ -204,13 +204,13 @@ func main() {
 	client = &http.Client{}
 	response, err = client.Do(request)
 	if err != nil {
-		panic(err)
+		klog.Errorln(err)
 
 	}
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		panic(err)
+		klog.Errorln(err)
 
 	}
 	klog.Infof(string(body))
@@ -227,7 +227,7 @@ func main() {
 	client2 := &http.Client{}
 	response, err = client2.Do(request)
 	if err != nil {
-		panic(err)
+		klog.Errorln(err)
 
 	}
 	defer response.Body.Close()
@@ -249,7 +249,7 @@ func main() {
 	client = &http.Client{}
 	response, err = client.Do(request)
 	if err != nil {
-		panic(err)
+		klog.Errorln(err)
 
 	}
 	defer response.Body.Close()
@@ -263,7 +263,7 @@ func main() {
 	client = &http.Client{}
 	response, err = client.Do(request)
 	if err != nil {
-		panic(err)
+		klog.Errorln(err)
 
 	}
 	defer response.Body.Close()
@@ -355,6 +355,8 @@ func serveGrafanaDashboard(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodPost:
 		caller.CreateDashBoard(res, req)
+	case http.MethodDelete:
+		caller.DeleteGrafanaDashboard(res, req)
 	default:
 		//error
 	}

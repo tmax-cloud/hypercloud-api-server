@@ -34,7 +34,8 @@ func GetGrafanaUser(email string) int {
 	client := &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
-		panic(err)
+		klog.Errorln(err)
+		return 0
 	}
 	defer resp.Body.Close()
 
@@ -66,15 +67,12 @@ func CreateGrafanaUser(email string) {
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		panic(err)
-
+		klog.Errorln(err)
+		return
 	}
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		panic(err)
+	body, _ := ioutil.ReadAll(response.Body)
 
-	}
 	klog.Infof(string(body))
 	var grafana_resp util.Grafana_key
 	json.Unmarshal([]byte(body), &grafana_resp)
@@ -98,7 +96,8 @@ func CreateGrafanaUser(email string) {
 	client = &http.Client{}
 	resp, err := client.Do(request)
 	if err != nil {
-		panic(err)
+		klog.Errorln(err)
+		return
 	}
 	defer resp.Body.Close()
 
@@ -106,8 +105,8 @@ func CreateGrafanaUser(email string) {
 	if err == nil {
 		str := string(respBody)
 		klog.Info(str)
+		klog.Info(" Create Grafana User " + email + " Success ")
 	}
-	klog.Info(" Create Grafana User " + email + " Success ")
 
 }
 
@@ -130,14 +129,14 @@ func CreateGrafanaPermission(email string, userId int, dashboardId int) {
 	client := &http.Client{}
 	response, err := client.Do(request)
 	if err != nil {
-		panic(err)
-
+		klog.Errorln(err)
+		return
 	}
 	defer response.Body.Close()
 	body, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		panic(err)
-
+		klog.Errorln(err)
+		return
 	}
 	klog.Infof(string(body))
 	var grafana_resp util.Grafana_key
@@ -164,8 +163,8 @@ func CreateGrafanaPermission(email string, userId int, dashboardId int) {
 	client = &http.Client{}
 	response, err = client.Do(request)
 	if err != nil {
-		panic(err)
-
+		klog.Errorln(err)
+		return
 	}
 	defer response.Body.Close()
 	resbody, err := ioutil.ReadAll(response.Body)
@@ -178,7 +177,7 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 	body, err := ioutil.ReadAll(req.Body)
 	klog.Infof(string(body))
 	if err != nil {
-		panic(err)
+		klog.Errorln(err)
 	}
 
 	var v util.Grafana_Namespace
@@ -228,6 +227,7 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 				"editable": true,
 				"graphTooltip": 0,
 				"id": null,
+				"uid": ` + namespace + `
 				"links": [],
 				"panels": [
 				  {
@@ -2694,7 +2694,7 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 	client = &http.Client{}
 	resp, err := client.Do(request_db)
 	if err != nil {
-		panic(err)
+		klog.Errorln(err)
 	}
 	defer resp.Body.Close()
 	var grafana_resp_dash util.Grafana_Dashboad_resp
@@ -2712,6 +2712,61 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 
 }
 
+func DeleteGrafanaDashboard(res http.ResponseWriter, req *http.Request) {
+	queryParams := req.URL.Query()
+	namespace := queryParams.Get(util.QUERY_PARAMETER_NAMESPACE)
+	grafanaId, grafanaPw = "admin", "admin"
+	// get grafana api key
+	klog.Infof("start to create grafana apikey")
+
+	httpposturl := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/auth/keys"
+	var GrafanaKeyBody util.GrafanaKeyBody
+
+	GrafanaKeyBody.Name = RandomString(8)
+	GrafanaKeyBody.Role = "Admin"
+	GrafanaKeyBody.SecondsToLive = 300
+	json_body, _ := json.Marshal(GrafanaKeyBody)
+	request, _ := http.NewRequest("POST", httpposturl, bytes.NewBuffer(json_body))
+
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		klog.Errorln(err)
+
+	}
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		klog.Errorln(err)
+
+	}
+	klog.Infof(string(body))
+	var grafana_resp util.Grafana_key
+	json.Unmarshal([]byte(body), &grafana_resp)
+	util.GrafanaKey = "Bearer " + grafana_resp.Key
+	klog.Infof(util.GrafanaKey)
+
+	httpposturl_dashboard := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/dashboards/uid/" + namespace
+	request, _ = http.NewRequest("DELETE", httpposturl_dashboard, nil)
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	request.Header.Set("Authorization", util.GrafanaKey)
+	client = &http.Client{}
+	response, err = client.Do(request)
+	if err != nil {
+		klog.Errorln(err)
+
+	}
+	defer response.Body.Close()
+	body, err = ioutil.ReadAll(response.Body)
+	if err != nil {
+		klog.Errorln(err)
+
+	}
+	klog.Infof(string(body))
+}
+
 func DeleteGrafanaUser(email string) {
 	id := GetGrafanaUser(email)
 	grafanaId, grafanaPw = "admin", "admin"
@@ -2723,7 +2778,7 @@ func DeleteGrafanaUser(email string) {
 	resp, err := client.Do(request_user_delete)
 	if err != nil {
 		klog.Errorln(err)
-		panic(err)
+
 	}
 	defer resp.Body.Close()
 	respBody, _ := ioutil.ReadAll(resp.Body)
