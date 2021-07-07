@@ -185,10 +185,12 @@ func main() {
 	if err != nil {
 		klog.Errorln(err)
 
+	} else {
+		defer response.Body.Close()
+		resbody, _ := ioutil.ReadAll(response.Body)
+		klog.Infof(string(resbody))
 	}
-	defer response.Body.Close()
-	resbody, err := ioutil.ReadAll(response.Body)
-	klog.Infof(string(resbody))
+
 	//get grafana key
 	httpposturl := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/auth/keys"
 	var GrafanaKeyBody util.GrafanaKeyBody
@@ -206,18 +208,16 @@ func main() {
 	if err != nil {
 		klog.Errorln(err)
 
-	}
-	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		klog.Errorln(err)
+	} else {
+		body, _ := ioutil.ReadAll(response.Body)
 
+		klog.Infof(string(body))
+		var grafana_resp util.Grafana_key
+		json.Unmarshal([]byte(body), &grafana_resp)
+		util.GrafanaKey = "Bearer " + grafana_resp.Key
+		klog.Infof(util.GrafanaKey)
 	}
-	klog.Infof(string(body))
-	var grafana_resp util.Grafana_key
-	json.Unmarshal([]byte(body), &grafana_resp)
-	util.GrafanaKey = "Bearer " + grafana_resp.Key
-	klog.Infof(util.GrafanaKey)
+
 	//org permission
 	httpgeturlorg := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/orgs/1/users/" + strconv.Itoa(id)
 	adminorgBody := `{"role":"Admin"}`
@@ -229,11 +229,12 @@ func main() {
 	if err != nil {
 		klog.Errorln(err)
 
-	}
-	defer response.Body.Close()
-	resbody, err = ioutil.ReadAll(response.Body)
+	} else {
+		defer response.Body.Close()
+		resbody, _ := ioutil.ReadAll(response.Body)
 
-	klog.Infof(string(resbody))
+		klog.Infof(string(resbody))
+	}
 
 	//default dashboard permission to only admin
 
@@ -251,10 +252,11 @@ func main() {
 	if err != nil {
 		klog.Errorln(err)
 
+	} else {
+		defer response.Body.Close()
+		resbody, _ := ioutil.ReadAll(response.Body)
+		klog.Infof(string(resbody))
 	}
-	defer response.Body.Close()
-	resbody, err = ioutil.ReadAll(response.Body)
-	klog.Infof(string(resbody))
 	httpposturl_per = "http://" + util.GRAFANA_URI + "api/dashboards/id/2/permissions"
 	request, _ = http.NewRequest("POST", httpposturl_per, bytes.NewBuffer([]byte(permBody)))
 
@@ -265,10 +267,11 @@ func main() {
 	if err != nil {
 		klog.Errorln(err)
 
+	} else {
+		defer response.Body.Close()
+		resbody, _ := ioutil.ReadAll(response.Body)
+		klog.Infof(string(resbody))
 	}
-	defer response.Body.Close()
-	resbody, err = ioutil.ReadAll(response.Body)
-	klog.Infof(string(resbody))
 	whsvr := &http.Server{
 		Addr:      fmt.Sprintf(":%d", port),
 		Handler:   mux,
