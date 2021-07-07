@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.17.1 start -------------------->
+
+## Hypercloud-api-server 5.0.17.1 (2021. 07. 05. (월) 10:54:20 KST)
+
+### Added
+
+### Changed
+  - [mod] 클러스터에 사용자 초대시 발생하는 에러 수정 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] 리팩토링 by chosangwon93
+
 <!-------------------- v5.0.17.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.17.0 (2021. 07. 01. (목) 17:37:48 KST)

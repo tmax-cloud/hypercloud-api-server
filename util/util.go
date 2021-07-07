@@ -354,7 +354,7 @@ func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) ([]string, err
 	var memberId string
 	var cluster string
 	var namespace string
-	var groups []string
+	// var groups []string
 	token, err := VerifyToken(r)
 	if err != nil {
 		return nil, err
@@ -364,15 +364,15 @@ func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) ([]string, err
 		memberId, ok = claims["user_id"].(string)
 		cluster, ok = claims["cluster"].(string)
 		namespace, ok = claims["namespace"].(string)
-		tmp := claims["user_groups"].([]interface{})
-		groups = make([]string, len(tmp))
-		for i, v := range tmp {
-			groups[i] = fmt.Sprint(v)
-		}
+		// tmp, ok = claims["user_groups"].([]interface{})
+		// groups = make([]string, len(tmp))
+		// for i, v := range tmp {
+		// 	groups[i] = fmt.Sprint(v)
+		// }
 	}
 
 	if clusterMember.MemberId == memberId && clusterMember.Cluster == cluster && clusterMember.Namespace == namespace {
-		return groups, nil
+		return nil, nil
 	}
 	return nil, errors.New("Request user or target cluster does not match with token payload")
 }
@@ -385,7 +385,7 @@ func Search(NamespacedNameList []types.NamespacedName, clmList *clusterv1alpha1.
 
 	for _, namespacedName := range NamespacedNameList {
 		for _, clm := range clmList.Items {
-			if namespacedName.Namespace == clm.Namespace && namespacedName.Name == clm.Name && clm.Status.Ready {
+			if namespacedName.Namespace == clm.Namespace && namespacedName.Name == clm.Name && clm.Status.Ready && clm.DeletionTimestamp.IsZero() {
 				ret.Items = append(ret.Items, clm)
 			}
 		}
