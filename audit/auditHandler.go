@@ -114,8 +114,8 @@ func AddAuditBatch(w http.ResponseWriter, r *http.Request) {
 		event.StageTimestamp.Time = time.Now()
 	}
 
-	if len(eventBuffer.buffer) < bufferSize {
-		eventBuffer.buffer <- event
+	if len(EventBuffer.Buffer) < BufferSize {
+		EventBuffer.Buffer <- event
 	} else {
 		klog.Error("event is dropped.")
 	}

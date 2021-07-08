@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,7 +14,15 @@ import (
 	"syscall"
 
 	"github.com/Shopify/sarama"
+	guuid "github.com/google/uuid"
+	haudit "github.com/tmax-cloud/hypercloud-api-server/audit"
 	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
+	authv1 "k8s.io/api/authentication/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apiserver/pkg/apis/audit"
+
+	// "k8s.io/apiserver/pkg/apis/audit"
 	"k8s.io/klog"
 )
 
@@ -31,6 +40,19 @@ type TopicEvent struct {
 }
 
 func HyperauthConsumer() {
+	defer func() {
+		if r := recover(); r != nil {
+			if err, ok := r.(error); ok {
+				fmt.Println("panic 1 =  " + err.Error())
+			} else {
+				fmt.Printf("Panic happened with %v", r)
+				fmt.Println()
+			}
+		} else {
+			fmt.Println("what???")
+		}
+	}()
+
 	sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags)
 
 	/*
@@ -208,11 +230,78 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			k8sApiCaller.CreateGrafanaUser(topicEvent.UserName)
 			klog.Info("Grafana User [ " + topicEvent.UserName + " ] Created !")
 		case "LOGIN":
+			klog.Info("login")
+			event := audit.Event{
+				AuditID: types.UID(guuid.New().String()),
+				User: authv1.UserInfo{
+					Username: topicEvent.UserName,
+				},
+				Verb:      topicEvent.Type,
+				ObjectRef: &audit.ObjectReference{},
+				ResponseStatus: &metav1.Status{
+					Code:   200,
+					Status: "Success",
+					// Message: string(message.Value),
+				},
+			}
+			if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {
+				if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {
+					haudit.EventBuffer.Buffer <- event
+				} else {
+					klog.Error("###########   event is dropped.     ############")
+				}
+			}
 
 		case "LOGOUT":
+			klog.Info("LOGOUT")
+			event := audit.Event{
+				AuditID: types.UID(guuid.New().String()),
+				User: authv1.UserInfo{
+					Username: topicEvent.UserName,
+				},
+				Verb:      topicEvent.Type,
+				ObjectRef: &audit.ObjectReference{},
+				ResponseStatus: &metav1.Status{
+					Code:   200,
+					Status: "Success",
+					// Message: string(message.Value),
+				},
+			}
+			if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {
+				if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {
+					haudit.EventBuffer.Buffer <- event
+				} else {
+					klog.Error("###########   event is dropped.     ############")
+				}
+			}
+
+		case "LOGIN_ERROR":
+			klog.Info("LOGIN_ERROR")
+			// if topicEvent.
+			event := audit.Event{
+				AuditID: types.UID(guuid.New().String()),
+				User: authv1.UserInfo{
+					Username: topicEvent.UserName,
+				},
+				Verb:      topicEvent.Type,
+				ObjectRef: &audit.ObjectReference{},
+				ResponseStatus: &metav1.Status{
+					Code:   400,
+					Status: "Failure",
+					Reason: metav1.StatusReason(topicEvent.Error),
+					// Message: string(message.Value),
+				},
+			}
+			if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {
+				if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {
+					haudit.EventBuffer.Buffer <- event
+				} else {
+					klog.Error("###########   event is dropped.     ############")
+				}
+			}
 
 		default:
-			klog.Info("Unknown Event Published from Hyperauth, Do nothing!")
+			// klog.Info("Unknown Event Published from Hyperauth, Do nothing!")
 		}
 
 	}
