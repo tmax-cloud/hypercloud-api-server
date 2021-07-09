@@ -26,6 +26,16 @@ func init() {
 		PORT, HOSTNAME, DB_USER, DB_PASSWORD, DB_NAME)
 }
 
+func NewNullString(s string) sql.NullString {
+	if s == "null" {
+		return sql.NullString{}
+	}
+	return sql.NullString{
+		String: s,
+		Valid:  true,
+	}
+}
+
 func Insert(items []audit.Event) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {

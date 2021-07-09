@@ -271,6 +271,8 @@ github.com/google/renameio v0.1.0/go.mod h1:KWCgfxg9yswjAJkECMjeO8J8rahYeXnNhOm4
 github.com/google/uuid v1.0.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/google/uuid v1.2.0 h1:qJYtXnJRWmpe7m/3XlyhrsLrEURqHRM2kxzoxXqyUDs=
+github.com/google/uuid v1.2.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/googleapis/gax-go/v2 v2.0.4/go.mod h1:0Wqv26UfaUD9n4G6kQubkQ+KchISgw+vpHVxEJEs9eg=
 github.com/googleapis/gax-go/v2 v2.0.5/go.mod h1:DWXyrwAJ9X0FpwwEdw+IPEYBICEFu5mhpdKc/us6bOk=
 github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d/go.mod h1:sJBsCZ4ayReDTBIg8b9dl28c5xFWyhBTVRp3pOg5EKY=
@@ -901,8 +903,6 @@ k8s.io/client-go v0.19.2/go.mod h1:S5wPhCqyDNAlzM9CnEdgTGV4OqhsW3jGO1UM1epwfJA=
 k8s.io/client-go v0.19.3/go.mod h1:+eEMktZM+MG0KO+PTkci8xnbCZHvj9TqR6Q1XDUIJOM=
 k8s.io/client-go v0.19.4 h1:85D3mDNoLF+xqpyE9Dh/OtrJDyJrSRKkHmDXIbEzer8=
 k8s.io/client-go v0.19.4/go.mod h1:ZrEy7+wj9PjH5VMBCuu/BDlvtUAku0oVFk4MmnW9mWA=
-k8s.io/client-go v1.5.2 h1:JOxmv4FxrCIOS54kAABbN8/hA9jqGpns+Zc6soNgd8U=
-k8s.io/client-go v1.5.2/go.mod h1:OmM68YRko3DQ0sjlnWxzjQF9lcSLHJXuGMTo23rc7wI=
 k8s.io/cluster-bootstrap v0.17.8 h1:qee9dmkOVwngBf98zbwrij1s898EZ2aHg+ymXw1UBLU=
 k8s.io/cluster-bootstrap v0.17.8/go.mod h1:SC9J2Lt/MBOkxcCB04+5mYULLfDQL5kdM0BjtKaVCVU=
 k8s.io/code-generator v0.17.2/go.mod h1:DVmfPQgxQENqDIzVR2ddLXMH34qeszkKSdH/N+s+38s=
