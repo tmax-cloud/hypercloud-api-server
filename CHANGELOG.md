@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.18.0 start -------------------->
+
+## Hypercloud-api-server 5.0.18.0 (2021. 07. 09. (금) 09:36:55 KST)
+
+### Added
+  - [feat] audit verb list api 추가 by chosangwon93
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.17.5 start -------------------->
 
 ## Hypercloud-api-server 5.0.17.5 (2021. 07. 08. (목) 13:29:58 KST)
