@@ -60,7 +60,7 @@ func main() {
 	// Get Hypercloud Operating Mode!!!
 	hcMode := os.Getenv("HC_MODE")
 	util.TokenExpiredDate = os.Getenv("INVITATION_TOKEN_EXPIRED_DATE")
-
+	kafkaConsumer.KafkaGroupId = os.Getenv("KAFKA_GROUP_ID")
 	util.ReadFile()
 	caller.UpdateAuditResourceList()
 
@@ -107,7 +107,7 @@ func main() {
 
 	// Metering Cron Job
 	cronJob.AddFunc("0 */1 * ? * *", metering.MeteringJob)
-	cronJob.AddFunc("@hourly", audit.UpdateAuditResource)
+	// cronJob.AddFunc("@hourly", audit.UpdateAuditResource)
 	cronJob.Start()
 
 	// Hyperauth Event Consumer

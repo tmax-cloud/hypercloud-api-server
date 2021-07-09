@@ -187,8 +187,8 @@ func Get(res http.ResponseWriter, req *http.Request) {
 					}
 				}
 			}
-			klog.Infoln(mod.Name + " status = " + result[idx].Status)
-			klog.Infoln(mod.Name + " version = " + result[idx].Version)
+			// klog.Infoln(mod.Name + " status = " + result[idx].Status)
+			// klog.Infoln(mod.Name + " version = " + result[idx].Version)
 		}(idx, mod)
 	}
 	wg.Wait()

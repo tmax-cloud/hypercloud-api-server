@@ -12,6 +12,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/Shopify/sarama"
 	guuid "github.com/google/uuid"
@@ -25,6 +26,8 @@ import (
 	// "k8s.io/apiserver/pkg/apis/audit"
 	"k8s.io/klog"
 )
+
+var KafkaGroupId string
 
 type TopicEvent struct {
 	Type      string            `json:"type"`
@@ -77,7 +80,7 @@ func HyperauthConsumer() {
 	consumerConfig.Net.TLS.Config = tlsConfig
 	consumerConfig.ClientID = "hypercloud-api-server" //FIXME
 	consumerConfig.Version = version
-	consumerGroupId := "hypercloud-api-server"
+	consumerGroupId := KafkaGroupId
 	//
 
 	consumer := Consumer{
@@ -236,12 +239,21 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 				User: authv1.UserInfo{
 					Username: topicEvent.UserName,
 				},
-				Verb:      topicEvent.Type,
-				ObjectRef: &audit.ObjectReference{},
+				Verb: topicEvent.Type,
+				ObjectRef: &audit.ObjectReference{
+					Resource:   "users",
+					Namespace:  "null",
+					Name:       topicEvent.UserName,
+					APIGroup:   "null",
+					APIVersion: "null",
+				},
 				ResponseStatus: &metav1.Status{
 					Code:   200,
 					Status: "Success",
 					// Message: string(message.Value),
+				},
+				StageTimestamp: metav1.MicroTime{
+					Time: time.Unix(int64(topicEvent.Time/1000), 0),
 				},
 			}
 			if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {
@@ -259,12 +271,21 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 				User: authv1.UserInfo{
 					Username: topicEvent.UserName,
 				},
-				Verb:      topicEvent.Type,
-				ObjectRef: &audit.ObjectReference{},
+				Verb: topicEvent.Type,
+				ObjectRef: &audit.ObjectReference{
+					Resource:   "users",
+					Namespace:  "null",
+					Name:       topicEvent.UserName,
+					APIGroup:   "null",
+					APIVersion: "null",
+				},
 				ResponseStatus: &metav1.Status{
 					Code:   200,
 					Status: "Success",
 					// Message: string(message.Value),
+				},
+				StageTimestamp: metav1.MicroTime{
+					Time: time.Unix(int64(topicEvent.Time/1000), 0),
 				},
 			}
 			if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {
@@ -283,13 +304,22 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 				User: authv1.UserInfo{
 					Username: topicEvent.UserName,
 				},
-				Verb:      topicEvent.Type,
-				ObjectRef: &audit.ObjectReference{},
+				Verb: topicEvent.Type,
+				ObjectRef: &audit.ObjectReference{
+					Resource:   "users",
+					Namespace:  "null",
+					Name:       topicEvent.UserName,
+					APIGroup:   "null",
+					APIVersion: "null",
+				},
 				ResponseStatus: &metav1.Status{
 					Code:   400,
 					Status: "Failure",
 					Reason: metav1.StatusReason(topicEvent.Error),
 					// Message: string(message.Value),
+				},
+				StageTimestamp: metav1.MicroTime{
+					Time: time.Unix(int64(topicEvent.Time/1000), 0),
 				},
 			}
 			if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {

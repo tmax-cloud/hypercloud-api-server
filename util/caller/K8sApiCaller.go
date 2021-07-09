@@ -1190,7 +1190,7 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 }
 
 func UpdateAuditResourceList() {
-	AuditResourceList = []string{}
+	AuditResourceList = []string{"users"}
 	tmp := make(map[string]struct{})
 	fullName := make(map[string]struct{})
 	apiGroupList := &metav1.APIGroupList{}
