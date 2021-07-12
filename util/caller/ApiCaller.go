@@ -33,17 +33,18 @@ func GetGrafanaUser(email string) int {
 	request, _ := http.NewRequest("GET", httpgeturl, nil)
 	client := &http.Client{}
 	resp, err := client.Do(request)
+	var GrafanaUserGet util.Grafana_User_Get
 	if err != nil {
 		klog.Errorln(err)
 		return 0
-	}
-	defer resp.Body.Close()
+	} else {
+		defer resp.Body.Close()
 
-	var GrafanaUserGet util.Grafana_User_Get
-	body, err := ioutil.ReadAll(resp.Body)
-	json.Unmarshal([]byte(body), &GrafanaUserGet)
-	klog.Infof(string(body))
-	klog.Infof(strconv.Itoa(GrafanaUserGet.Id))
+		body, _ := ioutil.ReadAll(resp.Body)
+		json.Unmarshal([]byte(body), &GrafanaUserGet)
+		klog.Infof(string(body))
+		klog.Infof(strconv.Itoa(GrafanaUserGet.Id))
+	}
 	return GrafanaUserGet.Id
 }
 
@@ -69,18 +70,18 @@ func CreateGrafanaUser(email string) {
 	if err != nil {
 		klog.Errorln(err)
 		return
+	} else {
+		defer response.Body.Close()
+		body, _ := ioutil.ReadAll(response.Body)
+
+		klog.Infof(string(body))
+		var grafana_resp util.Grafana_key
+		json.Unmarshal([]byte(body), &grafana_resp)
+		util.GrafanaKey = "Bearer " + grafana_resp.Key
+		klog.Infof(util.GrafanaKey)
+		/////create grafana user
+		klog.Infof("start to create grafana user")
 	}
-	defer response.Body.Close()
-	body, _ := ioutil.ReadAll(response.Body)
-
-	klog.Infof(string(body))
-	var grafana_resp util.Grafana_key
-	json.Unmarshal([]byte(body), &grafana_resp)
-	util.GrafanaKey = "Bearer " + grafana_resp.Key
-	klog.Infof(util.GrafanaKey)
-	/////create grafana user
-	klog.Infof("start to create grafana user")
-
 	var grafana_user_body util.Grafana_user
 	grafana_user_body.Email = email
 	grafana_user_body.Name = RandomString(8)
@@ -98,11 +99,11 @@ func CreateGrafanaUser(email string) {
 	if err != nil {
 		klog.Errorln(err)
 		return
-	}
-	defer resp.Body.Close()
+	} else {
+		defer resp.Body.Close()
 
-	respBody, err := ioutil.ReadAll(resp.Body)
-	if err == nil {
+		respBody, _ := ioutil.ReadAll(resp.Body)
+
 		str := string(respBody)
 		klog.Info(str)
 		klog.Info(" Create Grafana User " + email + " Success ")
@@ -131,19 +132,16 @@ func CreateGrafanaPermission(email string, userId int, dashboardId int) {
 	if err != nil {
 		klog.Errorln(err)
 		return
-	}
-	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		klog.Errorln(err)
-		return
-	}
-	klog.Infof(string(body))
-	var grafana_resp util.Grafana_key
-	json.Unmarshal([]byte(body), &grafana_resp)
-	util.GrafanaKey = "Bearer " + grafana_resp.Key
-	klog.Infof(util.GrafanaKey)
+	} else {
+		defer response.Body.Close()
+		body, _ := ioutil.ReadAll(response.Body)
 
+		klog.Infof(string(body))
+		var grafana_resp util.Grafana_key
+		json.Unmarshal([]byte(body), &grafana_resp)
+		util.GrafanaKey = "Bearer " + grafana_resp.Key
+		klog.Infof(util.GrafanaKey)
+	}
 	klog.Infof("start to handle dashboard permission")
 	httpposturl_per := "http://" + util.GRAFANA_URI + "api/dashboards/id/" + strconv.Itoa(dashboardId) + "/permissions"
 	permBody := `{
@@ -165,11 +163,11 @@ func CreateGrafanaPermission(email string, userId int, dashboardId int) {
 	if err != nil {
 		klog.Errorln(err)
 		return
+	} else {
+		defer response.Body.Close()
+		resbody, _ := ioutil.ReadAll(response.Body)
+		klog.Infof(string(resbody))
 	}
-	defer response.Body.Close()
-	resbody, err := ioutil.ReadAll(response.Body)
-	klog.Infof(string(resbody))
-
 }
 
 func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
@@ -2695,20 +2693,21 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 	resp, err := client.Do(request_db)
 	if err != nil {
 		klog.Errorln(err)
+	} else {
+		defer resp.Body.Close()
+		var grafana_resp_dash util.Grafana_Dashboad_resp
+
+		dashbody, _ := ioutil.ReadAll(resp.Body)
+
+		klog.Infof(string(dashbody))
+		json.Unmarshal([]byte(dashbody), &grafana_resp_dash)
+
+		dashboardId := grafana_resp_dash.Id
+		klog.Infof("start to get grafana user info")
+		userId := GetGrafanaUser(email)
+		klog.Infof(strconv.Itoa(userId))
+		CreateGrafanaPermission(email, userId, dashboardId)
 	}
-	defer resp.Body.Close()
-	var grafana_resp_dash util.Grafana_Dashboad_resp
-
-	dashbody, err := ioutil.ReadAll(resp.Body)
-
-	klog.Infof(string(dashbody))
-	json.Unmarshal([]byte(dashbody), &grafana_resp_dash)
-
-	dashboardId := grafana_resp_dash.Id
-	klog.Infof("start to get grafana user info")
-	userId := GetGrafanaUser(email)
-	klog.Infof(strconv.Itoa(userId))
-	CreateGrafanaPermission(email, userId, dashboardId)
 
 }
 
@@ -2735,18 +2734,16 @@ func DeleteGrafanaDashboard(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		klog.Errorln(err)
 
-	}
-	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		klog.Errorln(err)
+	} else {
+		defer response.Body.Close()
+		body, _ := ioutil.ReadAll(response.Body)
 
+		klog.Infof(string(body))
+		var grafana_resp util.Grafana_key
+		json.Unmarshal([]byte(body), &grafana_resp)
+		util.GrafanaKey = "Bearer " + grafana_resp.Key
+		klog.Infof(util.GrafanaKey)
 	}
-	klog.Infof(string(body))
-	var grafana_resp util.Grafana_key
-	json.Unmarshal([]byte(body), &grafana_resp)
-	util.GrafanaKey = "Bearer " + grafana_resp.Key
-	klog.Infof(util.GrafanaKey)
 
 	httpposturl_dashboard := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/dashboards/uid/" + namespace
 	request, _ = http.NewRequest("DELETE", httpposturl_dashboard, nil)
@@ -2757,14 +2754,15 @@ func DeleteGrafanaDashboard(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		klog.Errorln(err)
 
-	}
-	defer response.Body.Close()
-	body, err = ioutil.ReadAll(response.Body)
-	if err != nil {
-		klog.Errorln(err)
+	} else {
+		defer response.Body.Close()
+		body, _ := ioutil.ReadAll(response.Body)
+		if err != nil {
+			klog.Errorln(err)
 
+		}
+		klog.Infof(string(body))
 	}
-	klog.Infof(string(body))
 }
 
 func DeleteGrafanaUser(email string) {
@@ -2779,9 +2777,10 @@ func DeleteGrafanaUser(email string) {
 	if err != nil {
 		klog.Errorln(err)
 
+	} else {
+		defer resp.Body.Close()
+		respBody, _ := ioutil.ReadAll(resp.Body)
+		klog.Infof(string(respBody))
 	}
-	defer resp.Body.Close()
-	respBody, _ := ioutil.ReadAll(resp.Body)
-	klog.Infof(string(respBody))
 
 }

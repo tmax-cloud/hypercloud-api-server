@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.18.1 start -------------------->
+
+## Hypercloud-api-server 5.0.18.1 (2021. 07. 09. (금) 17:06:45 KST)
+
+### Added
+
+### Changed
+  - [mod] 카프라 groupid를 변수로 받도록 수정 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.18.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.18.0 (2021. 07. 09. (금) 09:36:55 KST)
