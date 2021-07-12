@@ -182,7 +182,7 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 	json.Unmarshal([]byte(body), &v)
 	email := v.Email
 	namespace := v.Namespace
-	klog.Infof("Namespace Name is" + v.Namespace)
+	klog.Infof("Namespace Name is " + namespace)
 	grafanaId, grafanaPw = "admin", "admin"
 	klog.Infof("start to get api key")
 	httpposturl := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/auth/keys"
@@ -225,7 +225,7 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 				"editable": true,
 				"graphTooltip": 0,
 				"id": null,
-				"uid": ` + namespace + `
+				
 				"links": [],
 				"panels": [
 				  {
@@ -2680,7 +2680,8 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 				},
 				"timezone": "",
 				"title": "Kubernetes / Compute Resources / Namespace (Pods)-` + namespace + `",
-				"version": 2
+				"version": 2,
+				"uid": "` + namespace + `"
 			  }
 		}
 	}`
