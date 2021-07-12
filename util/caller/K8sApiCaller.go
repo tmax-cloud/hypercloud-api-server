@@ -1129,7 +1129,7 @@ func DeleteNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 	}
 
 	// Subject가 해당 ns에 사용중인 클러스터가 남았다면 ns get rolebinding 삭제 안하고.. 없으면 삭제한다. (이전에 db에서 현재 요청에대한 클러스터는 삭제함)
-	if res, err := clusterDataFactory.GetRemainClusterForSubject(clusterManager.Namespace, clusterManager.Name, subject, attribute); err != nil {
+	if res, err := clusterDataFactory.GetRemainClusterForSubject(clusterManager.Namespace, subject, attribute); err != nil {
 		klog.Errorln(err)
 		return err
 	} else if res != 0 {

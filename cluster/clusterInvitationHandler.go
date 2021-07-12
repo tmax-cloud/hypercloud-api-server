@@ -380,7 +380,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	}
 
 	/// redirection
-	http.Redirect(res, req, "https://"+ConsoleLB+"/k8s/"+namespace+"/clustermanagers", http.StatusSeeOther)
+	http.Redirect(res, req, "https://"+ConsoleLB+"/k8s/ns/"+namespace+"/clustermanagers", http.StatusSeeOther)
 
 	msg := "User [" + userId + "] is added to cluster [" + cluster + "]"
 	klog.Infoln(msg)
