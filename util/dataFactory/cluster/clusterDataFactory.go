@@ -630,7 +630,7 @@ func DeleteALL(namespace, cluster string) error {
 	return nil
 }
 
-func GetRemainClusterForSubject(namespace, cluster, subject, attribute string) (int, error) {
+func GetRemainClusterForSubject(namespace, subject, attribute string) (int, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -644,10 +644,6 @@ func GetRemainClusterForSubject(namespace, cluster, subject, attribute string) (
 
 	b.WriteString("and namespace = '")
 	b.WriteString(namespace)
-	b.WriteString("' ")
-
-	b.WriteString("and cluster = '")
-	b.WriteString(cluster)
 	b.WriteString("' ")
 
 	b.WriteString("and member_id = '")
