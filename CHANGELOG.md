@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.18.4 start -------------------->
+
+## Hypercloud-api-server 5.0.18.4 (2021. 07. 13. (화) 12:51:06 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][265974] hypercloud mutator 수정 후 nsc 승인 시 ns 생성 안되는 문제 해결 by chosangwon93
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.18.3 start -------------------->
 
 ## Hypercloud-api-server 5.0.18.3 (2021. 07. 12. (월) 17:51:44 KST)
