@@ -35,14 +35,6 @@ func AddResourceMeta(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		return ToAdmissionResponse(err) //msg: error
 	}
 
-	klog.Infoln("")
-	klog.Infoln("This reqeuset is derived from " + userName)
-	klog.Infoln("Kind: " + ms.Kind)
-	klog.Infoln("Name: " + ms.Name)
-	klog.Infoln("Namespace: " + ms.Namespace)
-	klog.Infoln("Operation: " + operation)
-	klog.Infoln("")
-
 	// unmarshal old manifests and diff between ori and old manifests, if exists
 	if len(ar.Request.OldObject.Raw) > 0 {
 		if err := json.Unmarshal(ar.Request.OldObject.Raw, &oms); err != nil {
