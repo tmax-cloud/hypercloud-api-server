@@ -1,6 +1,36 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.18.3 start -------------------->
+
+## Hypercloud-api-server 5.0.18.3 (2021. 07. 12. (월) 17:51:44 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.18.2 start -------------------->
+
+## Hypercloud-api-server 5.0.18.2 (2021. 07. 12. (월) 14:11:34 KST)
+
+### Added
+
+### Changed
+  - [mod] 클러스터 초대 수락 시 redirect url 변경 by chosangwon93
+  - [mod] 클러스터에 초대된 사용자 삭제 시에 해당 ns에 사용중인 클러스터가 남아있는데도 불구하고 ns-get rolebinding 삭제되는 문제 해결 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.18.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.18.1 (2021. 07. 09. (금) 17:06:45 KST)
