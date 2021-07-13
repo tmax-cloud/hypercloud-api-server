@@ -442,7 +442,7 @@ func serveClusterInvitationAdmit(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	vars := gmux.Vars(req)
 	switch req.Method {
-	case http.MethodPost:
+	case http.MethodGet:
 		if vars["admit"] == "accept" {
 			cluster.AcceptInvitation(res, req)
 		} else if vars["admit"] == "reject" {

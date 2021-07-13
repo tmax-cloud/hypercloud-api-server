@@ -42,7 +42,7 @@ func ListClusterMember(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if userId == clm.Annotations["owner"] {
-		clusterMemberList, err := clusterDataFactory.ListAllClusterMember(cluster, namespace)
+		clusterMemberList, err := clusterDataFactory.ListClusterMember(cluster, namespace)
 		if err != nil {
 			klog.Errorln(err)
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
@@ -102,7 +102,7 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Attribute = attribute
 	clusterMember.Status = "invited"
 
-	clusterMemberList, err := clusterDataFactory.ListAllClusterMember(clusterMember.Cluster, clusterMember.Namespace)
+	clusterMemberList, err := clusterDataFactory.ListClusterMember(clusterMember.Cluster, clusterMember.Namespace)
 	if err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
@@ -197,7 +197,7 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Attribute = attribute
 	clusterMember.Status = "invited"
 
-	clusterMemberList, err := clusterDataFactory.ListAllClusterMember(clusterMember.Cluster, clusterMember.Namespace)
+	clusterMemberList, err := clusterDataFactory.ListClusterMember(clusterMember.Cluster, clusterMember.Namespace)
 	if err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)

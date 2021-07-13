@@ -147,7 +147,7 @@ func ListClusterMemberWithOutPending(cluster string, namespace string) ([]util.C
 	return clusterMemberList, nil
 }
 
-func ListAllClusterMember(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
+func ListClusterMember(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -245,7 +245,7 @@ func ListAllClusterUser(cluster string, namespace string) ([]util.ClusterMemberI
 	return clusterMemberList, nil
 }
 
-func ListAllClusterGroup(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
+func ListClusterGroupMember(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -265,16 +265,8 @@ func ListAllClusterGroup(cluster string, namespace string) ([]util.ClusterMember
 	b.WriteString(cluster)
 	b.WriteString("' ")
 
-	b.WriteString("and attribute = 'group'")
-	b.WriteString("or status = 'owner' ")
-
-	b.WriteString("and namespace = '")
-	b.WriteString(namespace)
-	b.WriteString("' ")
-
-	b.WriteString("and cluster = '")
-	b.WriteString(cluster)
-	b.WriteString("' ")
+	b.WriteString("and (attribute = 'group'")
+	b.WriteString("or status = 'owner')")
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
