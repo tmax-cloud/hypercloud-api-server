@@ -8,7 +8,7 @@ import (
 	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/klog"
+	//"k8s.io/klog"
 )
 
 type Meta struct {
