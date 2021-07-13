@@ -584,7 +584,7 @@ func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 
 	respBytes, err := json.Marshal(responseAdmissionReview)
 
-	klog.Infof("Response body: %s\n", respBytes)
+	// klog.Infof("Response body: %s\n", respBytes)
 
 	if err != nil {
 		klog.Error(err)

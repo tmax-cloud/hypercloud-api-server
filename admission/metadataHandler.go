@@ -28,10 +28,22 @@ func AddResourceMeta(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	oms := Meta{}
 	diff := Meta{}
 
+	// create면.. ownerRef 있는지 확인..
+
+	// First, unmarshal original manifests
 	if err := json.Unmarshal(ar.Request.Object.Raw, &ms); err != nil {
 		return ToAdmissionResponse(err) //msg: error
 	}
 
+	klog.Infoln("")
+	klog.Infoln("This reqeuset is derived from " + userName)
+	klog.Infoln("Kind: " + ms.Kind)
+	klog.Infoln("Name: " + ms.Name)
+	klog.Infoln("Namespace: " + ms.Namespace)
+	klog.Infoln("Operation: " + operation)
+	klog.Infoln("")
+
+	// unmarshal old manifests and diff between ori and old manifests, if exists
 	if len(ar.Request.OldObject.Raw) > 0 {
 		if err := json.Unmarshal(ar.Request.OldObject.Raw, &oms); err != nil {
 			return ToAdmissionResponse(err) //msg: error
@@ -45,13 +57,18 @@ func AddResourceMeta(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		}
 	}
 
-	if err := denyReq(ms, diff, operation); err != nil {
-		return ToAdmissionResponse(err) //msg: error
+	// Check, whether a request is made by user or system
+	// if made by a system, then pass request validation
+	// else if req. is made by a user, do request validation
+	if !isSystemRequest(userName) {
+		if err := denyReq(ms, diff, operation, userName); err != nil {
+			return ToAdmissionResponse(err) //msg: error
+		}
 	}
 
 	var patch []patchOps
 
-	if len(ms.Annotations) == 0 {
+	if ms.Annotations == nil {
 		am := map[string]interface{}{
 			"creator":     userName,
 			"createdTime": currentTime,
@@ -73,7 +90,7 @@ func AddResourceMeta(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if patchData, err := json.Marshal(patch); err != nil {
 		return ToAdmissionResponse(err) //msg: error
 	} else {
-		klog.Infof("JsonPatch=%s", string(patchData))
+		// klog.Infof("JsonPatch=%s", string(patchData))
 		reviewResponse.Patch = patchData
 	}
 
@@ -84,8 +101,9 @@ func AddResourceMeta(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	return &reviewResponse
 }
 
-func denyReq(ms, diff Meta, op string) error {
+func denyReq(ms, diff Meta, op, userName string) error {
 	if op == "CREATE" {
+
 		if _, ok := ms.Annotations["creator"]; ok {
 			return errors.New("Cannot create resource with creator annotation")
 		} else if _, ok := ms.Annotations["createdTime"]; ok {
