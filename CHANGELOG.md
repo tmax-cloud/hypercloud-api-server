@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.19.0 start -------------------->
+
+## Hypercloud-api-server 5.0.19.0 (2021. 07. 15. (목) 17:18:59 KST)
+
+### Added
+
+### Changed
+  - [mod] cluster에 그룹 초대할 때 rolebinding 생성 에러 문제 해결 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] refactor by chosangwon93
+
 <!-------------------- v5.0.18.4 start -------------------->
 
 ## Hypercloud-api-server 5.0.18.4 (2021. 07. 13. (화) 12:51:06 KST)
