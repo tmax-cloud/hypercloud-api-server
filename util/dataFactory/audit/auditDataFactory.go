@@ -142,19 +142,19 @@ func Get(query string) (audit.EventList, int64) {
 		if temp_namespace.Valid {
 			event.ObjectRef.Namespace = temp_namespace.String
 		} else {
-			event.ObjectRef.Namespace = "null"
+			event.ObjectRef.Namespace = ""
 		}
 
 		if temp_apigroup.Valid {
 			event.ObjectRef.APIGroup = temp_apigroup.String
 		} else {
-			event.ObjectRef.APIGroup = "null"
+			event.ObjectRef.APIGroup = ""
 		}
 
 		if temp_apiversion.Valid {
 			event.ObjectRef.APIVersion = temp_apiversion.String
 		} else {
-			event.ObjectRef.APIVersion = "null"
+			event.ObjectRef.APIVersion = ""
 		}
 		eventList.Items = append(eventList.Items, event)
 	}
