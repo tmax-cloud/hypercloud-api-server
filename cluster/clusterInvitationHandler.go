@@ -236,20 +236,6 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// sarResult, err := caller.CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", namespace, cluster, "update")
-	// if err != nil {
-	// 	klog.Errorln(err)
-	// 	util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// if !sarResult.Status.Allowed {
-	// 	msg := " User [ " + userId + " ] is not a owner of cluster. Cannot invtie member"
-	// 	klog.Infoln(msg)
-	// 	util.SetResponse(res, msg, nil, http.StatusBadRequest)
-	// 	return
-	// }
-
 	// insert db
 	if err := clusterDataFactory.Insert(clusterMember); err != nil {
 		klog.Errorln(err)
@@ -257,9 +243,6 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	// role 생성해 주면 될 듯
-	// 1. NS get 주고..
-	// role 생성해 주면 될 듯
 	if err := caller.CreateNSGetRole(clm, clusterMember.MemberId, clusterMember.Attribute); err != nil {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return

@@ -8,7 +8,6 @@ import (
 	jsonpatch "github.com/evanphx/json-patch"
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	//"k8s.io/klog"
 )
 
 type Meta struct {
@@ -34,6 +33,14 @@ func AddResourceMeta(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if err := json.Unmarshal(ar.Request.Object.Raw, &ms); err != nil {
 		return ToAdmissionResponse(err) //msg: error
 	}
+
+	// klog.Infoln("")
+	// klog.Infoln("This reqeuset is derived from " + userName)
+	// klog.Infoln("Kind: " + ms.Kind)
+	// klog.Infoln("Name: " + ms.Name)
+	// klog.Infoln("Namespace: " + ms.Namespace)
+	// klog.Infoln("Operation: " + operation)
+	// klog.Infoln("")
 
 	// unmarshal old manifests and diff between ori and old manifests, if exists
 	if len(ar.Request.OldObject.Raw) > 0 {
