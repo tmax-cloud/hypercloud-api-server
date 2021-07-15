@@ -113,6 +113,7 @@ func Get(query string) (audit.EventList, int64) {
 	eventList := audit.EventList{}
 	var row_count int64
 	for rows.Next() {
+		var temp_namespace, temp_apigroup, temp_apiversion sql.NullString
 		event := audit.Event{
 			ObjectRef:      &audit.ObjectReference{},
 			ResponseStatus: &metav1.Status{},
@@ -121,9 +122,9 @@ func Get(query string) (audit.EventList, int64) {
 			&event.AuditID,
 			&event.User.Username,
 			&event.UserAgent,
-			&event.ObjectRef.Namespace,
-			&event.ObjectRef.APIGroup,
-			&event.ObjectRef.APIVersion,
+			&temp_namespace,  //&event.ObjectRef.Namespace,
+			&temp_apigroup,   //&event.ObjectRef.APIGroup,
+			&temp_apiversion, //&event.ObjectRef.APIVersion,
 			&event.ObjectRef.Resource,
 			&event.ObjectRef.Name,
 			&event.Stage,
@@ -137,6 +138,23 @@ func Get(query string) (audit.EventList, int64) {
 		if err != nil {
 			rows.Close()
 			klog.Error(err)
+		}
+		if temp_namespace.Valid {
+			event.ObjectRef.Namespace = temp_namespace.String
+		} else {
+			event.ObjectRef.Namespace = "null"
+		}
+
+		if temp_apigroup.Valid {
+			event.ObjectRef.APIGroup = temp_apigroup.String
+		} else {
+			event.ObjectRef.APIGroup = "null"
+		}
+
+		if temp_apiversion.Valid {
+			event.ObjectRef.APIVersion = temp_apiversion.String
+		} else {
+			event.ObjectRef.APIVersion = "null"
 		}
 		eventList.Items = append(eventList.Items, event)
 	}
