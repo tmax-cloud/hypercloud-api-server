@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.19.1 start -------------------->
+
+## Hypercloud-api-server 5.0.19.1 (2021. 07. 15. (목) 18:16:19 KST)
+
+### Added
+
+### Changed
+  - [mod] nullString 에러 해결 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.19.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.19.0 (2021. 07. 15. (목) 17:18:59 KST)
