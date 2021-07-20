@@ -25,6 +25,10 @@ const (
 type buffer struct {
 	Buffer chan audit.Event
 
+	clusterNamespace chan string
+
+	clusterName chan string
+
 	batchSize int
 
 	batchWait time.Duration
@@ -34,10 +38,12 @@ type buffer struct {
 
 func newBuffer() buffer {
 	return buffer{
-		Buffer:    make(chan audit.Event, BufferSize),
-		batchSize: batchSize,
-		batchWait: batchWait,
-		wg:        sync.WaitGroup{},
+		Buffer:           make(chan audit.Event, BufferSize),
+		clusterNamespace: make(chan string, BufferSize),
+		clusterName:      make(chan string, BufferSize),
+		batchSize:        batchSize,
+		batchWait:        batchWait,
+		wg:               sync.WaitGroup{},
 	}
 }
 
@@ -48,6 +54,8 @@ func (b *buffer) run() {
 			maxWaitChan  <-chan time.Time
 			maxWaitTimer *time.Timer
 		)
+		var clusterName string
+		var clusterNamespace string
 
 		maxWaitTimer = time.NewTimer(b.batchWait)
 		maxWaitChan = maxWaitTimer.C
@@ -57,11 +65,11 @@ func (b *buffer) run() {
 			maxWaitTimer.Reset(b.batchWait)
 			eventList := audit.EventList{}
 
-			if eventList.Items = b.collectEvents(maxWaitChan); len(eventList.Items) != 0 {
+			if eventList.Items, clusterName, clusterNamespace = b.collectEvents(maxWaitChan); len(eventList.Items) != 0 {
 				b.wg.Add(1)
 				go func() {
 					defer b.wg.Done()
-					auditDataFactory.Insert(eventList.Items)
+					auditDataFactory.Insert(eventList.Items, clusterName, clusterNamespace)
 				}()
 
 				b.wg.Add(1)
@@ -77,8 +85,10 @@ func (b *buffer) run() {
 	}()
 }
 
-func (b *buffer) collectEvents(timer <-chan time.Time) []audit.Event {
+func (b *buffer) collectEvents(timer <-chan time.Time) ([]audit.Event, string, string) {
 	var events []audit.Event
+	clusterName := "master"
+	clusterNamespace := ""
 
 L:
 	for i := 0; i < b.batchSize; i++ {
@@ -88,11 +98,21 @@ L:
 				break L
 			}
 			events = append(events, ev)
+		case cName, ok := <-b.clusterName:
+			if !ok {
+				break L
+			}
+			clusterName = cName
+		case cNamespace, ok := <-b.clusterNamespace:
+			if !ok {
+				break L
+			}
+			clusterNamespace = cNamespace
 		case <-timer:
 			// Timer has expired. Send currently accumulated batch.
 			break L
 		}
 	}
 
-	return events
+	return events, clusterName, clusterNamespace
 }

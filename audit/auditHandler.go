@@ -36,8 +36,10 @@ type urlParam struct {
 }
 
 type response struct {
-	EventList audit.EventList `json:"eventList"`
-	RowsCount int64           `json:"rowsCount"`
+	EventList        audit.EventList `json:"eventList"`
+	RowsCount        int64           `json:"rowsCount"`
+	ClusterName      string          `json:"clusterName"`
+	ClusterNamespace string          `json:"clusterNamespace"`
 }
 
 type MemberListResponse struct {
@@ -64,6 +66,14 @@ func UpdateAuditResource() {
 func AddAudit(w http.ResponseWriter, r *http.Request) {
 	var body []byte
 	var eventList audit.EventList
+	clusterName := r.URL.Query().Get(util.QUERY_PARAMETER_CLUSTER_NAME)
+	clusterNamespace := r.URL.Query().Get(util.QUERY_PARAMETER_CLUSTER_NAMESPACE)
+	if clusterName == "" {
+		clusterName = "master"
+	}
+	if clusterNamespace == "" {
+		clusterNamespace = ""
+	}
 
 	if r.Body != nil {
 		if data, err := ioutil.ReadAll(r.Body); err == nil {
@@ -87,7 +97,7 @@ func AddAudit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	auditDataFactory.Insert(eventList.Items)
+	auditDataFactory.Insert(eventList.Items, clusterName, clusterNamespace)
 	if len(hub.clients) > 0 {
 		hub.broadcast <- eventList
 	}
@@ -120,8 +130,19 @@ func AddAuditBatch(w http.ResponseWriter, r *http.Request) {
 		event.StageTimestamp.Time = time.Now()
 	}
 
+	clusterName := r.URL.Query().Get(util.QUERY_PARAMETER_CLUSTER_NAME)
+	clusterNamespace := r.URL.Query().Get(util.QUERY_PARAMETER_CLUSTER_NAMESPACE)
+	if clusterName == "" {
+		clusterName = "master"
+	}
+	if clusterNamespace == "" {
+		clusterNamespace = ""
+	}
+
 	if len(EventBuffer.Buffer) < BufferSize {
 		EventBuffer.Buffer <- event
+		EventBuffer.clusterName <- clusterName
+		EventBuffer.clusterNamespace <- clusterNamespace
 	} else {
 		klog.Error("event is dropped.")
 	}
@@ -228,7 +249,7 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 	urlParam.NamespaceList = nsList
 
 	query := queryBuilder(urlParam)
-	eventList, count := auditDataFactory.Get(query)
+	eventList, count := auditDataFactory.Get(query) // 반환 값 추가해야함
 
 	response := response{
 		EventList: eventList,

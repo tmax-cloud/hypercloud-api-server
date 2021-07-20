@@ -36,7 +36,7 @@ func NewNullString(s string) sql.NullString {
 	}
 }
 
-func Insert(items []audit.Event) {
+func Insert(items []audit.Event, clusterName string, clusterNamespace string) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -48,7 +48,7 @@ func Insert(items []audit.Event) {
 		klog.Error(err)
 	}
 
-	stmt, err := txn.Prepare(pq.CopyIn("audit", "id", "username", "useragent", "namespace", "apigroup", "apiversion", "resource", "name",
+	stmt, err := txn.Prepare(pq.CopyIn("audit", "id", "clusternamespace", "cluster", "username", "useragent", "namespace", "apigroup", "apiversion", "resource", "name",
 		"stage", "stagetimestamp", "verb", "code", "status", "reason", "message"))
 	if err != nil {
 		klog.Error(err)
@@ -56,6 +56,8 @@ func Insert(items []audit.Event) {
 
 	for _, event := range items {
 		_, err = stmt.Exec(event.AuditID,
+			clusterNamespace,
+			clusterName,
 			event.User.Username,
 			event.UserAgent,
 			NewNullString(event.ObjectRef.Namespace),
@@ -97,6 +99,7 @@ func Insert(items []audit.Event) {
 	}
 }
 
+// Select 추가해야함
 func Get(query string) (audit.EventList, int64) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
