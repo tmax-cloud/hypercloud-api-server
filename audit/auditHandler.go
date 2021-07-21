@@ -83,6 +83,7 @@ func AddAudit(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.Unmarshal(body, &eventList); err != nil {
 		util.SetResponse(w, "", nil, http.StatusInternalServerError)
+		return
 	}
 
 	contentType := r.Header.Get("Content-Type")
