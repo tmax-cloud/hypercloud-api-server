@@ -27,7 +27,7 @@ func init() {
 }
 
 func NewNullString(s string) sql.NullString {
-	if s == "null" {
+	if len(s) == 0 {
 		return sql.NullString{}
 	}
 	return sql.NullString{
@@ -99,7 +99,7 @@ func Insert(items []audit.Event, clusterName string, clusterNamespace string) {
 	}
 }
 
-// Select 추가해야함
+// TODO : Select multi_audit 변경
 func Get(query string) (audit.EventList, int64) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {

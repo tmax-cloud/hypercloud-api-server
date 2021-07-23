@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	"github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	auditDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/audit"
@@ -66,8 +67,9 @@ func UpdateAuditResource() {
 func AddAudit(w http.ResponseWriter, r *http.Request) {
 	var body []byte
 	var eventList audit.EventList
-	clusterName := r.URL.Query().Get(util.QUERY_PARAMETER_CLUSTER_NAME)
-	clusterNamespace := r.URL.Query().Get(util.QUERY_PARAMETER_CLUSTER_NAMESPACE)
+	params := mux.Vars(r)
+	clusterNamespace := params["clusterNamespace"]
+	clusterName := params["clusterName"]
 	if clusterName == "" {
 		clusterName = "master"
 	}
@@ -131,8 +133,9 @@ func AddAuditBatch(w http.ResponseWriter, r *http.Request) {
 		event.StageTimestamp.Time = time.Now()
 	}
 
-	clusterName := r.URL.Query().Get(util.QUERY_PARAMETER_CLUSTER_NAME)
-	clusterNamespace := r.URL.Query().Get(util.QUERY_PARAMETER_CLUSTER_NAMESPACE)
+	params := mux.Vars(r)
+	clusterNamespace := params["clusterNamespace"]
+	clusterName := params["clusterName"]
 	if clusterName == "" {
 		clusterName = "master"
 	}

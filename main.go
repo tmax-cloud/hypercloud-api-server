@@ -151,7 +151,7 @@ func main() {
 
 	mux.HandleFunc("/metadata", serveMetadata)
 	mux.HandleFunc("/audit/member_suggestions", serveAuditMemberSuggestions)
-	mux.HandleFunc("/audit", serveAudit)
+	mux.HandleFunc("/audit/{clusterNamespace}/{clusterName}", serveAudit)
 	mux.HandleFunc("/audit/batch", serveAuditBatch)
 	mux.HandleFunc("/audit/resources", serveAuditResources)
 	mux.HandleFunc("/audit/verb", serveAuditVerb)
