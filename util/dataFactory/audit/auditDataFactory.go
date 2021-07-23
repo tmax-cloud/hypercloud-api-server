@@ -27,7 +27,7 @@ func init() {
 }
 
 func NewNullString(s string) sql.NullString {
-	if len(s) == 0 {
+	if s == "null" {
 		return sql.NullString{}
 	}
 	return sql.NullString{
