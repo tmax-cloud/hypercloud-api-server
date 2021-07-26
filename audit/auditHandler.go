@@ -21,19 +21,21 @@ import (
 )
 
 type urlParam struct {
-	Search        string               `json:"search"`
-	UserId        string               `json:"userId"`
-	Namespace     string               `json:"namespace"`
-	NamespaceList corev1.NamespaceList `json:"namespaceList"`
-	Resource      string               `json:"resource"`
-	StartTime     string               `json:"startTime"`
-	EndTime       string               `json:"endTime"`
-	Limit         string               `json:"limit"`
-	Offset        string               `json:"offset"`
-	Code          string               `json:"code"`
-	Verb          string               `json:"verb"`
-	Status        string               `json:"status"`
-	Sort          []string             `json:"sort"`
+	Search           string               `json:"search"`
+	UserId           string               `json:"userId"`
+	ClusterName      string               `json:"clusterName"`
+	ClusterNamespace string               `json:"clusterNamespace"`
+	Namespace        string               `json:"namespace"`
+	NamespaceList    corev1.NamespaceList `json:"namespaceList"`
+	Resource         string               `json:"resource"`
+	StartTime        string               `json:"startTime"`
+	EndTime          string               `json:"endTime"`
+	Limit            string               `json:"limit"`
+	Offset           string               `json:"offset"`
+	Code             string               `json:"code"`
+	Verb             string               `json:"verb"`
+	Status           string               `json:"status"`
+	Sort             []string             `json:"sort"`
 }
 
 type response struct {
@@ -240,6 +242,8 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 	urlParam := urlParam{}
 	urlParam.Search = queryParams.Get("search")
 	urlParam.UserId = userId
+	urlParam.ClusterName = queryParams.Get("clusterName")
+	urlParam.ClusterNamespace = queryParams.Get("clusterNamespace")
 	urlParam.Namespace = queryParams.Get("namespace")
 	urlParam.Resource = queryParams.Get("resource")
 	urlParam.Limit = queryParams.Get("limit")
@@ -266,6 +270,8 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 func queryBuilder(param urlParam) string {
 	// search := param.Search
 	// userId := param.UserId
+	clusterName := param.ClusterName
+	clusterNamespace := param.ClusterNamespace
 	namespace := param.Namespace
 	resource := param.Resource
 	startTime := param.StartTime
@@ -279,7 +285,7 @@ func queryBuilder(param urlParam) string {
 	// nsList := param.NamespaceList
 
 	var b strings.Builder
-	b.WriteString("select *, count(*) over() as full_count from audit where 1=1 ")
+	b.WriteString("select *, count(*) over() as full_count from audit_multi_cluster where 1=1 ")
 
 	// if startTime != "" && endTime != "" {
 	// 	b.WriteString("and stagetimestamp between to_timestamp(")
@@ -328,6 +334,18 @@ func queryBuilder(param urlParam) string {
 	if verb != "" {
 		b.WriteString("and verb = '")
 		b.WriteString(verb)
+		b.WriteString("' ")
+	}
+
+	if clusterName != "" {
+		b.WriteString("and clustername = '")
+		b.WriteString(clusterName)
+		b.WriteString("' ")
+	}
+
+	if clusterNamespace != "" {
+		b.WriteString("and clusternamespace = '")
+		b.WriteString(clusterNamespace)
 		b.WriteString("' ")
 	}
 
