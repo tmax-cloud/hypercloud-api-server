@@ -48,7 +48,7 @@ func Insert(items []audit.Event, clusterName string, clusterNamespace string) {
 		klog.Error(err)
 	}
 
-	stmt, err := txn.Prepare(pq.CopyIn("audit_multi_cluster", "id", "clusternamespace", "clustername", "username", "useragent", "namespace", "apigroup", "apiversion", "resource", "name",
+	stmt, err := txn.Prepare(pq.CopyIn("audit", "id", "clusternamespace", "clustername", "username", "useragent", "namespace", "apigroup", "apiversion", "resource", "name",
 		"stage", "stagetimestamp", "verb", "code", "status", "reason", "message"))
 	if err != nil {
 		klog.Error(err)

@@ -285,7 +285,7 @@ func queryBuilder(param urlParam) string {
 	// nsList := param.NamespaceList
 
 	var b strings.Builder
-	b.WriteString("select *, count(*) over() as full_count from audit_multi_cluster where 1=1 ")
+	b.WriteString("select *, count(*) over() as full_count from audit where 1=1 ")
 
 	// if startTime != "" && endTime != "" {
 	// 	b.WriteString("and stagetimestamp between to_timestamp(")
