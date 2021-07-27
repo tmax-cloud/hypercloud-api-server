@@ -34,6 +34,8 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		reqURL += param
 	default:
 		klog.Errorln("NO API is given")
+		util.SetResponse(res, "", "NO API is given", http.StatusBadRequest)
+		return
 	}
 
 	client := http.Client{
@@ -43,8 +45,8 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	response, err := client.Get(reqURL)
 	if err != nil {
 		klog.Errorln("HTTP Error : ", err)
-		//util.SetResponse(res, "", result_struct, http.)
-		//break
+		util.SetResponse(res, "", err, http.StatusBadRequest)
+		return
 	}
 	klog.Infoln(response)
 	util.SetResponse(res, "", response, http.StatusOK)
