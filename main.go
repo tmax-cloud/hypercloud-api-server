@@ -137,6 +137,7 @@ func main() {
 	mux.HandleFunc("/version", serveVersion)
 	mux.HandleFunc("/cloudCredential", serveCloudCredential)
 	mux.HandleFunc("/grafana/{path}", serveGrafana)
+	mux.HandleFunc("/grafana/", serveGrafana)
 
 	if hcMode != "single" {
 		// for multi mode only
@@ -620,7 +621,7 @@ func serveGrafana(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		grafana.Get(res, req)
-	case http.MethodPut:
+	case http.MethodPost:
 		postPath := vars["path"]
 
 		if postPath == "search" {
