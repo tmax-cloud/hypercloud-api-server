@@ -2,7 +2,6 @@ package caller
 
 import (
 	"context"
-	"net/http"
 
 	"k8s.io/apimachinery/pkg/api/errors"
 
@@ -18,13 +17,13 @@ import (
 var remoteClientset *kubernetes.Clientset
 var remoteRestConfig *restclient.Config
 
-func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, remoteRole string, attribute string) (string, int) {
+func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, remoteRole string, attribute string) error {
 	if remoteRole == "admin" {
 		remoteRole = "cluster-admin"
 	}
 	remoteClientset, err := getRemoteK8sClient(clusterManager)
 	if err != nil {
-		return err.Error(), http.StatusForbidden
+		return err
 	}
 
 	// var clusterRoleName string
@@ -63,17 +62,17 @@ func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject 
 
 	if _, err := remoteClientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding, metav1.CreateOptions{}); err != nil {
 		klog.Errorln(err)
-		return err.Error(), http.StatusInternalServerError
+		return err
 	}
 	msg := "Create clusterrole [" + remoteRole + "] to remote cluster [" + clusterManager.Name + "] for subject [" + subject + "] "
 	klog.Infoln(msg)
-	return msg, http.StatusOK
+	return nil
 }
 
-func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) (string, int) {
+func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) error {
 	remoteClientset, err := getRemoteK8sClient(clusterManager)
 	if err != nil {
-		return err.Error(), http.StatusInternalServerError
+		return err
 	}
 
 	// var clusterRoleName string
@@ -84,23 +83,24 @@ func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subjec
 		clusterRoleBindingName = subject + "-group-rolebinding"
 	}
 
-	_, err = remoteClientset.RbacV1().ClusterRoleBindings().Get(context.TODO(), clusterRoleBindingName, metav1.GetOptions{})
-	if err == nil {
+	if _, err := remoteClientset.RbacV1().ClusterRoleBindings().Get(context.TODO(), clusterRoleBindingName, metav1.GetOptions{}); err != nil {
+		if errors.IsNotFound(err) {
+			klog.Infoln("Rolebinding [" + clusterRoleBindingName + "] is already deleted")
+			return nil
+		} else {
+			klog.Errorln(err)
+			return err
+		}
+	} else {
 		if err := remoteClientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), clusterRoleBindingName, metav1.DeleteOptions{}); err != nil {
 			klog.Errorln(err)
-			return err.Error(), http.StatusInternalServerError
+			return err
 		}
-	} else if errors.IsNotFound(err) {
-		klog.Errorln("Rolebinding [" + clusterRoleBindingName + "] is already deleted")
-		return err.Error(), http.StatusInternalServerError
-	} else {
-		klog.Errorln(err)
-		return err.Error(), http.StatusInternalServerError
 	}
+
 	msg := "Remove rolebinding [" + clusterRoleBindingName + "] from remote cluster [" + clusterManager.Name + "] for subject [" + subject + "]"
 	klog.Infoln(msg)
-
-	return msg, http.StatusOK
+	return nil
 }
 
 func getRemoteK8sClient(clusterManager *clusterv1alpha1.ClusterManager) (*kubernetes.Clientset, error) {

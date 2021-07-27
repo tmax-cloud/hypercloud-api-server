@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"k8s.io/api/admission/v1beta1"
-	authv1 "k8s.io/api/authentication/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -108,15 +107,15 @@ func buildConfigmapVolumePatch(configMapName string) corev1.Volume {
 	return configmapVolumePatch
 }
 
-func isSystemRequest(userInfo authv1.UserInfo) bool {
-	for _, group := range userInfo.Groups {
-		gorupElement := strings.Split(group, ":")
-		if gorupElement[0] == "system" && ((gorupElement[1] != "masters") && (gorupElement[1] != "authenticated")) { //for kubectl
-			return true
-		}
-	}
+func isSystemRequest(userName string) bool {
+	// for _, group := range userInfo.Groups {
+	// 	gorupElement := strings.Split(group, ":")
+	// 	if gorupElement[0] == "system" && ((gorupElement[1] != "masters") && (gorupElement[1] != "authenticated")) { //for kubectl
+	// 		return true
+	// 	}
+	// }
 
-	userNameElement := strings.Split(userInfo.Username, ":")
+	userNameElement := strings.Split(userName, ":")
 	if userNameElement[0] == "system" {
 		return true
 	}

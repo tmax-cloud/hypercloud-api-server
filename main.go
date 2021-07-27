@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"flag"
@@ -8,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"time"
 
 	gmux "github.com/gorilla/mux"
@@ -59,7 +61,7 @@ func main() {
 	// Get Hypercloud Operating Mode!!!
 	hcMode := os.Getenv("HC_MODE")
 	util.TokenExpiredDate = os.Getenv("INVITATION_TOKEN_EXPIRED_DATE")
-
+	kafkaConsumer.KafkaGroupId = os.Getenv("KAFKA_GROUP_ID")
 	util.ReadFile()
 	caller.UpdateAuditResourceList()
 
@@ -106,7 +108,7 @@ func main() {
 
 	// Metering Cron Job
 	cronJob.AddFunc("0 */1 * ? * *", metering.MeteringJob)
-	cronJob.AddFunc("@hourly", audit.UpdateAuditResource)
+	// cronJob.AddFunc("@hourly", audit.UpdateAuditResource)
 	cronJob.Start()
 
 	// Hyperauth Event Consumer
@@ -124,6 +126,8 @@ func main() {
 	mux.HandleFunc("/metering", serveMetering)
 	mux.HandleFunc("/namespace", serveNamespace)
 	mux.HandleFunc("/alert", serveAlert)
+	mux.HandleFunc("/grafanaUser", serveGrafanaUser)
+	mux.HandleFunc("/grafanaDashboard", serveGrafanaDashboard)
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
 	mux.HandleFunc("/cloudCredential", serveCloudCredential)
@@ -139,12 +143,12 @@ func main() {
 		mux.HandleFunc("/clustermanagers/{access}", serveCluster)               // list accessible clustermanager for all namespaces (lnb & all ns)
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster) // list all clustermanager in a specific namespace
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}", serveCluster)
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member", serveClusterMember)                                                  // list all member
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation", serveClusterInvitation)                                   // list a pending status user
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation/{attribute}/{member}", serveClusterInvitation)              // 추가 요청 (db + token 발급)
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation/{attribute}/{member}/{admit}", serveClusterInvitationAdmit) // 추가 요청 승인, 추가 요청 거절
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/remove_member/{attribute}/{member}", serveClusterMember)                      // 멤버 삭제 (db)
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/update_role/{attribute}/{member}", serveClusterMember)                        // 권한 변경 (db)
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member", serveClusterMember)                                     // list all member
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation", serveClusterInvitation)                      // list a pending status user
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation/{attribute}/{member}", serveClusterInvitation) // 추가 요청 (db + token 발급)
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation/{admit}", serveClusterInvitationAdmit)         // 추가 요청 승인, 추가 요청 거절
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/remove_member/{attribute}/{member}", serveClusterMember)         // 멤버 삭제 (db)
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/update_role/{attribute}/{member}", serveClusterMember)           // 권한 변경 (db)
 	}
 
 	mux.HandleFunc("/metadata", serveMetadata)
@@ -152,6 +156,7 @@ func main() {
 	mux.HandleFunc("/audit", serveAudit)
 	mux.HandleFunc("/audit/batch", serveAuditBatch)
 	mux.HandleFunc("/audit/resources", serveAuditResources)
+	mux.HandleFunc("/audit/verb", serveAuditVerb)
 	mux.HandleFunc("/audit/websocket", serveAuditWss)
 	mux.HandleFunc("/inject/pod", serveSidecarInjectionForPod)
 	mux.HandleFunc("/inject/deployment", serveSidecarInjectionForDeploy)
@@ -166,7 +171,110 @@ func main() {
 	// HTTP Server Start
 	klog.Info("Starting Hypercloud5-API server...")
 	klog.Flush()
+	klog.Info("Setiing Grafana Admin...")
+	hc_admin := caller.GetCRBAdmin()
+	caller.CreateGrafanaUser(hc_admin)
+	id := caller.GetGrafanaUser(hc_admin)
+	adminBody := `{"isGrafanaAdmin": true}`
+	grafanaId, grafanaPw := "admin", "admin"
+	httpgeturl := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/admin/users/" + strconv.Itoa(id) + "/permissions"
 
+	request, _ := http.NewRequest("PUT", httpgeturl, bytes.NewBuffer([]byte(adminBody)))
+
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		klog.Errorln(err)
+
+	} else {
+		defer response.Body.Close()
+		resbody, _ := ioutil.ReadAll(response.Body)
+		klog.Infof(string(resbody))
+	}
+
+	//get grafana key
+	httpposturl := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/auth/keys"
+	var GrafanaKeyBody util.GrafanaKeyBody
+
+	GrafanaKeyBody.Name = caller.RandomString(8)
+	GrafanaKeyBody.Role = "Admin"
+	GrafanaKeyBody.SecondsToLive = 300
+	json_body, _ := json.Marshal(GrafanaKeyBody)
+	request, _ = http.NewRequest("POST", httpposturl, bytes.NewBuffer(json_body))
+
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+
+	client = &http.Client{}
+	response, err = client.Do(request)
+	if err != nil {
+		klog.Errorln(err)
+
+	} else {
+		body, _ := ioutil.ReadAll(response.Body)
+
+		klog.Infof(string(body))
+		var grafana_resp util.Grafana_key
+		json.Unmarshal([]byte(body), &grafana_resp)
+		util.GrafanaKey = "Bearer " + grafana_resp.Key
+		klog.Infof(util.GrafanaKey)
+	}
+
+	//org permission
+	httpgeturlorg := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/orgs/1/users/" + strconv.Itoa(id)
+	adminorgBody := `{"role":"Admin"}`
+	request, _ = http.NewRequest("PATCH", httpgeturlorg, bytes.NewBuffer([]byte(adminorgBody)))
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	//request.Header.Set("Authorization", util.GrafanaKey)
+	client2 := &http.Client{}
+	response, err = client2.Do(request)
+	if err != nil {
+		klog.Errorln(err)
+
+	} else {
+		defer response.Body.Close()
+		resbody, _ := ioutil.ReadAll(response.Body)
+
+		klog.Infof(string(resbody))
+	}
+
+	//default dashboard permission to only admin
+
+	klog.Infof("default dashboard permission setting(admin)")
+	permBody := `{
+		"items": []
+	}`
+	httpposturl_per := "http://" + util.GRAFANA_URI + "api/dashboards/id/1/permissions"
+	request, _ = http.NewRequest("POST", httpposturl_per, bytes.NewBuffer([]byte(permBody)))
+
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	request.Header.Set("Authorization", util.GrafanaKey)
+	client = &http.Client{}
+	response, err = client.Do(request)
+	if err != nil {
+		klog.Errorln(err)
+
+	} else {
+		defer response.Body.Close()
+		resbody, _ := ioutil.ReadAll(response.Body)
+		klog.Infof(string(resbody))
+	}
+	httpposturl_per = "http://" + util.GRAFANA_URI + "api/dashboards/id/2/permissions"
+	request, _ = http.NewRequest("POST", httpposturl_per, bytes.NewBuffer([]byte(permBody)))
+
+	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
+	request.Header.Set("Authorization", util.GrafanaKey)
+	client = &http.Client{}
+	response, err = client.Do(request)
+	if err != nil {
+		klog.Errorln(err)
+
+	} else {
+		defer response.Body.Close()
+		resbody, _ := ioutil.ReadAll(response.Body)
+		klog.Infof(string(resbody))
+	}
 	whsvr := &http.Server{
 		Addr:      fmt.Sprintf(":%d", port),
 		Handler:   mux,
@@ -238,6 +346,27 @@ func serveAlert(res http.ResponseWriter, req *http.Request) {
 		//error
 	}
 }
+func serveGrafanaUser(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodPost:
+		caller.CreateGrafanaUser("test12@tmax.co.kr")
+	default:
+		//error
+	}
+}
+
+func serveGrafanaDashboard(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodPost:
+		caller.CreateDashBoard(res, req)
+	case http.MethodDelete:
+		caller.DeleteGrafanaDashboard(res, req)
+	default:
+		//error
+	}
+}
 func serveVersion(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
@@ -271,6 +400,8 @@ func serveCluster(res http.ResponseWriter, req *http.Request) {
 			// errror
 		}
 	case http.MethodPost:
+		cluster.InsertCLM(res, req)
+	case http.MethodDelete:
 		cluster.DeleteCLM(res, req)
 	default:
 	}
@@ -313,7 +444,7 @@ func serveClusterInvitationAdmit(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	vars := gmux.Vars(req)
 	switch req.Method {
-	case http.MethodPost:
+	case http.MethodGet:
 		if vars["admit"] == "accept" {
 			cluster.AcceptInvitation(res, req)
 		} else if vars["admit"] == "reject" {
@@ -387,6 +518,16 @@ func serveAudit(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func serveAuditVerb(w http.ResponseWriter, r *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	switch r.Method {
+	case http.MethodGet:
+		audit.ListAuditVerb(w, r)
+	default:
+		//error
+	}
+}
+
 func serveAuditResources(w http.ResponseWriter, r *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	switch r.Method {
@@ -445,7 +586,7 @@ func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 
 	respBytes, err := json.Marshal(responseAdmissionReview)
 
-	klog.Infof("Response body: %s\n", respBytes)
+	// klog.Infof("Response body: %s\n", respBytes)
 
 	if err != nil {
 		klog.Error(err)

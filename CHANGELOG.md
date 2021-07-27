@@ -1,6 +1,213 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.20.0 start -------------------->
+
+## Hypercloud-api-server 5.0.20.0 (2021. 07. 22. (목) 14:17:03 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.19.1 start -------------------->
+
+## Hypercloud-api-server 5.0.19.1 (2021. 07. 15. (목) 18:16:19 KST)
+
+### Added
+
+### Changed
+  - [mod] nullString 에러 해결 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.19.0 start -------------------->
+
+## Hypercloud-api-server 5.0.19.0 (2021. 07. 15. (목) 17:18:59 KST)
+
+### Added
+
+### Changed
+  - [mod] cluster에 그룹 초대할 때 rolebinding 생성 에러 문제 해결 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] refactor by chosangwon93
+
+<!-------------------- v5.0.18.4 start -------------------->
+
+## Hypercloud-api-server 5.0.18.4 (2021. 07. 13. (화) 12:51:06 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][265974] hypercloud mutator 수정 후 nsc 승인 시 ns 생성 안되는 문제 해결 by chosangwon93
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.18.3 start -------------------->
+
+## Hypercloud-api-server 5.0.18.3 (2021. 07. 12. (월) 17:51:44 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.18.2 start -------------------->
+
+## Hypercloud-api-server 5.0.18.2 (2021. 07. 12. (월) 14:11:34 KST)
+
+### Added
+
+### Changed
+  - [mod] 클러스터 초대 수락 시 redirect url 변경 by chosangwon93
+  - [mod] 클러스터에 초대된 사용자 삭제 시에 해당 ns에 사용중인 클러스터가 남아있는데도 불구하고 ns-get rolebinding 삭제되는 문제 해결 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.18.1 start -------------------->
+
+## Hypercloud-api-server 5.0.18.1 (2021. 07. 09. (금) 17:06:45 KST)
+
+### Added
+
+### Changed
+  - [mod] 카프라 groupid를 변수로 받도록 수정 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.18.0 start -------------------->
+
+## Hypercloud-api-server 5.0.18.0 (2021. 07. 09. (금) 09:36:55 KST)
+
+### Added
+  - [feat] audit verb list api 추가 by chosangwon93
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.17.5 start -------------------->
+
+## Hypercloud-api-server 5.0.17.5 (2021. 07. 08. (목) 13:29:58 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.17.3 start -------------------->
+
+## Hypercloud-api-server 5.0.17.3 (2021. 07. 07. (수) 18:06:51 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.17.2 start -------------------->
+
+## Hypercloud-api-server 5.0.17.2 (2021. 07. 07. (수) 17:31:17 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.17.1 start -------------------->
+
+## Hypercloud-api-server 5.0.17.1 (2021. 07. 05. (월) 10:54:20 KST)
+
+### Added
+
+### Changed
+  - [mod] 클러스터에 사용자 초대시 발생하는 에러 수정 by chosangwon93
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] 리팩토링 by chosangwon93
+
+<!-------------------- v5.0.17.0 start -------------------->
+
+## Hypercloud-api-server 5.0.17.0 (2021. 07. 01. (목) 17:37:48 KST)
+
+### Added
+  - [feat] 클러스터 등록 기능 추가 by chosangwon93
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.16.1 start -------------------->
+
+## Hypercloud-api-server 5.0.16.1 (2021. 07. 01. (목) 10:45:05 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.16.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.16.0 (2021. 06. 25. (금) 11:06:55 KST)

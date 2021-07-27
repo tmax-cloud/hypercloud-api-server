@@ -15,11 +15,15 @@ import (
 
 	"regexp"
 
+	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	gomail "gopkg.in/gomail.v2"
 	"k8s.io/api/admission/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
 )
+
+var GrafanaKey string
 
 type ClusterMemberInfo struct {
 	Id          int64
@@ -350,7 +354,7 @@ func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) ([]string, err
 	var memberId string
 	var cluster string
 	var namespace string
-	var groups []string
+	// var groups []string
 	token, err := VerifyToken(r)
 	if err != nil {
 		return nil, err
@@ -360,15 +364,100 @@ func TokenValid(r *http.Request, clusterMember ClusterMemberInfo) ([]string, err
 		memberId, ok = claims["user_id"].(string)
 		cluster, ok = claims["cluster"].(string)
 		namespace, ok = claims["namespace"].(string)
-		tmp := claims["user_groups"].([]interface{})
-		groups = make([]string, len(tmp))
-		for i, v := range tmp {
-			groups[i] = fmt.Sprint(v)
-		}
+		// tmp, ok = claims["user_groups"].([]interface{})
+		// groups = make([]string, len(tmp))
+		// for i, v := range tmp {
+		// 	groups[i] = fmt.Sprint(v)
+		// }
 	}
 
 	if clusterMember.MemberId == memberId && clusterMember.Cluster == cluster && clusterMember.Namespace == namespace {
-		return groups, nil
+		return nil, nil
 	}
 	return nil, errors.New("Request user or target cluster does not match with token payload")
+}
+
+func Search(NamespacedNameList []types.NamespacedName, clmList *clusterv1alpha1.ClusterManagerList) *clusterv1alpha1.ClusterManagerList {
+
+	ret := &clusterv1alpha1.ClusterManagerList{
+		Items: []clusterv1alpha1.ClusterManager{},
+	}
+
+	for _, namespacedName := range NamespacedNameList {
+		for _, clm := range clmList.Items {
+			if namespacedName.Namespace == clm.Namespace && namespacedName.Name == clm.Name && clm.Status.Ready && clm.DeletionTimestamp.IsZero() {
+				ret.Items = append(ret.Items, clm)
+			}
+		}
+	}
+
+	return ret
+}
+
+type GrafanaUser struct {
+	Id       string `json:"id"`
+	Password string `json:"password"`
+}
+
+type GrafanaKeyBody struct {
+	Name          string `json:"name"`
+	Role          string `json:"role"`
+	SecondsToLive int    `json:"secondsToLive"`
+}
+
+/*func GetGrafanauser() (string, string) {
+	jsonFile, err := os.Open("/grafana/grafana-user.json")
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Successfully Opened grafanausers.json")
+	defer jsonFile.Close()
+
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+
+	var grafanaUser GrafanaUser
+
+	json.Unmarshal(byteValue, &grafanaUser)
+	return grafanaUser.Id, grafanaUser.Password
+}*/
+
+type Grafana_key struct {
+	Name string `json:"name"`
+	Key  string `json:"key"`
+}
+type Grafana_user struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Login    string `json:"login"`
+	Password string `json:"password"`
+}
+
+type Grafana_Dashboad_resp struct {
+	Id      int    `json:"id"`
+	Uid     string `json:"uid"`
+	Url     string `json:"url"`
+	Status  string `json:"status"`
+	Version string `json:"version"`
+	Slug    string `json:"slug"`
+}
+
+type Grafana_User_Get struct {
+	Id             int    `json:"id"`
+	Email          string `json:"email"`
+	Name           string `json:"name"`
+	Login          string `json:"login"`
+	Theme          string `json:"light"`
+	OrgId          string `json:"OrgId"`
+	IsGrafanaAdmin string `json:"isGrafanaAdmin"`
+	IsDisabled     string `json:"isDisabled"`
+	IsExternal     string `json:"isExternal"`
+	AuthLabels     string `json:"authLabels"`
+	UpdatedAt      string `json:"updatedAt"`
+	CreatedAt      string `json:"createdAt"`
+	AvatarUrl      string `json:"avatarUrl"`
+}
+
+type Grafana_Namespace struct {
+	Email     string `json:"email"`
+	Namespace string `json:"namespace"`
 }

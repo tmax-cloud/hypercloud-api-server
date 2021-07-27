@@ -9,21 +9,21 @@ import (
 	"k8s.io/apiserver/pkg/apis/audit"
 )
 
-var eventBuffer buffer
+var EventBuffer buffer
 
 func init() {
-	eventBuffer = newBuffer()
-	eventBuffer.run()
+	EventBuffer = newBuffer()
+	EventBuffer.run()
 }
 
 const (
-	bufferSize int           = 256
+	BufferSize int           = 256
 	batchSize  int           = 16
 	batchWait  time.Duration = time.Second * 10
 )
 
 type buffer struct {
-	buffer chan audit.Event
+	Buffer chan audit.Event
 
 	batchSize int
 
@@ -34,7 +34,7 @@ type buffer struct {
 
 func newBuffer() buffer {
 	return buffer{
-		buffer:    make(chan audit.Event, bufferSize),
+		Buffer:    make(chan audit.Event, BufferSize),
 		batchSize: batchSize,
 		batchWait: batchWait,
 		wg:        sync.WaitGroup{},
@@ -43,7 +43,7 @@ func newBuffer() buffer {
 
 func (b *buffer) run() {
 	go func() {
-		defer close(b.buffer)
+		defer close(b.Buffer)
 		var (
 			maxWaitChan  <-chan time.Time
 			maxWaitTimer *time.Timer
@@ -83,7 +83,7 @@ func (b *buffer) collectEvents(timer <-chan time.Time) []audit.Event {
 L:
 	for i := 0; i < b.batchSize; i++ {
 		select {
-		case ev, ok := <-b.buffer:
+		case ev, ok := <-b.Buffer:
 			if !ok {
 				break L
 			}

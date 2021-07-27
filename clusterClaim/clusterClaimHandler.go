@@ -8,6 +8,7 @@ import (
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
 	caller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	clusterDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/cluster"
+	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
 	"k8s.io/klog"
 )
 
@@ -48,13 +49,13 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	cc, msg, status := caller.GetClusterClaim(userId, userGroups, clusterClaimName, clusterClaimNamespace)
-	if cc == nil {
-		util.SetResponse(res, msg, nil, status)
+	var cc *claimsv1alpha1.ClusterClaim
+	if cc, err = caller.GetClusterClaim(userId, userGroups, clusterClaimName, clusterClaimNamespace); err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 	if cc.Status.Phase != "Awaiting" {
-		msg = "ClusterClaim is already admitted or rejected by admin"
+		msg := "ClusterClaim is already admitted or rejected by admin"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
@@ -63,24 +64,26 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	// name duplicate
 	exist, err := caller.CheckClusterManagerDupliation(cc.Spec.ClusterName, clusterClaimNamespace)
 	if err != nil {
+		klog.Errorln(err.Error())
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
 	if exist {
+		msg := "Cluster [" + cc.Spec.ClusterName + "] is already existed."
+		klog.Infoln(msg)
 		util.SetResponse(res, "Cluster ["+cc.Spec.ClusterName+"] is already existed.", nil, http.StatusBadRequest)
 		return
 	}
 
-	updatedClusterClaim, msg, status := caller.AdmitClusterClaim(userId, userGroups, cc, admitBool, reason)
-	if updatedClusterClaim == nil {
-		klog.Errorln(msg)
-		util.SetResponse(res, msg, nil, status)
+	var updatedClusterClaim *claimsv1alpha1.ClusterClaim
+	if updatedClusterClaim, err = caller.AdmitClusterClaim(userId, userGroups, cc, admitBool, reason); err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-
 	if updatedClusterClaim.Status.Phase == "Rejected" {
-		msg = "ClusterClaim is rejected by admin"
+		msg := "ClusterClaim is rejected by admin"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusOK)
 		return
@@ -95,10 +98,9 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Attribute = "user"
 	clusterMember.Status = "owner"
 
-	clm, msg, status := caller.CreateClusterManager(updatedClusterClaim)
-	if clm == nil {
-		klog.Errorln(msg)
-		util.SetResponse(res, msg, nil, http.StatusInternalServerError)
+	if _, err := caller.CreateClusterManager(updatedClusterClaim); err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
@@ -124,13 +126,23 @@ func List(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
+	// var clusterClaimList *claimsv1alpha1.ClusterClaimList
 	if clusterClaimNamespace == "" {
-		clusterClaimList, msg, status := caller.ListAllClusterClaims(userId, userGroups)
-		util.SetResponse(res, msg, clusterClaimList, status)
-		return
+		if clusterClaimList, err := caller.ListAllClusterClaims(userId, userGroups); err != nil {
+			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+			return
+		} else {
+			util.SetResponse(res, "Success", clusterClaimList, http.StatusOK)
+			return
+		}
 	} else {
-		clusterClaimList, msg, status := caller.ListAccessibleClusterClaims(userId, userGroups, clusterClaimNamespace)
-		util.SetResponse(res, msg, clusterClaimList, status)
-		return
+		if clusterClaimList, err := caller.ListAccessibleClusterClaims(userId, userGroups, clusterClaimNamespace); err != nil {
+			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+			return
+		} else {
+			util.SetResponse(res, "Success", clusterClaimList, http.StatusOK)
+			return
+		}
 	}
+
 }
