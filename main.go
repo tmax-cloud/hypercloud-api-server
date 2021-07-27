@@ -15,6 +15,7 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/alert"
 	audit "github.com/tmax-cloud/hypercloud-api-server/audit"
 	cloudCredential "github.com/tmax-cloud/hypercloud-api-server/cloudCredential"
+	grafana "github.com/tmax-cloud/hypercloud-api-server/cloudCredential/grafana"
 	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
 	claim "github.com/tmax-cloud/hypercloud-api-server/clusterClaim"
 	metering "github.com/tmax-cloud/hypercloud-api-server/metering"
@@ -126,6 +127,7 @@ func main() {
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
 	mux.HandleFunc("/cloudCredential", serveCloudCredential)
+	mux.HandleFunc("/grafana/{path}", serveGrafana)
 
 	if hcMode != "single" {
 		// for multi mode only
@@ -460,6 +462,30 @@ func serveCloudCredential(res http.ResponseWriter, req *http.Request) {
 	case http.MethodGet:
 		cloudCredential.Get(res, req)
 	case http.MethodPut:
+	case http.MethodOptions:
+	default:
+		//error
+	}
+}
+
+func serveGrafana(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	vars := gmux.Vars(req)
+	switch req.Method {
+	case http.MethodGet:
+		grafana.Get(res, req)
+	case http.MethodPut:
+		postPath := vars["path"]
+
+		if postPath == "search" {
+			grafana.Search(res, req)
+		} else if postPath == "query" {
+			grafana.Query(res, req)
+		} else if postPath == "annotations" {
+			grafana.Annotations(res, req)
+		} else {
+			// error
+		}
 	case http.MethodOptions:
 	default:
 		//error
