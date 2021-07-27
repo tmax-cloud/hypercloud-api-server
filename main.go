@@ -62,6 +62,11 @@ func main() {
 	hcMode := os.Getenv("HC_MODE")
 	util.TokenExpiredDate = os.Getenv("INVITATION_TOKEN_EXPIRED_DATE")
 	kafkaConsumer.KafkaGroupId = os.Getenv("KAFKA_GROUP_ID")
+	if len(kafkaConsumer.KafkaGroupId) == 0 || kafkaConsumer.KafkaGroupId == "{KAFKA_GROUP_ID}" {
+		klog.Infoln("KAFKA_GROUP_ID was not given. Please set KAFKA_GROUP_ID.")
+		klog.Infoln("Temporary give HOSTNAME for KAFKA_GROUP_ID :", os.Getenv("HOSTNAME"))
+		kafkaConsumer.KafkaGroupId = os.Getenv("HOSTNAME")
+	}
 	util.ReadFile()
 	caller.UpdateAuditResourceList()
 
