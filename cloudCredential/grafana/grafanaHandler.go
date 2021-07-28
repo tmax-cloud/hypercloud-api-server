@@ -11,7 +11,7 @@ import (
 type QueryResponse struct {
 	Target string `json:"target"`
 	//Datapoints []DataPoint `json:"datapoints"`
-	Datapoints [][]float32 `json:"datapoints"`
+	Datapoints [][]int64 `json:"datapoints"`
 }
 
 // type DataPoint struct {
@@ -37,13 +37,18 @@ func Search(res http.ResponseWriter, req *http.Request) {
 func Query(res http.ResponseWriter, req *http.Request) {
 
 	var qr []QueryResponse
-
 	var temp QueryResponse
 	temp.Target = "billing_by_account"
 	time := time.Now().Unix()
+	time *= 1000
+	temp.Datapoints = append(temp.Datapoints, []int64{3, (time - 10000*1000)})
+	temp.Datapoints = append(temp.Datapoints, []int64{1, (time)})
+	qr = append(qr, temp)
 
-	temp.Datapoints = append(temp.Datapoints, []float32{0.5, float32(time)})
-
+	temp = QueryResponse{}
+	temp.Target = "billing_by_region"
+	temp.Datapoints = append(temp.Datapoints, []int64{8, (time - 1000*1000)})
+	temp.Datapoints = append(temp.Datapoints, []int64{3, (time)})
 	qr = append(qr, temp)
 
 	klog.Infoln("qr =", qr)
