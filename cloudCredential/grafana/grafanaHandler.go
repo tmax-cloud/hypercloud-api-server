@@ -1,6 +1,8 @@
 package grafana
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -9,15 +11,9 @@ import (
 )
 
 type QueryResponse struct {
-	Target string `json:"target"`
-	//Datapoints []DataPoint `json:"datapoints"`
-	Datapoints [][]int64 `json:"datapoints"`
+	Target     string    `json:"target"`
+	Datapoints [][]int64 `json:"datapoints"` // [ ["value", "timestamp in milliseconds"], ["value", ...], ...]
 }
-
-// type DataPoint struct {
-// 	Value         float32 `json:"value"`
-// 	Unixtimestamp int64   `json:"unixtimestamp"`
-// }
 
 func Get(res http.ResponseWriter, req *http.Request) {
 	util.SetResponse(res, "Test Success", nil, http.StatusOK)
@@ -35,6 +31,24 @@ func Search(res http.ResponseWriter, req *http.Request) {
 }
 
 func Query(res http.ResponseWriter, req *http.Request) {
+
+	var resultJson map[string]interface{}
+	bytes, _ := ioutil.ReadAll(req.Body)
+	str := string(bytes)
+	//klog.Infoln("Result string :", str)
+	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
+		klog.Errorln("Error occured during unmarshaling request body")
+		util.SetResponse(res, "", nil, http.StatusInternalServerError)
+	}
+	targets := resultJson["targets"].([]interface{})
+	klog.Infoln("targets =", targets)
+
+	for i := range targets {
+		//temp := targets[i]
+		klog.Infoln(targets[i])
+		//targets[i]["target"]
+		//klog.Infoln(temp["target"].(string))
+	}
 
 	var qr []QueryResponse
 	var temp QueryResponse
