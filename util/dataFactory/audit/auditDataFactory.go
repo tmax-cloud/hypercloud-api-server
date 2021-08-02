@@ -51,18 +51,21 @@ func Insert(items []audit.Event, clusterName string, clusterNamespace string) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
+		return
 	}
 	defer db.Close()
 
 	txn, err := db.Begin()
 	if err != nil {
 		klog.Error(err)
+		return
 	}
 
 	stmt, err := txn.Prepare(pq.CopyIn("audit", "id", "username", "useragent", "namespace", "apigroup", "apiversion", "resource", "name",
 		"stage", "stagetimestamp", "verb", "code", "status", "reason", "message", "clusternamespace", "clustername"))
 	if err != nil {
 		klog.Error(err)
+		return
 	}
 
 	for _, event := range items {
@@ -87,25 +90,30 @@ func Insert(items []audit.Event, clusterName string, clusterNamespace string) {
 
 		if err != nil {
 			klog.Error(err)
+			return
 		}
 	}
 	res, err := stmt.Exec()
 	if err != nil {
 		klog.Error(err)
+		return
 	}
 
 	err = stmt.Close()
 	if err != nil {
 		klog.Error(err)
+		return
 	}
 
 	err = txn.Commit()
 	if err != nil {
 		klog.Error(err)
+		return
 	}
 
 	if count, err := res.RowsAffected(); err != nil {
 		klog.Error(err)
+		return
 	} else {
 		klog.Info("Affected rows: ", count)
 	}
@@ -115,12 +123,14 @@ func Get(query string) Response {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
+		return Response{}
 	}
 	defer db.Close()
 
 	rows, err := db.Query(query)
 	if err != nil {
 		klog.Error(err)
+		return Response{}
 	}
 	defer rows.Close()
 
@@ -157,6 +167,7 @@ func Get(query string) Response {
 		if err != nil {
 			rows.Close()
 			klog.Error(err)
+			return Response{}
 		}
 
 		if temp_clusternamespace.Valid {
@@ -206,12 +217,14 @@ func GetMemberList(query string) ([]string, int64) {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
+		return nil, 0
 	}
 	defer db.Close()
 
 	rows, err := db.Query(query)
 	if err != nil {
 		klog.Error(err)
+		return nil, 0
 	}
 	defer rows.Close()
 
@@ -227,6 +240,7 @@ func GetMemberList(query string) ([]string, int64) {
 		if err != nil {
 			rows.Close()
 			klog.Error(err)
+			return nil, 0
 		}
 		memberList = append(memberList, member)
 	}
