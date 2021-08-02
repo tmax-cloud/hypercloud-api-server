@@ -18,6 +18,17 @@ const (
 	PORT        = 5432
 )
 
+type Response struct {
+	ClusterInfo []ClusterInfo   `json:"clusterInfo"`
+	EventList   audit.EventList `json:"eventList"`
+	RowsCount   int64           `json:"rowsCount"`
+}
+
+type ClusterInfo struct {
+	ClusterNamespace string `json:"clusterNamespace"`
+	ClusterName      string `json:"clusterName"`
+}
+
 var pg_con_info string
 
 func init() {
@@ -55,7 +66,8 @@ func Insert(items []audit.Event, clusterName string, clusterNamespace string) {
 	}
 
 	for _, event := range items {
-		_, err = stmt.Exec(event.AuditID,
+		_, err = stmt.Exec(
+			event.AuditID,
 			clusterNamespace,
 			clusterName,
 			event.User.Username,
@@ -99,8 +111,7 @@ func Insert(items []audit.Event, clusterName string, clusterNamespace string) {
 	}
 }
 
-// TODO : Select multi_audit 변경
-func Get(query string) (audit.EventList, int64) {
+func Get(query string) Response {
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -113,16 +124,21 @@ func Get(query string) (audit.EventList, int64) {
 	}
 	defer rows.Close()
 
+	response := Response{}
+	clusterInfo := []ClusterInfo{}
 	eventList := audit.EventList{}
 	var row_count int64
 	for rows.Next() {
-		var temp_namespace, temp_apigroup, temp_apiversion sql.NullString
+		var temp_clusternamespace, temp_clustername, temp_namespace, temp_apigroup, temp_apiversion sql.NullString
+		cluster := ClusterInfo{}
 		event := audit.Event{
 			ObjectRef:      &audit.ObjectReference{},
 			ResponseStatus: &metav1.Status{},
 		}
 		err := rows.Scan(
 			&event.AuditID,
+			&temp_clusternamespace,
+			&temp_clustername,
 			&event.User.Username,
 			&event.UserAgent,
 			&temp_namespace,  //&event.ObjectRef.Namespace,
@@ -142,6 +158,19 @@ func Get(query string) (audit.EventList, int64) {
 			rows.Close()
 			klog.Error(err)
 		}
+
+		if temp_clusternamespace.Valid {
+			cluster.ClusterNamespace = temp_clusternamespace.String
+		} else {
+			cluster.ClusterNamespace = ""
+		}
+
+		if temp_clustername.Valid {
+			cluster.ClusterNamespace = temp_clustername.String
+		} else {
+			cluster.ClusterNamespace = ""
+		}
+
 		if temp_namespace.Valid {
 			event.ObjectRef.Namespace = temp_namespace.String
 		} else {
@@ -159,12 +188,18 @@ func Get(query string) (audit.EventList, int64) {
 		} else {
 			event.ObjectRef.APIVersion = ""
 		}
+
+		clusterInfo = append(clusterInfo, cluster)
 		eventList.Items = append(eventList.Items, event)
 	}
 	eventList.Kind = "EventList"
 	eventList.APIVersion = "audit.k8s.io/v1"
 
-	return eventList, row_count
+	response.ClusterInfo = clusterInfo
+	response.EventList = eventList
+	response.RowsCount = row_count
+
+	return response
 }
 
 func GetMemberList(query string) ([]string, int64) {

@@ -70,9 +70,9 @@ func (c *Client) readPump() {
 		}
 
 		query := queryBuilder(c.cond)
-		eventList, _ := auditDataFactory.Get(query)
+		response := auditDataFactory.Get(query)
 
-		respMsg, err := json.Marshal(eventList)
+		respMsg, err := json.Marshal(response.EventList)
 
 		c.conn.WriteMessage(websocket.TextMessage, respMsg)
 		if err != nil {

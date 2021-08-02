@@ -38,13 +38,6 @@ type urlParam struct {
 	Sort             []string             `json:"sort"`
 }
 
-type response struct {
-	EventList        audit.EventList `json:"eventList"`
-	RowsCount        int64           `json:"rowsCount"`
-	ClusterName      string          `json:"clusterName"`
-	ClusterNamespace string          `json:"clusterNamespace"`
-}
-
 type MemberListResponse struct {
 	MemberList []string `json:"memberList"`
 }
@@ -257,12 +250,7 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 	urlParam.NamespaceList = nsList
 
 	query := queryBuilder(urlParam)
-	eventList, count := auditDataFactory.Get(query) // 반환 값 추가해야함
-
-	response := response{
-		EventList: eventList,
-		RowsCount: count,
-	}
+	response := auditDataFactory.Get(query)
 
 	util.SetResponse(res, "", response, http.StatusOK)
 }
