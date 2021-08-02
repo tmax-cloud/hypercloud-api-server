@@ -59,8 +59,8 @@ func Insert(items []audit.Event, clusterName string, clusterNamespace string) {
 		klog.Error(err)
 	}
 
-	stmt, err := txn.Prepare(pq.CopyIn("audit", "id", "clusternamespace", "clustername", "username", "useragent", "namespace", "apigroup", "apiversion", "resource", "name",
-		"stage", "stagetimestamp", "verb", "code", "status", "reason", "message"))
+	stmt, err := txn.Prepare(pq.CopyIn("audit", "id", "username", "useragent", "namespace", "apigroup", "apiversion", "resource", "name",
+		"stage", "stagetimestamp", "verb", "code", "status", "reason", "message", "clusternamespace", "clustername"))
 	if err != nil {
 		klog.Error(err)
 	}
@@ -68,8 +68,6 @@ func Insert(items []audit.Event, clusterName string, clusterNamespace string) {
 	for _, event := range items {
 		_, err = stmt.Exec(
 			event.AuditID,
-			clusterNamespace,
-			clusterName,
 			event.User.Username,
 			event.UserAgent,
 			NewNullString(event.ObjectRef.Namespace),
@@ -83,7 +81,9 @@ func Insert(items []audit.Event, clusterName string, clusterNamespace string) {
 			event.ResponseStatus.Code,
 			event.ResponseStatus.Status,
 			event.ResponseStatus.Reason,
-			event.ResponseStatus.Message)
+			event.ResponseStatus.Message,
+			clusterNamespace,
+			clusterName)
 
 		if err != nil {
 			klog.Error(err)
@@ -137,8 +137,6 @@ func Get(query string) Response {
 		}
 		err := rows.Scan(
 			&event.AuditID,
-			&temp_clusternamespace,
-			&temp_clustername,
 			&event.User.Username,
 			&event.UserAgent,
 			&temp_namespace,  //&event.ObjectRef.Namespace,
@@ -153,6 +151,8 @@ func Get(query string) Response {
 			&event.ResponseStatus.Status,
 			&event.ResponseStatus.Reason,
 			&event.ResponseStatus.Message,
+			&temp_clusternamespace,
+			&temp_clustername,
 			&row_count)
 		if err != nil {
 			rows.Close()
