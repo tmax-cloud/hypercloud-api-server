@@ -14,6 +14,7 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	"github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	auditDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/audit"
+	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	"k8s.io/apiserver/pkg/apis/audit"
@@ -52,6 +53,27 @@ func ListAuditVerb(w http.ResponseWriter, r *http.Request) {
 func ListAuditResource(w http.ResponseWriter, r *http.Request) {
 	util.SetResponse(w, "", caller.AuditResourceList, http.StatusOK)
 	return
+}
+
+func ListAuditCluster(w http.ResponseWriter, r *http.Request) {
+	queryParams := r.URL.Query()
+	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
+	cml := &clusterv1alpha1.ClusterManagerList{}
+
+	var err error
+	if cml, err = caller.ListAllCluster(userId, userGroups); err != nil {
+		klog.Errorln(err)
+		util.SetResponse(w, "Error occured", nil, http.StatusOK)
+		return
+	}
+
+	var result []string
+	for _, item := range cml.Items {
+		result = append(result, item.Name)
+	}
+
+	util.SetResponse(w, "", result, http.StatusOK)
 }
 
 func UpdateAuditResource() {
