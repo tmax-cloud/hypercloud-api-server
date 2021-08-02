@@ -192,6 +192,7 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
+	params := mux.Vars(req)
 
 	if userId == "" {
 		msg := "UserId is empty."
@@ -235,8 +236,6 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 	urlParam := urlParam{}
 	urlParam.Search = queryParams.Get("search")
 	urlParam.UserId = userId
-	urlParam.ClusterName = queryParams.Get("clusterName")
-	urlParam.ClusterNamespace = queryParams.Get("clusterNamespace")
 	urlParam.Namespace = queryParams.Get("namespace")
 	urlParam.Resource = queryParams.Get("resource")
 	urlParam.Limit = queryParams.Get("limit")
@@ -248,6 +247,8 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 	urlParam.EndTime = queryParams.Get("endTime")
 	urlParam.Status = queryParams.Get("status")
 	urlParam.NamespaceList = nsList
+	urlParam.ClusterNamespace = params["clusterNamespace"]
+	urlParam.ClusterName = params["clusterName"]
 
 	query := queryBuilder(urlParam)
 	response := auditDataFactory.Get(query)
