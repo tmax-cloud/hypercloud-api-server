@@ -51,11 +51,11 @@ func HyperauthConsumer() {
 				fmt.Printf("Panic happened with %v", r)
 				fmt.Println()
 			}
+			go HyperauthConsumer()
 		} else {
 			fmt.Println("what???")
 		}
 	}()
-
 	sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags)
 
 	/*
@@ -104,8 +104,9 @@ func HyperauthConsumer() {
 
 	client, err := sarama.NewConsumerGroup([]string{kafka1_addr, kafka2_addr, kafka3_addr}, consumerGroupId, consumerConfig)
 	if err != nil {
-		klog.Error("Error creating consumer group client: %v", err)
-		return
+		klog.Errorln("Error creating consumer group client: %v", err)
+		time.Sleep(time.Minute * 1)
+		panic("Try Reconnection to Kafka...")
 	}
 
 	wg := &sync.WaitGroup{}
