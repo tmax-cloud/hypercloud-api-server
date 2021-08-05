@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.22.0 start -------------------->
+
+## Hypercloud-api-server 5.0.22.0 (2021. 08. 05. (목) 15:14:49 KST)
+
+### Added
+
+### Changed
+  - [mod] cluster 생성시 cluster manger creator annotation이 service account가 아닌 계정명으로 찍히도록 변경 by soohwan kim
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.21.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.21.0 (2021. 07. 29. (목) 15:30:23 KST)
