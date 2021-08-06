@@ -1165,9 +1165,11 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 				"parent": clusterClaim.Name,
 			},
 			Annotations: map[string]string{
-				"owner": clusterClaim.Annotations["creator"],
+				"owner":   clusterClaim.Annotations["creator"],
+				"creator": clusterClaim.Annotations["creator"],
 			},
 		},
+		// todo-shkim
 		Spec: clusterv1alpha1.ClusterManagerSpec{
 			Provider:   clusterClaim.Spec.Provider,
 			Version:    clusterClaim.Spec.Version,
