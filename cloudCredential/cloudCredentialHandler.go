@@ -1,6 +1,8 @@
 package cloudcredential
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -48,8 +50,22 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, "", err, http.StatusBadRequest)
 		return
 	}
-	klog.Infoln(response)
-	util.SetResponse(res, "", response, http.StatusOK)
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		klog.Errorln(err.Error())
+		util.SetResponse(res, "Failed to read response body", nil, http.StatusInternalServerError)
+		return
+	}
+
+	var data interface{}
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		klog.Errorln(err.Error())
+	}
+	klog.Infoln("Results: ", data)
+
+	util.SetResponse(res, "", data, http.StatusOK)
 }
 
 func AppendParam(req *http.Request, param string) string {
