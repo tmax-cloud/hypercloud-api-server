@@ -1,6 +1,35 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.24.0 start -------------------->
+
+## Hypercloud-api-server 5.0.24.0 (2021. 08. 19. (목) 17:01:25 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.23.0 start -------------------->
+
+## Hypercloud-api-server 5.0.23.0 (2021. 08. 12. (목) 13:03:29 KST)
+
+### Added
+
+### Changed
+  - [mod] kafka 비정상 동작으로 인해 consumer group 등록 실패 시, 1분 후에 재시도 하도록 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.22.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.22.0 (2021. 08. 05. (목) 15:14:49 KST)
