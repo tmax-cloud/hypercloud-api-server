@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	//cc "github.com/tmax-cloud/hypercloud-api-server/cloudCredential"
@@ -17,6 +18,8 @@ type QueryResponse struct {
 	Target     string    `json:"target"`
 	Datapoints [][]int64 `json:"datapoints"` // [ ["value", "timestamp in milliseconds"], ["value", ...], ...]
 }
+
+var query_response []QueryResponse
 
 const (
 	BILLING_BY_ACCOUNT  = "billing_by_account"
@@ -66,8 +69,8 @@ func Query(res http.ResponseWriter, req *http.Request) {
 		...
 	]
 	*/
-	var qr []QueryResponse
-	var temp QueryResponse
+	time := time.Now().Unix()
+	//time *= 1000
 	for i := range targets {
 		query := targets[i].(map[string]interface{})
 		target := query["target"]
@@ -79,7 +82,7 @@ func Query(res http.ResponseWriter, req *http.Request) {
 		switch target {
 		case BILLING_BY_ACCOUNT:
 			klog.Infoln("Handling billing_by_account...")
-			requestURL := "https://localhost:443/cloudCredential?api=billing&resource=swlee-aws&namespace=hypercloud5-system&endTime=1625717822&startTime=1625065200"
+			requestURL := "https://localhost:443/cloudCredential?api=billing&resource=swlee-aws&namespace=hypercloud5-system&startTime=1625717822&endTime=" + strconv.FormatInt(time, 10)
 			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // skip TLS
 			resp, err := http.Get(requestURL)
 			if err != nil {
@@ -96,20 +99,13 @@ func Query(res http.ResponseWriter, req *http.Request) {
 				return
 			}
 
-			var data []model.Awscost //interface{}
+			var data []model.Awscost
 			err = json.Unmarshal(body, &data)
 			if err != nil {
 				klog.Errorln(err.Error())
 			}
 
-			klog.Infoln("cloudcredential API response.data ==", data)
-
-			temp = QueryResponse{}
-			temp.Target = "billing_by_account"
-			time := time.Now().Unix()
-			time *= 1000
-			temp.Datapoints = append(temp.Datapoints, []int64{int64(data[0].Metrics["BlendedCost"].Amount), (time)})
-			qr = append(qr, temp)
+			addData(BILLING_BY_ACCOUNT, data)
 
 		case BILLING_BY_REGION:
 			klog.Infoln("Handling billing_by_region...")
@@ -124,27 +120,31 @@ func Query(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	// var qr []QueryResponse
-	// var temp QueryResponse
-	// temp = QueryResponse{}
-	// temp.Target = "billing_by_account"
-	// time := time.Now().Unix()
-	// time *= 1000
-	// temp.Datapoints = append(temp.Datapoints, []int64{3, (time - 10000*1000)})
-	// temp.Datapoints = append(temp.Datapoints, []int64{1, (time)})
-	// qr = append(qr, temp)
-
-	// temp = QueryResponse{}
-	// temp.Target = "billing_by_region"
-	// temp.Datapoints = append(temp.Datapoints, []int64{8, (time - 1000*1000)})
-	// temp.Datapoints = append(temp.Datapoints, []int64{3, (time)})
-	// qr = append(qr, temp)
-
-	//klog.Infoln("qr =", qr)
-
-	util.SetResponse(res, "", qr, http.StatusOK)
+	util.SetResponse(res, "", query_response, http.StatusOK)
 }
 
 func Annotations(res http.ResponseWriter, req *http.Request) {
 
+}
+
+func addData(target string, data []model.Awscost) {
+	// if target already exists,
+	// append data to it
+	for i := range query_response {
+		if query_response[i].Target == target {
+			time := time.Now().Unix()
+			time *= 1000
+			query_response[i].Datapoints = append(query_response[i].Datapoints, []int64{int64(data[0].Metrics["BlendedCost"].Amount), (time)})
+			return
+		}
+	}
+
+	// if not,
+	// generate new object for the target
+	temp := QueryResponse{}
+	temp.Target = target
+	time := time.Now().Unix()
+	time *= 1000
+	temp.Datapoints = append(temp.Datapoints, []int64{int64(data[0].Metrics["BlendedCost"].Amount), (time)})
+	query_response = append(query_response, temp)
 }
