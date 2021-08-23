@@ -49,8 +49,8 @@ func Query(res http.ResponseWriter, req *http.Request) {
 	bytes, _ := ioutil.ReadAll(req.Body)
 	str := string(bytes)
 	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
-		klog.Errorln("Error occured during unmarshaling request body")
-		util.SetResponse(res, "", nil, http.StatusInternalServerError)
+		klog.Errorln(err.Error())
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 	targets := resultJson["targets"].([]interface{})
@@ -86,8 +86,8 @@ func Query(res http.ResponseWriter, req *http.Request) {
 			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // skip TLS
 			resp, err := http.Get(requestURL)
 			if err != nil {
-				klog.Errorln("Error while calling /cloudCredential API")
-				util.SetResponse(res, "Error while calling /cloudCredential API", nil, http.StatusInternalServerError)
+				klog.Errorln(err.Error())
+				util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 				return
 			}
 			defer resp.Body.Close()
@@ -95,7 +95,7 @@ func Query(res http.ResponseWriter, req *http.Request) {
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
 				klog.Errorln(err.Error())
-				util.SetResponse(res, "Failed to read response body", nil, http.StatusInternalServerError)
+				util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 				return
 			}
 
