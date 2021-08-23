@@ -37,6 +37,12 @@ func NewNullString(s string) sql.NullString {
 }
 
 func Insert(items []audit.Event) {
+	defer func() {
+		if v := recover(); v != nil {
+			klog.Errorln("capture a panic:", v)
+		}
+	}()
+
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -98,6 +104,12 @@ func Insert(items []audit.Event) {
 }
 
 func Get(query string) (audit.EventList, int64) {
+	defer func() {
+		if v := recover(); v != nil {
+			klog.Errorln("capture a panic:", v)
+		}
+	}()
+
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
@@ -165,6 +177,12 @@ func Get(query string) (audit.EventList, int64) {
 }
 
 func GetMemberList(query string) ([]string, int64) {
+	defer func() {
+		if v := recover(); v != nil {
+			klog.Errorln("capture a panic:", v)
+		}
+	}()
+
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
 		klog.Error(err)
