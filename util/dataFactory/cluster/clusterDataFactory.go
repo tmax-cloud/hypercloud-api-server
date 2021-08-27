@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
-
+	
 	pq "github.com/lib/pq"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
 	"k8s.io/apimachinery/pkg/types"
@@ -381,6 +381,7 @@ func ListClusterAllNamespace(userId string, userGroups []string) ([]types.Namesp
 	}
 	defer rows.Close()
 
+	//klog.Infoln(unsafe.Sizeof(rows))
 	for rows.Next() {
 		var clusterManagerNamespacedName types.NamespacedName
 		rows.Scan(
@@ -389,6 +390,7 @@ func ListClusterAllNamespace(userId string, userGroups []string) ([]types.Namesp
 		)
 		clusterManagerNamespacedNameList = append(clusterManagerNamespacedNameList, clusterManagerNamespacedName)
 	}
+	//klog.Infoln("NS: " + clusterManagerNamespacedNameList[0].Namespace + " / Name: " + clusterManagerNamespacedNameList[0].Name)
 	return clusterManagerNamespacedNameList, nil
 }
 
