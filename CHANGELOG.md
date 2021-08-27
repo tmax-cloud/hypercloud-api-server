@@ -3,6 +3,24 @@ All notable changes to this project will be documented in this file.
 
 <!-------------------- v5.0.25.0 start -------------------->
 
+## Hypercloud-api-server 5.0.25.0 (2021. 08. 27. (금) 18:29:46 KST)
+
+### Added
+  - [feat] vsphere cluster claim을 위한 struct 추가 by soohwan kim
+
+### Changed
+  - [mod] postgres 연결 실패 시, pod 다운 되지 않도록 수정 by Seungwon Lee
+  - [mod] 미사용 API 삭제 ~/awscost by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] go.mod multi-operator repo 버전 업데이트 by soohwan kim
+
+<!-------------------- v5.0.25.0 start -------------------->
+
 ## Hypercloud-api-server 5.0.25.0 (2021. 08. 27. (금) 17:44:59 KST)
 
 ### Added
