@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.25.1 start -------------------->
+
+## Hypercloud-api-server 5.0.25.1 (2021. 10. 21. (목) 17:06:57 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][271798] service instance parameter 공백 버그 수정 by soohwan kim
+
+### CRD yaml
+
+### Etc
+  - [etc] undo build v5.0.25.6 by soohwan kim
+
 <!-------------------- v5.0.25.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.25.0 (2021. 08. 27. (금) 18:52:08 KST)
