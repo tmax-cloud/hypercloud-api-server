@@ -18,7 +18,7 @@ require (
 	github.com/robfig/cron v1.2.0
 	//github.com/robfig/cron v1.2.0
 	github.com/tmax-cloud/efk-operator v0.0.0-20201207030412-fd9c02a3e1c2
-	github.com/tmax-cloud/hypercloud-multi-operator v0.0.0-20210827064858-776bc25bd5c0
+	github.com/tmax-cloud/hypercloud-multi-operator/v5 v5.0.2508
 	github.com/tmax-cloud/hypercloud-single-operator v0.0.0-20210222045913-0ace319d7c34
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v2 v2.3.0

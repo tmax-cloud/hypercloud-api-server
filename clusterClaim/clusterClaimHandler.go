@@ -8,7 +8,7 @@ import (
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
 	caller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	clusterDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/cluster"
-	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
+	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/v5/apis/claim/v1alpha1"
 	"k8s.io/klog"
 )
 
