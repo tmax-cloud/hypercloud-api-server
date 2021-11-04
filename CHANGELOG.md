@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.0 start -------------------->
+
+## Hypercloud-api-server 5.0.26.0 (2021. 11. 04. (목) 13:57:24 KST)
+
+### Added
+
+### Changed
+  - [mod] 인증서 방식 변경, kafka_enabled 분기 추가 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.25.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.25.1 (2021. 10. 21. (목) 17:06:57 KST)
