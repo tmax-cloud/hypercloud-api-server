@@ -5,10 +5,22 @@ import (
 	"fmt"
 
 	pq "github.com/lib/pq"
+	//hypercloudAudit "github.com/tmax-cloud/hypercloud-api-server/audit"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/apis/audit"
 	"k8s.io/klog"
 )
+
+type ClaimListResponse struct {
+	Claims    []Claim `json:"claimList"`
+	RowsCount int64   `json:"rowsCount"`
+}
+
+type Claim struct {
+	Id        string `json:"id"`
+	Namespace string `json:"namespace"`
+	Body      string `json:"body"`
+}
 
 const (
 	DB_USER     = "postgres"
@@ -174,6 +186,50 @@ func Get(query string) (audit.EventList, int64) {
 	eventList.APIVersion = "audit.k8s.io/v1"
 
 	return eventList, row_count
+}
+
+func GetByJson(jquery string) ClaimListResponse {
+	defer func() {
+		if v := recover(); v != nil {
+			klog.Errorln("capture a panic:", v)
+		}
+	}()
+
+	klog.Infoln("query =", jquery)
+
+	db, err := sql.Open("postgres", pg_con_info)
+	if err != nil {
+		klog.Error(err)
+	}
+	defer db.Close()
+
+	rows, err := db.Query(jquery)
+	if err != nil {
+		klog.Error(err)
+	}
+	defer rows.Close()
+
+	var claimList ClaimListResponse
+	for rows.Next() {
+		var claim Claim
+		var namespace sql.NullString
+
+		err := rows.Scan(
+			&claim.Id,
+			&namespace,
+			&claim.Body)
+		if err != nil {
+			rows.Close()
+			klog.Error(err)
+		}
+		if namespace.Valid {
+			claim.Namespace = namespace.String
+		} else {
+			claim.Namespace = ""
+		}
+		claimList.Claims = append(claimList.Claims, claim)
+	}
+	return claimList
 }
 
 func GetMemberList(query string) ([]string, int64) {

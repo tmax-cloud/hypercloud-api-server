@@ -20,6 +20,8 @@ const (
 	QUERY_PARAMETER_GRANULARITY    = "granularity"
 	QUERY_PARAMETER_METRICS        = "metrics"
 	QUERY_PARAMETER_DIMENSION      = "dimension"
+	QUERY_PARAMETER_KEY            = "key"
+	QUERY_PARAMETER_VALUE          = "value"
 
 	//HyperAuth
 	//HYPERAUTH_URL = "http://hyperauth.hyperauth"
