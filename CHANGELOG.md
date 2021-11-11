@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.25.2 start -------------------->
+
+## Hypercloud-api-server 5.0.25.2 (2021. 11. 11. (목) 17:30:04 KST)
+
+### Added
+
+### Changed
+  - [mod] KAFKA_ENABLED 변수 추가 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.25.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.25.1 (2021. 10. 21. (목) 17:06:57 KST)
