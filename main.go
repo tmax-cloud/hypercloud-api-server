@@ -115,7 +115,13 @@ func main() {
 	cronJob.Start()
 
 	// Hyperauth Event Consumer
-	go kafkaConsumer.HyperauthConsumer()
+
+	kafka_enabled := os.Getenv("KAFKA_ENABLED")
+	if kafka_enabled == "true" || kafka_enabled == "TRUE" {
+		go kafkaConsumer.HyperauthConsumer()
+	} else {
+		klog.Infoln("KAFKA_ENABLED is false")
+	}
 
 	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
