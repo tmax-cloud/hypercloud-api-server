@@ -9,6 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/apis/audit"
 	"k8s.io/klog"
+	"strings"
 )
 
 type ClaimListResponse struct {
@@ -227,6 +228,8 @@ func GetByJson(jquery string) ClaimListResponse {
 		} else {
 			claim.Namespace = ""
 		}
+		claim.Body = strings.Replace(claim.Body, "\\", "", -1)
+
 		claimList.Claims = append(claimList.Claims, claim)
 	}
 	return claimList
