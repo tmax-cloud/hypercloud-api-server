@@ -167,6 +167,7 @@ func main() {
 	mux.HandleFunc("/audit/resources", serveAuditResources)
 	mux.HandleFunc("/audit/verb", serveAuditVerb)
 	mux.HandleFunc("/audit/websocket", serveAuditWss)
+	mux.HandleFunc("/audit/json", serveAuditJson)
 	mux.HandleFunc("/inject/pod", serveSidecarInjectionForPod)
 	mux.HandleFunc("/inject/deployment", serveSidecarInjectionForDeploy)
 	mux.HandleFunc("/inject/replicaset", serveSidecarInjectionForRs)
@@ -521,7 +522,6 @@ func serveAudit(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		audit.AddAudit(w, r)
 	case http.MethodPut:
-		audit.GetAuditBodyByJson(w, r)
 	case http.MethodDelete:
 	default:
 		//error
@@ -565,6 +565,16 @@ func serveAuditBatch(w http.ResponseWriter, r *http.Request) {
 func serveAuditWss(w http.ResponseWriter, r *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	audit.ServeWss(w, r)
+}
+
+func serveAuditJson(w http.ResponseWriter, r *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	switch r.Method {
+	case http.MethodGet:
+		audit.GetAuditBodyByJson(w, r)
+	default:
+		//error
+	}
 }
 
 func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
