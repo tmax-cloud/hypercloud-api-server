@@ -257,7 +257,7 @@ func GetByJson(jquery string) ClaimListResponse {
 		} else {
 			claim.Namespace = ""
 		}
-		claim.Body = strings.Replace(claim.Body, "\\", "", -1)
+		//claim.Body = strings.Replace(claim.Body, "\\", "", -1)
 
 		claimList.Claims = append(claimList.Claims, claim)
 	}
