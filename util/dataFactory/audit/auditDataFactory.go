@@ -66,6 +66,7 @@ func Insert(items []audit.Event) {
 		klog.Error(err)
 	}
 
+	// Insert Metadata
 	stmt, err := txn.Prepare(pq.CopyIn("audit", "id", "username", "useragent", "namespace", "apigroup", "apiversion", "resource", "name",
 		"stage", "stagetimestamp", "verb", "code", "status", "reason", "message"))
 	if err != nil {
@@ -103,12 +104,40 @@ func Insert(items []audit.Event) {
 		klog.Error(err)
 	}
 
+	// Insert Request Body
+	stmt_body, err := txn.Prepare(pq.CopyIn("audit_body", "id", "namespace", "body"))
+	if err != nil {
+		klog.Error(err)
+	}
+
+	for _, event := range items {
+		_, err = stmt_body.Exec(event.AuditID,
+			NewNullString(event.ObjectRef.Namespace),
+			event.RequestObject.Raw)
+
+		if err != nil {
+			klog.Error(err)
+		}
+	}
+	res_body, err := stmt_body.Exec()
+	if err != nil {
+		klog.Error(err)
+	}
+
+	err = stmt_body.Close()
+	if err != nil {
+		klog.Error(err)
+	}
+
+	// Commit
 	err = txn.Commit()
 	if err != nil {
 		klog.Error(err)
 	}
 
 	if count, err := res.RowsAffected(); err != nil {
+		klog.Error(err)
+	} else if _, err := res_body.RowsAffected(); err != nil {
 		klog.Error(err)
 	} else {
 		klog.Info("Affected rows: ", count)
