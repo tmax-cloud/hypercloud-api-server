@@ -45,8 +45,11 @@ var (
 func main() {
 	// For tls
 	flag.IntVar(&port, "port", 443, "hypercloud5-api-server port")
-	flag.StringVar(&certFile, "certFile", "/run/secrets/tls/hypercloud-api-server.crt", "hypercloud5-api-server cert")
-	flag.StringVar(&keyFile, "keyFile", "/run/secrets/tls/hypercloud-api-server.key", "hypercloud5-api-server key")
+	// flag.StringVar(&certFile, "certFile", "/run/secrets/tls/hypercloud-api-server.crt", "hypercloud5-api-server cert")
+	// flag.StringVar(&keyFile, "keyFile", "/run/secrets/tls/hypercloud-api-server.key", "hypercloud5-api-server key")
+	// certificate name is modified from hypercloud-* to tls.*
+	flag.StringVar(&certFile, "certFile", "/run/secrets/tls/tls.crt", "hypercloud5-api-server cert")
+	flag.StringVar(&keyFile, "keyFile", "/run/secrets/tls/tls.key", "hypercloud5-api-server key")
 	flag.StringVar(&admission.SidecarContainerImage, "sidecarImage", "fluent/fluent-bit:1.5-debug", "Fluent-bit image name.")
 	flag.StringVar(&util.SMTPHost, "smtpHost", "mail.tmax.co.kr", "SMTP Server Host Address")
 	flag.IntVar(&util.SMTPPort, "smtpPort", 25, "SMTP Server Port")
@@ -115,7 +118,6 @@ func main() {
 	cronJob.Start()
 
 	// Hyperauth Event Consumer
-
 	kafka_enabled := os.Getenv("KAFKA_ENABLED")
 	if kafka_enabled == "true" || kafka_enabled == "TRUE" {
 		go kafkaConsumer.HyperauthConsumer()
@@ -165,6 +167,7 @@ func main() {
 	mux.HandleFunc("/audit/resources", serveAuditResources)
 	mux.HandleFunc("/audit/verb", serveAuditVerb)
 	mux.HandleFunc("/audit/websocket", serveAuditWss)
+	mux.HandleFunc("/audit/json", serveAuditJson)
 	mux.HandleFunc("/inject/pod", serveSidecarInjectionForPod)
 	mux.HandleFunc("/inject/deployment", serveSidecarInjectionForDeploy)
 	mux.HandleFunc("/inject/replicaset", serveSidecarInjectionForRs)
@@ -564,6 +567,16 @@ func serveAuditWss(w http.ResponseWriter, r *http.Request) {
 	audit.ServeWss(w, r)
 }
 
+func serveAuditJson(w http.ResponseWriter, r *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	switch r.Method {
+	case http.MethodGet:
+		audit.GetAuditBodyByJson(w, r)
+	default:
+		//error
+	}
+}
+
 func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 	var body []byte
 	if r.Body != nil {
@@ -604,4 +617,3 @@ func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 		responseAdmissionReview.Response = admission.ToAdmissionResponse(err)
 	}
 }
-

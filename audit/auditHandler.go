@@ -33,6 +33,8 @@ type urlParam struct {
 	Verb          string               `json:"verb"`
 	Status        string               `json:"status"`
 	Sort          []string             `json:"sort"`
+	Key           []string             `json:"key"`
+	Value         string               `json:"value"`
 }
 
 type response struct {
@@ -238,6 +240,68 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 	util.SetResponse(res, "", response, http.StatusOK)
 }
 
+func GetAuditBodyByJson(res http.ResponseWriter, req *http.Request) {
+	var nsList corev1.NamespaceList
+	queryParams := req.URL.Query()
+
+	key := queryParams[util.QUERY_PARAMETER_KEY]
+	value := queryParams.Get(util.QUERY_PARAMETER_VALUE)
+	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
+
+	if len(key) == 0 || value == "" {
+		msg := "key or value is empty."
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
+		return
+	}
+
+	// admin 권한 체크
+	nsListSAR, err := caller.CreateSubjectAccessReview(userId, userGroups, "", "namespaces", "", "", "list")
+	if err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, "", nil, http.StatusInternalServerError)
+		return
+	}
+
+	// admin이 아니라면...
+	if !nsListSAR.Status.Allowed {
+		if queryParams.Get("namespace") == "" {
+			util.SetResponse(res, "Non-admin users should select namespace.", nil, http.StatusBadRequest)
+			return
+		}
+		tmp := []string{}
+		// list ns w/ labelselector
+		if nsList = caller.GetAccessibleNS(userId, "", userGroups); len(nsList.Items) == 0 {
+			util.SetResponse(res, "no ns", nil, http.StatusOK)
+			return
+		}
+		for _, item := range nsList.Items {
+			if item.Annotations["owner"] == userId {
+				tmp = append(tmp, item.Name)
+			}
+		}
+		if !util.Contains(tmp, queryParams.Get("namespace")) {
+			util.SetResponse(res, "Not authorized", nil, http.StatusForbidden)
+			return
+		}
+	}
+	urlParam := urlParam{}
+	urlParam.Key = queryParams["key"]
+	urlParam.Value = queryParams.Get("value")
+	jquery := queryBuilderJson(urlParam)
+
+	claimList := auditDataFactory.GetByJson(jquery)
+
+	// response := auditDataFactory.ClaimListResponse{
+	// 	Claims:    claimList,
+	// 	RowsCount: count,
+	// }
+
+	util.SetResponse(res, "", claimList, http.StatusOK)
+
+}
+
 func queryBuilder(param urlParam) string {
 	// search := param.Search
 	// userId := param.UserId
@@ -351,4 +415,27 @@ func queryBuilder(param urlParam) string {
 
 	klog.Info("query: ", query)
 	return query
+}
+
+func queryBuilderJson(param urlParam) string {
+	key := param.Key
+	value := param.Value
+
+	if len(key) == 1 && key[0] == "_all" {
+		// return all rows
+		return "select * from audit_body"
+	}
+
+	jquery := "select * from audit_body where body "
+
+	for i, k := range key {
+		if i == len(key)-1 { // if last key
+			jquery += "->> '" + k + "' "
+		} else {
+			jquery += "-> '" + k + "' "
+		}
+	}
+	jquery += "= '" + value + "' "
+
+	return jquery
 }

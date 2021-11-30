@@ -62,13 +62,16 @@ func HyperauthConsumer() {
 		kubectl create secret tls hypercloud-kafka-secret2 --cert=./hypercloud-api-server.crt,hypercloud-root-ca.crt --key=./hypercloud-api-server.key -n hypercloud5-system
 		kubectl create secret generic hypercloud-kafka-secret2 --from-file=./hypercloud-api-server.crt --from-file=./hypercloud-root-ca.crt --from-file=./hypercloud-api-server.key -n hypercloud5-system
 	*/
+	// tlsConfig, err := NewTLSConfig("./etc/ssl/tls.crt",
+	// 	"./etc/ssl/tls.key",
+	// 	"./etc/ssl/ca.crt")
+
+	// original code,
+	// certificate name is modified from hypercloud-* to tls.*
 	tlsConfig, err := NewTLSConfig("./etc/ssl/hypercloud-api-server.crt",
 		"./etc/ssl/hypercloud-api-server.key",
 		"./etc/ssl/hypercloud-root-ca.crt")
-	if err != nil {
-		klog.Errorln(err)
-		return
-	}
+
 	// This can be used on test server if domain does not match cert:
 	// tlsConfig.InsecureSkipVerify = true
 
