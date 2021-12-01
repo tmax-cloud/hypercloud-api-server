@@ -22,6 +22,8 @@ const (
 	QUERY_PARAMETER_DIMENSION      = "dimension"
 	QUERY_PARAMETER_KEY            = "key"
 	QUERY_PARAMETER_VALUE          = "value"
+	QUERY_PARAMETER_API            = "api"
+	QUERY_PARAMETER_ACCOUNT        = "account"
 
 	//HyperAuth
 	//HYPERAUTH_URL = "http://hyperauth.hyperauth"
