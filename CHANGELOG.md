@@ -1,6 +1,29 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.2 start -------------------->
+
+## Hypercloud-api-server 5.0.26.2 (2021. 12. 08. (수) 11:28:58 KST)
+
+### Added
+  - [feat] GetAuditByJson 기능 추가 by Seungwon Lee
+  - [feat] /cloudCredential api 추가 by Seungwon Lee
+
+### Changed
+  - [mod] kafka DNS 주소만 고려 by Seungwon Lee
+  - [mod] insert audit json body 기능 비활성화 by Seungwon Lee
+  - [mod] 다중 key 조회 가능하도록 수정 by Seungwon Lee
+  - [mod] GET /audit/json 으로 변경 by Seungwon Lee
+  - [mod] json_body insert 기능 추가 by Seungwon Lee
+  - [mod] json body return 값 파싱 by Seungwon Lee
+  - [mod] KAFKA_ENABLED 변수 추가 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.26.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.1 (2021. 12. 06. (월) 15:26:16 KST)
