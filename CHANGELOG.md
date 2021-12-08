@@ -1,6 +1,36 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.1 start -------------------->
+
+## Hypercloud-api-server 5.0.26.1 (2021. 12. 06. (월) 15:26:16 KST)
+
+### Added
+
+### Changed
+  - [mod] kafka DNS 주소만 고려 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.26.0 start -------------------->
+
+## Hypercloud-api-server 5.0.26.0 (2021. 11. 04. (목) 13:57:24 KST)
+
+### Added
+
+### Changed
+  - [mod] 인증서 방식 변경, kafka_enabled 분기 추가 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.25.2 start -------------------->
 
 ## Hypercloud-api-server 5.0.25.2 (2021. 11. 11. (목) 17:30:04 KST)
