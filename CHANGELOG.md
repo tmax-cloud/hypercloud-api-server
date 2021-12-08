@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.3 start -------------------->
+
+## Hypercloud-api-server 5.0.26.3 (2021. 12. 08. (수) 16:44:52 KST)
+
+### Added
+
+### Changed
+  - [mod] kafka DNS 주소 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.26.2 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.2 (2021. 12. 08. (수) 11:28:58 KST)
