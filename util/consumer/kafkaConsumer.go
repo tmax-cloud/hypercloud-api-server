@@ -98,9 +98,9 @@ func HyperauthConsumer() {
 	// 	kafka2_addr = os.Getenv("kafka2_addr")
 	// 	kafka3_addr = os.Getenv("kafka3_addr")
 	// } else {
-	kafka1_addr = "kafka-1.hyperauth:9092"
-	kafka2_addr = "kafka-2.hyperauth:9092"
-	kafka3_addr = "kafka-3.hyperauth:9092"
+	kafka1_addr = "kafka-1.hyperauth.svc.cluster.local:9092"
+	kafka2_addr = "kafka-2.hyperauth.svc.cluster.local:9092"
+	kafka3_addr = "kafka-3.hyperauth.svc.cluster.local:9092"
 	// }
 
 	client, err := sarama.NewConsumerGroup([]string{kafka1_addr, kafka2_addr, kafka3_addr}, consumerGroupId, consumerConfig)
