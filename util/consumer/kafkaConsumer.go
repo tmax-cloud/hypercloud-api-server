@@ -98,7 +98,7 @@ func HyperauthConsumer() {
 	// 	kafka2_addr = os.Getenv("kafka2_addr")
 	// 	kafka3_addr = os.Getenv("kafka3_addr")
 	// } else {
-	kafka1_addr = "kafka-kafka-bootstrap.hyperauth.svc.cluster.local:9092"
+	kafka1_addr = "kafka-kafka-bootstrap.hyperauth:9092"
 	// kafka2_addr = "kafka-2.hyperauth.svc.cluster.local:9092"
 	// kafka3_addr = "kafka-3.hyperauth.svc.cluster.local:9092"
 	// }
