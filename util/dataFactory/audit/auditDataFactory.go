@@ -188,13 +188,7 @@ func GetByJson(jquery string) ClaimListResponse {
 
 	klog.Infoln("query =", jquery)
 
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-	}
-	defer db.Close()
-
-	rows, err := db.Query(jquery)
+	rows, err := db.Dbpool.Query(context.TODO(), jquery)
 	if err != nil {
 		klog.Error(err)
 	}
