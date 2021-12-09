@@ -1,13 +1,14 @@
 package metering
 
 import (
-	"database/sql"
+	"context"
 	"net/http"
 	"strconv"
 	"time"
 
 	meteringModel "github.com/tmax-cloud/hypercloud-api-server/metering/model"
 	"github.com/tmax-cloud/hypercloud-api-server/util"
+	db "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory"
 
 	"k8s.io/klog"
 )
@@ -69,20 +70,14 @@ func Get(res http.ResponseWriter, req *http.Request) {
 func getMeteringDataFromDB(query string) []meteringModel.Metering {
 	klog.Infoln("=== query ===")
 	klog.Infoln(query)
-	db, err := sql.Open(DB_DRIVER, DB_URI)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
 		klog.Error(err)
 		return nil
 	}
-	defer db.Close()
 
-	rows, err := db.Query(query)
 	defer rows.Close()
 
-	if err != nil {
-		klog.Error(err)
-		return nil
-	}
 	var meteringList []meteringModel.Metering
 	var status string
 	for rows.Next() {

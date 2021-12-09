@@ -27,6 +27,7 @@ import (
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
 	"github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
+	"github.com/tmax-cloud/hypercloud-api-server/util/dataFactory"
 	version "github.com/tmax-cloud/hypercloud-api-server/version"
 	"k8s.io/api/admission/v1beta1"
 	"k8s.io/klog"
@@ -60,6 +61,8 @@ func main() {
 
 	// Get Hypercloud Operating Mode!!!
 	hcMode := os.Getenv("HC_MODE")
+	dataFactory.CreateConnection()
+	defer dataFactory.Dbpool.Close()
 	util.TokenExpiredDate = os.Getenv("INVITATION_TOKEN_EXPIRED_DATE")
 	kafkaConsumer.KafkaGroupId = os.Getenv("KAFKA_GROUP_ID")
 	if len(kafkaConsumer.KafkaGroupId) == 0 || kafkaConsumer.KafkaGroupId == "{KAFKA_GROUP_ID}" {

@@ -1,7 +1,7 @@
 package metering
 
 import (
-	"database/sql"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -15,17 +15,12 @@ import (
 	"github.com/google/uuid"
 	meteringModel "github.com/tmax-cloud/hypercloud-api-server/metering/model"
 	"github.com/tmax-cloud/hypercloud-api-server/util"
+	db "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory"
 	"k8s.io/klog"
 )
 
 const (
-	// DB_URI      = fmt.Sprintf("port=%d host=%s user=%s "+"password=%s dbname=%s sslmode=disable", PORT, HOSTNAME, DB_USER, DB_PASSWORD, DB_NAME)
-	DB_DRIVER   = "postgres"
-	DB_USER     = "postgres"
-	DB_PASSWORD = "tmax"
-	DB_NAME     = "postgres"
-	HOSTNAME    = "postgres-service.hypercloud5-system.svc"
-	PORT        = 5432
+	// DB_URI      = fmt.Sprintf("port=%d host=%s user=%s "+"password=%s dbname=%s sslmode=disable", db.PORT, db.HOSTNAME, db.DB_USER, db.DB_PASSWORD, db.DB_NAME)
 
 	METERING_INSERT_QUERY = "insert into metering (id,namespace,cpu,memory,storage,gpu,public_ip,private_ip, traffic_in, traffic_out, metering_time, status) " +
 		"values ($1,$2,trunc($3,2),$4, $5,trunc($6,2),$7,$8,$9,$10,$11,$12)"
@@ -79,12 +74,6 @@ const (
 var t time.Time
 var file *os.File
 var err error
-
-var DB_URI string
-
-func init() {
-	DB_URI = fmt.Sprintf("port=%d host=%s user=%s password=%s dbname=%s sslmode=disable", PORT, HOSTNAME, DB_USER, DB_PASSWORD, DB_NAME)
-}
 
 func MeteringJob() {
 
@@ -156,29 +145,23 @@ func insertMeteringData(meteringData map[string]*meteringModel.Metering) {
 		"Insert into METERING Start!!\n"+
 			"Current Time	: "+t.Format("2006-01-02 15:04:00")+"\n")
 
-	db, err := sql.Open(DB_DRIVER, DB_URI)
-	defer db.Close()
-	if err != nil {
-		fmt.Fprintf(file, "%v\n", err)
-	} else {
-		for key, data := range meteringData {
-			_, err = db.Exec(METERING_INSERT_QUERY,
-				uuid.New(),
-				key,
-				data.Cpu,
-				data.Memory,
-				data.Storage,
-				data.Gpu,
-				data.PublicIp,
-				data.PrivateIp,
-				data.TrafficIn,
-				data.TrafficOut,
-				t.Format("2006-01-02 15:04:00"), "Success")
+	for key, data := range meteringData {
+		_, err = db.Dbpool.Exec(context.TODO(), METERING_INSERT_QUERY,
+			uuid.New(),
+			key,
+			data.Cpu,
+			data.Memory,
+			data.Storage,
+			data.Gpu,
+			data.PublicIp,
+			data.PrivateIp,
+			data.TrafficIn,
+			data.TrafficOut,
+			t.Format("2006-01-02 15:04:00"), "Success")
 
-			if err != nil {
-				fmt.Fprintf(file, "%v\n", err)
-				break
-			}
+		if err != nil {
+			fmt.Fprintf(file, "%v\n", err)
+			break
 		}
 	}
 
@@ -343,16 +326,8 @@ func insertMeteringYear() {
 		"Insert into METERING_YEAR Start!!\n"+
 			"Current Time	: "+t.Format("2006-01-02 15:04:00")+"\n")
 
-	db, err := sql.Open(DB_DRIVER, DB_URI)
-	if err != nil {
-		fmt.Fprintf(file, "%v\n", err)
-		return
-	}
-	defer db.Close()
-
-	rows, err := db.Query(METERING_MONTH_SELECT_QUERY)
+	rows, err := db.Dbpool.Query(context.TODO(), METERING_MONTH_SELECT_QUERY)
 	defer rows.Close()
-
 	if err != nil {
 		fmt.Fprintf(file, "%v\n", err)
 		return
@@ -379,7 +354,7 @@ func insertMeteringYear() {
 			return
 		}
 
-		_, err = db.Exec(METERING_YEAR_INSERT_QUERY,
+		_, err = db.Dbpool.Exec(context.TODO(), METERING_YEAR_INSERT_QUERY,
 			uuid.New(),
 			meteringData.Namespace,
 			meteringData.Cpu,
@@ -403,7 +378,7 @@ func insertMeteringYear() {
 		"Insert into METERING_YEAR Success!!\n"+
 			"--------------------------------------\n"+
 			"Update METERING_MONTH Past data to 'Merged' Start!!\n")
-	_, err = db.Exec(METERING_MONTH_UPDATE_QUERY)
+	_, err = db.Dbpool.Exec(context.TODO(), METERING_MONTH_UPDATE_QUERY)
 	if err != nil {
 		fmt.Fprintf(file, "%v\n", err)
 		return
@@ -414,7 +389,7 @@ func insertMeteringYear() {
 		klog.Infoln("Delete METERING for past 1 year Start!!")
 		_, err = db.Exec(METERING_MONTH_DELETE_QUERY)
 		if err != nil {
-			klog.Error(err)
+			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
 		klog.Infoln("Delete METERING for past 1 year Success!!")
@@ -426,14 +401,7 @@ func insertMeteringMonth() {
 		"Insert into METERING_MONTH Start!!\n"+
 			"Current Time	: "+t.Format("2006-01-02 15:04:00")+"\n")
 
-	db, err := sql.Open(DB_DRIVER, DB_URI)
-	if err != nil {
-		fmt.Fprintf(file, "%v\n", err)
-		return
-	}
-	defer db.Close()
-
-	rows, err := db.Query(METERING_MONTH_SELECT_QUERY)
+	rows, err := db.Dbpool.Query(context.TODO(), METERING_MONTH_SELECT_QUERY)
 	defer rows.Close()
 
 	if err != nil {
@@ -462,7 +430,7 @@ func insertMeteringMonth() {
 			return
 		}
 
-		_, err = db.Exec(METERING_MONTH_INSERT_QUERY,
+		_, err = db.Dbpool.Exec(context.TODO(), METERING_MONTH_INSERT_QUERY,
 			uuid.New(),
 			meteringData.Namespace,
 			meteringData.Cpu,
@@ -486,7 +454,7 @@ func insertMeteringMonth() {
 		"Insert into METERING_MONTH Success!!\n"+
 			"--------------------------------------\n"+
 			"Update METERING_DAY Past data to 'Merged' Start!!\n")
-	_, err = db.Exec(METERING_DAY_UPDATE_QUERY)
+	_, err = db.Dbpool.Exec(context.TODO(), METERING_DAY_UPDATE_QUERY)
 	if err != nil {
 		fmt.Fprintf(file, "%v\n", err)
 		return
@@ -497,7 +465,7 @@ func insertMeteringMonth() {
 		klog.Infoln("Delete METERING for past 1 month Start!!")
 		_, err = db.Exec(METERING_DAY_DELETE_QUERY)
 		if err != nil {
-			klog.Error(err)
+			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
 		klog.Infoln("Delete METERING for past 1 month Success!!")
@@ -509,14 +477,7 @@ func insertMeteringDay() {
 		"Insert into METERING_DAY Start!!\n"+
 			"Current Time	: "+t.Format("2006-01-02 15:04:00")+"\n")
 
-	db, err := sql.Open(DB_DRIVER, DB_URI)
-	if err != nil {
-		fmt.Fprintf(file, "%v\n", err)
-		return
-	}
-	defer db.Close()
-
-	rows, err := db.Query(METERING_DAY_SELECT_QUERY)
+	rows, err := db.Dbpool.Query(context.TODO(), METERING_DAY_SELECT_QUERY)
 	defer rows.Close()
 
 	if err != nil {
@@ -545,7 +506,7 @@ func insertMeteringDay() {
 			return
 		}
 
-		_, err = db.Exec(METERING_DAY_INSERT_QUERY,
+		_, err = db.Dbpool.Exec(context.TODO(), METERING_DAY_INSERT_QUERY,
 			uuid.New(),
 			meteringData.Namespace,
 			meteringData.Cpu,
@@ -567,7 +528,7 @@ func insertMeteringDay() {
 		"Insert into METERING_DAY Success!!\n"+
 			"--------------------------------------\n"+
 			"Update METERING_HOUR Past data to 'Merged' Start!!\n")
-	_, err = db.Exec(METERING_HOUR_UPDATE_QUERY)
+	_, err = db.Dbpool.Exec(context.TODO(), METERING_HOUR_UPDATE_QUERY)
 	if err != nil {
 		fmt.Fprintf(file, "%v\n", err)
 		return
@@ -578,7 +539,7 @@ func insertMeteringDay() {
 		klog.Infoln("Delete METERING for past 1 day Start!!")
 		_, err = db.Exec(METERING_HOUR_DELETE_QUERY)
 		if err != nil {
-			klog.Error(err)
+			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
 		klog.Infoln("Delete METERING for past 1 day Success!!")
@@ -590,14 +551,7 @@ func insertMeteringHour() {
 		"Insert into METERING_HOUR Start!!\n"+
 			"Current Time	: "+t.Format("2006-01-02 15:04:00")+"\n")
 
-	db, err := sql.Open(DB_DRIVER, DB_URI)
-	if err != nil {
-		fmt.Fprintf(file, "%v\n", err)
-		return
-	}
-	defer db.Close()
-
-	rows, err := db.Query(METERING_HOUR_SELECT_QUERY)
+	rows, err := db.Dbpool.Query(context.TODO(), METERING_HOUR_SELECT_QUERY)
 	defer rows.Close()
 
 	if err != nil {
@@ -626,7 +580,7 @@ func insertMeteringHour() {
 			return
 		}
 
-		_, err = db.Exec(METERING_HOUR_INSERT_QUERY,
+		_, err = db.Dbpool.Exec(context.TODO(), METERING_HOUR_INSERT_QUERY,
 			uuid.New(),
 			meteringData.Namespace,
 			meteringData.Cpu,
@@ -648,7 +602,7 @@ func insertMeteringHour() {
 		"Insert into METERING_HOUR Success!!\n"+
 			"--------------------------------------\n"+
 			"Update METERING Past data to 'Merged' Start!!\n")
-	_, err = db.Exec(METERING_DELETE_QUERY)
+	_, err = db.Dbpool.Exec(context.TODO(), METERING_DELETE_QUERY)
 	if err != nil {
 		fmt.Fprintf(file, "%v\n", err)
 		return

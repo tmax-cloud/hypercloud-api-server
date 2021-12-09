@@ -1,11 +1,11 @@
 package audit
 
 import (
+	"context"
 	"database/sql"
-	"fmt"
 
-	pq "github.com/lib/pq"
 	//hypercloudAudit "github.com/tmax-cloud/hypercloud-api-server/audit"
+	db "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/apis/audit"
 	"k8s.io/klog"
@@ -23,21 +23,12 @@ type Claim struct {
 	Body      string `json:"body"`
 }
 
-const (
-	DB_USER     = "postgres"
-	DB_PASSWORD = "tmax"
-	DB_NAME     = "postgres"
-	HOSTNAME    = "postgres-service.hypercloud5-system.svc"
-	PORT        = 5432
-)
-
 var pg_con_info string
 
-func init() {
-	pg_con_info = fmt.Sprintf("port=%d host=%s user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		PORT, HOSTNAME, DB_USER, DB_PASSWORD, DB_NAME)
-}
+const (
+	AUDIT_INSERT_QUERY = "INSERT INTO audit (ID, USERNAME, USERAGENT , NAMESPACE , APIGROUP , APIVERSION , RESOURCE , NAME , STAGE , STAGETIMESTAMP , VERB, CODE , STATUS , REASON , MESSAGE ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)"
+	//AUDIT_BODY_INSERT_QUERY = "INSERT INTO audit_body (ID, NAMESPACE, BODY ) VALUES ($1, $2, $3)"
+)
 
 func NewNullString(s string) sql.NullString {
 	if s == "null" {
@@ -56,26 +47,9 @@ func Insert(items []audit.Event) {
 		}
 	}()
 
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-	}
-	defer db.Close()
-
-	txn, err := db.Begin()
-	if err != nil {
-		klog.Error(err)
-	}
-
-	// Insert Metadata
-	stmt, err := txn.Prepare(pq.CopyIn("audit", "id", "username", "useragent", "namespace", "apigroup", "apiversion", "resource", "name",
-		"stage", "stagetimestamp", "verb", "code", "status", "reason", "message"))
-	if err != nil {
-		klog.Error(err)
-	}
-
 	for _, event := range items {
-		_, err = stmt.Exec(event.AuditID,
+		_, err := db.Dbpool.Exec(context.TODO(), AUDIT_INSERT_QUERY,
+			event.AuditID,
 			event.User.Username,
 			event.UserAgent,
 			NewNullString(event.ObjectRef.Namespace),
@@ -95,25 +69,12 @@ func Insert(items []audit.Event) {
 			klog.Error(err)
 		}
 	}
-	res, err := stmt.Exec()
-	if err != nil {
-		klog.Error(err)
-	}
-
-	err = stmt.Close()
-	if err != nil {
-		klog.Error(err)
-	}
 
 	// Insert Request Body
 	/*
-		stmt_body, err := txn.Prepare(pq.CopyIn("audit_body", "id", "namespace", "body"))
-		if err != nil {
-			klog.Error(err)
-		}
-
 		for _, event := range items {
-			_, err = stmt_body.Exec(event.AuditID,
+			_, err = db.Dbpool.Exec(context.TODO(), AUDIT_BODY_INSERT_QUERY,
+				event.AuditID,
 				NewNullString(event.ObjectRef.Namespace),
 				event.RequestObject.Raw)
 
@@ -121,29 +82,9 @@ func Insert(items []audit.Event) {
 				klog.Error(err)
 			}
 		}
-		res_body, err := stmt_body.Exec()
-		if err != nil {
-			klog.Error(err)
-		}
-
-		err = stmt_body.Close()
-		if err != nil {
-			klog.Error(err)
-		}
 	*/
-	// Commit
-	err = txn.Commit()
-	if err != nil {
-		klog.Error(err)
-	}
 
-	if count, err := res.RowsAffected(); err != nil {
-		klog.Error(err)
-	} else {
-		klog.Info("Affected rows: ", count)
-	}
-	// else if _, err := res_body.RowsAffected(); err != nil {
-	// 	klog.Error(err)
+	klog.Info("Affected rows: ", len(items))
 }
 
 func Get(query string) (audit.EventList, int64) {
@@ -153,13 +94,7 @@ func Get(query string) (audit.EventList, int64) {
 		}
 	}()
 
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-	}
-	defer db.Close()
-
-	rows, err := db.Query(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
 		klog.Error(err)
 	}
