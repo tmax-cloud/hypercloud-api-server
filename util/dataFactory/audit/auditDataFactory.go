@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	//hypercloudAudit "github.com/tmax-cloud/hypercloud-api-server/audit"
+	pgx "github.com/jackc/pgx/v4"
 	db "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apiserver/pkg/apis/audit"
@@ -47,8 +48,13 @@ func Insert(items []audit.Event) {
 		}
 	}()
 
+	//create batch
+	batch := &pgx.Batch{}
+	numInserts := len(items)
+
+	//load insert statements into batch queue
 	for _, event := range items {
-		_, err := db.Dbpool.Exec(context.TODO(), AUDIT_INSERT_QUERY,
+		batch.Queue(AUDIT_INSERT_QUERY,
 			event.AuditID,
 			event.User.Username,
 			event.UserAgent,
@@ -64,10 +70,6 @@ func Insert(items []audit.Event) {
 			event.ResponseStatus.Status,
 			event.ResponseStatus.Reason,
 			event.ResponseStatus.Message)
-
-		if err != nil {
-			klog.Error(err)
-		}
 	}
 
 	// Insert Request Body
@@ -84,7 +86,30 @@ func Insert(items []audit.Event) {
 		}
 	*/
 
-	klog.Info("Affected rows: ", len(items))
+	//send batch to connection pool
+	br := db.Dbpool.SendBatch(context.TODO(), batch)
+	//execute statements in batch queue
+	for i := 0; i < numInserts; i++ {
+		_, err := br.Exec()
+		if err != nil {
+			klog.Errorln(err)
+			// os.Exit(1)
+		}
+	}
+	// klog.Infoln("Successfully batch inserted data n")
+
+	//Compare length of results slice to size of table
+	klog.Infof("size of results: %d\n", numInserts)
+	//check size of table for number of rows inserted
+	// result of last SELECT statement
+	var rowsInserted int
+	err := br.QueryRow().Scan(&rowsInserted)
+	klog.Infof("size of table: %d\n", rowsInserted)
+
+	err = br.Close()
+	if err != nil {
+		klog.Errorf("Unable to closer batch %v\n", err)
+	}
 }
 
 func Get(query string) (audit.EventList, int64) {
