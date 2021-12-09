@@ -1,15 +1,12 @@
 package cluster
 
 import (
-	"bytes"
-	"database/sql"
-	"encoding/json"
-	"fmt"
+	"context"
 	"strings"
 	"time"
-	
-	pq "github.com/lib/pq"
+
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
+	db "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory"
 	"k8s.io/apimachinery/pkg/types"
 
 	// "k8s.io/apimachinery/pkg/types"
@@ -31,64 +28,8 @@ const (
 
 var pg_con_info string
 
-func init() {
-	pg_con_info = fmt.Sprintf("port=%d host=%s user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		PORT, HOSTNAME, DB_USER, DB_PASSWORD, DB_NAME)
-}
-
-func waitForNotification(l *pq.Listener) {
-	for {
-		select {
-		case n := <-l.Notify:
-			fmt.Println("Received data from channel [", n.Channel, "] :")
-			// Prepare notification payload for pretty print
-			var prettyJSON bytes.Buffer
-			err := json.Indent(&prettyJSON, []byte(n.Extra), "", "\t")
-			if err != nil {
-				fmt.Println("Error processing JSON: ", err)
-				return
-			}
-			fmt.Println(string(prettyJSON.Bytes()))
-			return
-		case <-time.After(90 * time.Second):
-			fmt.Println("Received no events for 90 seconds, checking connection")
-			go func() {
-				l.Ping()
-			}()
-			return
-		}
-	}
-}
-
-func test() {
-	reportProblem := func(ev pq.ListenerEventType, err error) {
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-	}
-
-	listener := pq.NewListener(pg_con_info, 10*time.Second, time.Minute, reportProblem)
-	err := listener.Listen("events")
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Start monitoring PostgreSQL...")
-	for {
-		waitForNotification(listener)
-	}
-}
-
 func Insert(item util.ClusterMemberInfo) error {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return err
-	}
-	defer db.Close()
-
-	_, err = db.Exec(INSERT_QUERY, item.Namespace, item.Cluster, item.MemberId, item.MemberName, item.Attribute, item.Role, item.Status, time.Now(), time.Now())
+	_, err := db.Dbpool.Exec(context.TODO(), INSERT_QUERY, item.Namespace, item.Cluster, item.MemberId, item.MemberName, item.Attribute, item.Role, item.Status, time.Now(), time.Now())
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -98,12 +39,6 @@ func Insert(item util.ClusterMemberInfo) error {
 }
 
 func ListClusterMemberWithOutPending(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
-	defer db.Close()
 	clusterMemberList := []util.ClusterMemberInfo{}
 	var b strings.Builder
 
@@ -121,7 +56,7 @@ func ListClusterMemberWithOutPending(cluster string, namespace string) ([]util.C
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
-	rows, err := db.Query(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
@@ -148,12 +83,6 @@ func ListClusterMemberWithOutPending(cluster string, namespace string) ([]util.C
 }
 
 func ListClusterMember(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
-	defer db.Close()
 	clusterMemberList := []util.ClusterMemberInfo{}
 	var b strings.Builder
 
@@ -169,7 +98,7 @@ func ListClusterMember(cluster string, namespace string) ([]util.ClusterMemberIn
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
-	rows, err := db.Query(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
@@ -196,12 +125,6 @@ func ListClusterMember(cluster string, namespace string) ([]util.ClusterMemberIn
 }
 
 func ListAllClusterUser(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
-	defer db.Close()
 	clusterMemberList := []util.ClusterMemberInfo{}
 	var b strings.Builder
 
@@ -219,7 +142,7 @@ func ListAllClusterUser(cluster string, namespace string) ([]util.ClusterMemberI
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
-	rows, err := db.Query(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
@@ -246,12 +169,6 @@ func ListAllClusterUser(cluster string, namespace string) ([]util.ClusterMemberI
 }
 
 func ListClusterGroupMember(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
-	defer db.Close()
 	clusterMemberList := []util.ClusterMemberInfo{}
 	var b strings.Builder
 
@@ -270,7 +187,7 @@ func ListClusterGroupMember(cluster string, namespace string) ([]util.ClusterMem
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
-	rows, err := db.Query(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
@@ -297,12 +214,6 @@ func ListClusterGroupMember(cluster string, namespace string) ([]util.ClusterMem
 }
 
 func ListClusterInNamespace(userId string, userGroups []string, namespace string) ([]string, error) {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
-	defer db.Close()
 	clusterNameList := []string{}
 	var b strings.Builder
 
@@ -328,7 +239,7 @@ func ListClusterInNamespace(userId string, userGroups []string, namespace string
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
-	rows, err := db.Query(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
@@ -346,12 +257,6 @@ func ListClusterInNamespace(userId string, userGroups []string, namespace string
 }
 
 func ListClusterAllNamespace(userId string, userGroups []string) ([]types.NamespacedName, error) {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
-	defer db.Close()
 	clusterManagerNamespacedNameList := []types.NamespacedName{}
 	var b strings.Builder
 
@@ -374,7 +279,7 @@ func ListClusterAllNamespace(userId string, userGroups []string) ([]types.Namesp
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
-	rows, err := db.Query(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
@@ -395,12 +300,6 @@ func ListClusterAllNamespace(userId string, userGroups []string) ([]types.Namesp
 }
 
 func GetPendingUser(clusterMember util.ClusterMemberInfo) (*util.ClusterMemberInfo, error) {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
-	defer db.Close()
 	// clusterMemberList := []util.ClusterMemberInfo{}
 	var b strings.Builder
 
@@ -424,7 +323,7 @@ func GetPendingUser(clusterMember util.ClusterMemberInfo) (*util.ClusterMemberIn
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
-	rows, err := db.Query(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
@@ -449,12 +348,6 @@ func GetPendingUser(clusterMember util.ClusterMemberInfo) (*util.ClusterMemberIn
 }
 
 func ListPendingUser(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return nil, err
-	}
-	defer db.Close()
 	clusterMemberList := []util.ClusterMemberInfo{}
 	var b strings.Builder
 	b.WriteString("select * from CLUSTER_MEMBER where 1=1 ")
@@ -473,7 +366,7 @@ func ListPendingUser(cluster string, namespace string) ([]util.ClusterMemberInfo
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
-	rows, err := db.Query(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
 		klog.Error(err)
 		return nil, err
@@ -500,12 +393,6 @@ func ListPendingUser(cluster string, namespace string) ([]util.ClusterMemberInfo
 }
 
 func GetInvitedGroup(clusterMember util.ClusterMemberInfo) (int, error) {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return 0, err
-	}
-	defer db.Close()
 	var result int
 	var b strings.Builder
 
@@ -529,7 +416,7 @@ func GetInvitedGroup(clusterMember util.ClusterMemberInfo) (int, error) {
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
-	rows, err := db.Query(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
 		klog.Error(err)
 		return 0, err
@@ -545,17 +432,11 @@ func GetInvitedGroup(clusterMember util.ClusterMemberInfo) (int, error) {
 }
 
 func UpdateStatus(item *util.ClusterMemberInfo) error {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return err
-	}
-	defer db.Close()
 
 	klog.Infoln("Query: " + UPDATE_STATUS_QUERY)
 	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
-	_, err = db.Exec(UPDATE_STATUS_QUERY, time.Now(), item.Namespace, item.Cluster, item.MemberId, item.Attribute)
+	_, err := db.Dbpool.Exec(context.TODO(), UPDATE_STATUS_QUERY, time.Now(), item.Namespace, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -565,18 +446,12 @@ func UpdateStatus(item *util.ClusterMemberInfo) error {
 }
 
 func UpdateRole(item util.ClusterMemberInfo) error {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return err
-	}
-	defer db.Close()
 
 	query := strings.Replace(UPDATE_ROLE_QUERY, "@@ROLE@@", item.Role, -1)
 	klog.Infoln("Query: " + query)
 	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
-	_, err = db.Exec(query, time.Now(), item.Namespace, item.Cluster, item.MemberId, item.Attribute)
+	_, err := db.Dbpool.Exec(context.TODO(), query, time.Now(), item.Namespace, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -586,17 +461,11 @@ func UpdateRole(item util.ClusterMemberInfo) error {
 }
 
 func Delete(item util.ClusterMemberInfo) error {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return err
-	}
-	defer db.Close()
 
 	klog.Infoln("Query: " + DELETE_QUERY)
 	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
-	_, err = db.Exec(DELETE_QUERY, item.Namespace, item.Cluster, item.MemberId, item.Attribute)
+	_, err := db.Dbpool.Exec(context.TODO(), DELETE_QUERY, item.Namespace, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -605,17 +474,11 @@ func Delete(item util.ClusterMemberInfo) error {
 	return nil
 }
 func DeleteALL(namespace, cluster string) error {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return err
-	}
-	defer db.Close()
 
 	klog.Infoln("Query: " + DELETE_ALL_QUERY)
 	klog.Infoln("Paremeters: " + namespace + ", " + cluster)
 
-	_, err = db.Exec(DELETE_ALL_QUERY, namespace, cluster)
+	_, err := db.Dbpool.Exec(context.TODO(), DELETE_ALL_QUERY, namespace, cluster)
 	if err != nil {
 		klog.Error(err)
 		return err
@@ -625,12 +488,6 @@ func DeleteALL(namespace, cluster string) error {
 }
 
 func GetRemainClusterForSubject(namespace, subject, attribute string) (int, error) {
-	db, err := sql.Open("postgres", pg_con_info)
-	if err != nil {
-		klog.Error(err)
-		return 0, err
-	}
-	defer db.Close()
 	var b strings.Builder
 	var result int
 
@@ -652,7 +509,7 @@ func GetRemainClusterForSubject(namespace, subject, attribute string) (int, erro
 
 	query := b.String()
 	klog.Infoln("Query: " + query)
-	rows, err := db.Query(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
 
 	if err != nil {
 		klog.Error(err)
