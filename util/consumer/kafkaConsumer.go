@@ -91,19 +91,19 @@ func HyperauthConsumer() {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	var kafka1_addr string
-	var kafka2_addr string
-	var kafka3_addr string
+	// var kafka2_addr string
+	// var kafka3_addr string
 	// if os.Getenv("kafka1_addr") != "DNS" {
 	// 	kafka1_addr = os.Getenv("kafka1_addr")
 	// 	kafka2_addr = os.Getenv("kafka2_addr")
 	// 	kafka3_addr = os.Getenv("kafka3_addr")
 	// } else {
-	kafka1_addr = "kafka-1.hyperauth.svc.cluster.local:9092"
-	kafka2_addr = "kafka-2.hyperauth.svc.cluster.local:9092"
-	kafka3_addr = "kafka-3.hyperauth.svc.cluster.local:9092"
+	kafka1_addr = "kafka-kafka-bootstrap.hyperauth:9092"
+	// kafka2_addr = "kafka-2.hyperauth.svc.cluster.local:9092"
+	// kafka3_addr = "kafka-3.hyperauth.svc.cluster.local:9092"
 	// }
 
-	client, err := sarama.NewConsumerGroup([]string{kafka1_addr, kafka2_addr, kafka3_addr}, consumerGroupId, consumerConfig)
+	client, err := sarama.NewConsumerGroup([]string{kafka1_addr}, consumerGroupId, consumerConfig)
 	if err != nil {
 		klog.Errorln("Error creating consumer group client: %v", err)
 		time.Sleep(time.Minute * 1)
