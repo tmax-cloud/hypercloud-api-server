@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.6 start -------------------->
+
+## Hypercloud-api-server 5.0.26.6 (2021. 12. 13. (월) 16:23:04 KST)
+
+### Added
+
+### Changed
+  - [mod] sarama kafka 2.8.0 버전으로 업그레이드 by GitHub
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.26.5 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.5 (2021. 12. 09. (목) 21:08:15 KST)
