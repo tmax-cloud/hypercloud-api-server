@@ -74,7 +74,7 @@ func HyperauthConsumer() {
 	// tlsConfig.InsecureSkipVerify = true
 
 	// Consumer Config!!!
-	version, err := sarama.ParseKafkaVersion("2.0.1")
+	version, err := sarama.ParseKafkaVersion("2.8.0")
 
 	consumerConfig := sarama.NewConfig()
 	consumerConfig.Net.TLS.Enable = true
