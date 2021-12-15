@@ -1,6 +1,24 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.7 start -------------------->
+
+## Hypercloud-api-server 5.0.26.7 (2021. 12. 15. (수) 11:00:36 KST)
+
+### Added
+
+### Changed
+  - [mod] audit batch 동작 오류로 보류 by Seungwon Lee
+  - [mod] audit batch insert by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] clusterDataFactory DB connection refactoring by Seungwon Lee
+  - [etc] DB connection refactoring by Seungwon Lee
+
 <!-------------------- v5.0.26.6 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.6 (2021. 12. 13. (월) 16:23:04 KST)
