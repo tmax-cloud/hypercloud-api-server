@@ -1171,33 +1171,33 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 		},
 		// todo-shkim
 		Spec: clusterv1alpha1.ClusterManagerSpec{
-			Provider:   clusterClaim.Spec.Provider,
-			Version:    clusterClaim.Spec.Version,
+			Provider: clusterClaim.Spec.Provider,
+			Version:  clusterClaim.Spec.Version,
 			//Region:     clusterClaim.Spec.Region,
 			//SshKey:     clusterClaim.Spec.SshKey,
-			MasterNum:  clusterClaim.Spec.MasterNum,
+			MasterNum: clusterClaim.Spec.MasterNum,
 			//MasterType: clusterClaim.Spec.MasterType,
-			WorkerNum:  clusterClaim.Spec.WorkerNum,
+			WorkerNum: clusterClaim.Spec.WorkerNum,
 			//WorkerType: clusterClaim.Spec.WorkerType,
 		},
 		AwsSpec: clusterv1alpha1.ProviderAwsSpec{
-			SshKey:		clusterClaim.Spec.ProviderAwsSpec.SshKey,
-			Region: 	clusterClaim.Spec.ProviderAwsSpec.Region,
+			SshKey:     clusterClaim.Spec.ProviderAwsSpec.SshKey,
+			Region:     clusterClaim.Spec.ProviderAwsSpec.Region,
 			MasterType: clusterClaim.Spec.ProviderAwsSpec.MasterType,
 			WorkerType: clusterClaim.Spec.ProviderAwsSpec.WorkerType,
 		},
 		VsphereSpec: clusterv1alpha1.ProviderVsphereSpec{
-			PodCidr: 			 clusterClaim.Spec.ProviderVsphereSpec.PodCidr,
-			VcenterIp: 			 clusterClaim.Spec.ProviderVsphereSpec.VcenterIp,
-			VcenterId: 			 clusterClaim.Spec.ProviderVsphereSpec.VcenterId,
-			VcenterPassword: 	 clusterClaim.Spec.ProviderVsphereSpec.VcenterPassword,
-			VcenterThumbprint: 	 clusterClaim.Spec.ProviderVsphereSpec.VcenterThumbprint,
-			VcenterNetwork: 	 clusterClaim.Spec.ProviderVsphereSpec.VcenterNetwork,
-			VcenterDataCenter: 	 clusterClaim.Spec.ProviderVsphereSpec.VcenterDataCenter,
-			VcenterDataStore: 	 clusterClaim.Spec.ProviderVsphereSpec.VcenterDataStore,
-			VcenterFolder: 		 clusterClaim.Spec.ProviderVsphereSpec.VcenterFolder,
+			PodCidr:             clusterClaim.Spec.ProviderVsphereSpec.PodCidr,
+			VcenterIp:           clusterClaim.Spec.ProviderVsphereSpec.VcenterIp,
+			VcenterId:           clusterClaim.Spec.ProviderVsphereSpec.VcenterId,
+			VcenterPassword:     clusterClaim.Spec.ProviderVsphereSpec.VcenterPassword,
+			VcenterThumbprint:   clusterClaim.Spec.ProviderVsphereSpec.VcenterThumbprint,
+			VcenterNetwork:      clusterClaim.Spec.ProviderVsphereSpec.VcenterNetwork,
+			VcenterDataCenter:   clusterClaim.Spec.ProviderVsphereSpec.VcenterDataCenter,
+			VcenterDataStore:    clusterClaim.Spec.ProviderVsphereSpec.VcenterDataStore,
+			VcenterFolder:       clusterClaim.Spec.ProviderVsphereSpec.VcenterFolder,
 			VcenterResourcePool: clusterClaim.Spec.ProviderVsphereSpec.VcenterResourcePool,
-			VcenterKcpIp: 		 clusterClaim.Spec.ProviderVsphereSpec.VcenterKcpIp,
+			VcenterKcpIp:        clusterClaim.Spec.ProviderVsphereSpec.VcenterKcpIp,
 			VcenterCpuNum:       clusterClaim.Spec.ProviderVsphereSpec.VcenterCpuNum,
 			VcenterMemSize:      clusterClaim.Spec.ProviderVsphereSpec.VcenterMemSize,
 			VcenterDiskSize:     clusterClaim.Spec.ProviderVsphereSpec.VcenterDiskSize,
@@ -1210,7 +1210,6 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 		return nil, err
 	}
 
-	
 	ccjson, err := json.Marshal(clusterClaim)
 	if err != nil {
 		klog.Info("***** json marshal error")
@@ -1224,8 +1223,6 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 		klog.Errorln(err)
 	}
 	klog.Info("#####" + string(clmjson))
-
-
 
 	klog.Info("ClusterMnager is created")
 	return clm, nil
