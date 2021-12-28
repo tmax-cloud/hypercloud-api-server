@@ -99,24 +99,21 @@ func MeteringJob() {
 			"day of year 	: %d\n",
 		t.Minute(), t.Hour(), t.Day(), t.YearDay())
 
-	switch {
-	case t.YearDay() == 1 && t.Day() == 1 && t.Hour() == 0 && t.Minute() == 0:
-		// Insert into metering_year
-		insertMeteringYear()
-		fallthrough
-	case t.Day() == 1 && t.Hour() == 0 && t.Minute() == 0:
-		// Insert into metering_month
-		insertMeteringMonth()
-		fallthrough
-	case t.Hour() == 0 && t.Minute() == 0:
-		// Insert into metering_day
-		insertMeteringDay()
-		fallthrough
-	case t.Minute() == 0:
-		// Insert into metering_hour
+	// Merge into upper table every fixed time
+	if t.Minute() == 0 {
 		insertMeteringHour()
 	}
+	if t.Hour() == 0 && t.Minute() == 0 {
+		insertMeteringDay()
+	}
+	if t.Day() == 1 && t.Hour() == 0 && t.Minute() == 0 {
+		insertMeteringMonth()
+	}
+	if t.YearDay() == 1 && t.Day() == 1 && t.Hour() == 0 && t.Minute() == 0 {
+		insertMeteringYear()
+	}
 
+	// Get data from Prometheus
 	meteringData := makeMeteringMap()
 
 	fmt.Fprintf(file, "============= Metering Data =============\n")
@@ -131,13 +128,6 @@ func MeteringJob() {
 	}
 	//Insert into metering (new data)
 	insertMeteringData(meteringData)
-
-	deleteMeteringData()
-
-}
-
-func deleteMeteringData() {
-
 }
 
 func insertMeteringData(meteringData map[string]*meteringModel.Metering) {
