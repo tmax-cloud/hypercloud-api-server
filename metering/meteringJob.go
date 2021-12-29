@@ -69,6 +69,7 @@ const (
 	PROMETHEUS_GET_PUBLIC_IP_QUERY   = "count(kube_service_spec_type{type=\"LoadBalancer\"})by(namespace)"
 	PROMETHEUS_GET_TRAFFIC_IN_QUERY  = "sum(istio_request_bytes_sum)by(destination_service, namespace)"
 	PROMETHEUS_GET_TRAFFIC_OUT_QUERY = "sum(istio_response_bytes_sum)by(destination_service, namespace)"
+	//PROMETHEUS_GET_GPU_QUERY = "sum(nvidia_gpu_memory_used_bytes)by(namespace)"
 )
 
 var t time.Time
