@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.8 start -------------------->
+
+## Hypercloud-api-server 5.0.26.8 (2021. 12. 30. (목) 17:55:19 KST)
+
+### Added
+
+### Changed
+  - [mod] metering INSERT 순서 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] jwt package 공식 repo로 변경 by Seungwon Lee
+
 <!-------------------- v5.0.26.7 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.7 (2021. 12. 15. (수) 11:00:36 KST)
