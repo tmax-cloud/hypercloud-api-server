@@ -317,7 +317,7 @@ func insertMeteringYear() {
 		"Insert into METERING_YEAR Start!!\n"+
 			"Current Time	: "+t.Format("2006-01-02 15:04:00")+"\n")
 
-	rows, err := db.Dbpool.Query(context.TODO(), METERING_MONTH_SELECT_QUERY)
+	rows, err := db.Dbpool.Query(context.TODO(), METERING_YEAR_SELECT_QUERY)
 	defer rows.Close()
 	if err != nil {
 		fmt.Fprintf(file, "%v\n", err)
