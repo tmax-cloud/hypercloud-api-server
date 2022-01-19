@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -60,15 +59,17 @@ const (
 		"TRUNC(CAST(SUM(traffic_in)/COUNT(*) as numeric) ,0) as traffic_in, TRUNC(CAST(SUM(traffic_out)/COUNT(*) as numeric) ,0) as traffic_out, " +
 		"DATE_TRUNC('year', metering_time) as metering_time, status FROM metering_month WHERE status='Success' GROUP BY DATE_TRUNC('year', metering_time), namespace, status"
 
-	PROMETHEUS_URI = "http://prometheus-k8s.monitoring:9090/api/v1/query" // use this when running on pod
+	PROMETHEUS_URI = "http://prometheus-k8s.monitoring:9090/api/v1/query"
 	//PROMETHEUS_GET_CPU_QUERY         = "namespace:container_cpu_usage_seconds_total:sum_rate"
 	//PROMETHEUS_GET_MEMORY_QUERY      = "namespace:container_memory_usage_bytes:sum"
 	PROMETHEUS_GET_CPU_QUERY         = "sum(kube_pod_container_resource_requests{resource=\"cpu\"})by(namespace)"
 	PROMETHEUS_GET_MEMORY_QUERY      = "sum(kube_pod_container_resource_requests{resource=\"memory\"})by(namespace)"
 	PROMETHEUS_GET_STORAGE_QUERY     = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes)by(namespace)"
 	PROMETHEUS_GET_PUBLIC_IP_QUERY   = "count(kube_service_spec_type{type=\"LoadBalancer\"})by(namespace)"
-	PROMETHEUS_GET_TRAFFIC_IN_QUERY  = "sum(istio_request_bytes_sum)by(destination_service, namespace)"
-	PROMETHEUS_GET_TRAFFIC_OUT_QUERY = "sum(istio_response_bytes_sum)by(destination_service, namespace)"
+	PROMETHEUS_GET_TRAFFIC_IN_QUERY  = "sum(rate(container_network_receive_bytes_total[1m]))by(namespace)"
+	PROMETHEUS_GET_TRAFFIC_OUT_QUERY = "sum(rate(container_network_transmit_bytes_total[1m]))by(namespace)"
+	//PROMETHEUS_GET_TRAFFIC_IN_QUERY  = "sum(istio_request_bytes_sum)by(destination_service, namespace)"
+	//PROMETHEUS_GET_TRAFFIC_OUT_QUERY = "sum(istio_response_bytes_sum)by(destination_service, namespace)"
 	//PROMETHEUS_GET_GPU_QUERY = "sum(nvidia_gpu_memory_used_bytes)by(namespace)"
 )
 
@@ -188,11 +189,11 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 			keys = append(keys, k)
 		}
 		if util.Contains(keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].Memory, _ = strconv.ParseFloat(metric.Value[1], 64)
+			meteringData[metric.Metric["namespace"]].Memory, _ = strconv.ParseUint(metric.Value[1], 10, 64)
 		} else {
 			metering := new(meteringModel.Metering)
 			metering.Namespace = metric.Metric["namespace"]
-			metering.Memory, _ = strconv.ParseFloat(metric.Value[1], 64)
+			metering.Memory, _ = strconv.ParseUint(metric.Value[1], 10, 64)
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
@@ -204,11 +205,11 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 			keys = append(keys, k)
 		}
 		if util.Contains(keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].Storage, _ = strconv.ParseFloat(metric.Value[1], 64)
+			meteringData[metric.Metric["namespace"]].Storage, _ = strconv.ParseUint(metric.Value[1], 10, 64)
 		} else {
 			metering := new(meteringModel.Metering)
 			metering.Namespace = metric.Metric["namespace"]
-			metering.Storage, _ = strconv.ParseFloat(metric.Value[1], 64)
+			metering.Storage, _ = strconv.ParseUint(metric.Value[1], 10, 64)
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
@@ -220,11 +221,11 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 			keys = append(keys, k)
 		}
 		if util.Contains(keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].PublicIp, _ = strconv.ParseInt(metric.Value[1], 10, 64)
+			meteringData[metric.Metric["namespace"]].PublicIp, _ = strconv.ParseUint(metric.Value[1], 10, 64)
 		} else {
 			metering := new(meteringModel.Metering)
 			metering.Namespace = metric.Metric["namespace"]
-			metering.PublicIp, _ = strconv.ParseInt(metric.Value[1], 10, 64)
+			metering.PublicIp, _ = strconv.ParseUint(metric.Value[1], 10, 64)
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
@@ -235,16 +236,14 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 		for k := range meteringData {
 			keys = append(keys, k)
 		}
-		if strings.Contains(metric.Metric["destination_service"], "."+metric.Metric["namespace"]+".") {
-			if util.Contains(keys, metric.Metric["namespace"]) {
-				usage, _ := strconv.ParseFloat(metric.Value[1], 64)
-				meteringData[metric.Metric["namespace"]].TrafficIn += usage
-			} else {
-				metering := new(meteringModel.Metering)
-				metering.Namespace = metric.Metric["namespace"]
-				metering.TrafficIn, _ = strconv.ParseFloat(metric.Value[1], 64)
-				meteringData[metric.Metric["namespace"]] = metering
-			}
+		//if strings.Contains(metric.Metric["destination_service"], "."+metric.Metric["namespace"]+".") {
+		if util.Contains(keys, metric.Metric["namespace"]) {
+			meteringData[metric.Metric["namespace"]].TrafficIn, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+		} else {
+			metering := new(meteringModel.Metering)
+			metering.Namespace = metric.Metric["namespace"]
+			metering.TrafficIn, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
 
@@ -254,16 +253,14 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 		for k := range meteringData {
 			keys = append(keys, k)
 		}
-		if strings.Contains(metric.Metric["destination_service"], "."+metric.Metric["namespace"]+".") {
-			if util.Contains(keys, metric.Metric["namespace"]) {
-				usage, _ := strconv.ParseFloat(metric.Value[1], 64)
-				meteringData[metric.Metric["namespace"]].TrafficOut += usage
-			} else {
-				metering := new(meteringModel.Metering)
-				metering.Namespace = metric.Metric["namespace"]
-				metering.TrafficOut, _ = strconv.ParseFloat(metric.Value[1], 64)
-				meteringData[metric.Metric["namespace"]] = metering
-			}
+		//if strings.Contains(metric.Metric["destination_service"], "."+metric.Metric["namespace"]+".") {
+		if util.Contains(keys, metric.Metric["namespace"]) {
+			meteringData[metric.Metric["namespace"]].TrafficOut, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+		} else {
+			metering := new(meteringModel.Metering)
+			metering.Namespace = metric.Metric["namespace"]
+			metering.TrafficOut, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
 

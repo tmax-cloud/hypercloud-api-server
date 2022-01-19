@@ -20,7 +20,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	limit := queryParams.Get(util.QUERY_PARAMETER_LIMIT)
 	namespace := queryParams.Get(util.QUERY_PARAMETER_NAMESPACE)
 	timeUnit := queryParams.Get(util.QUERY_PARAMETER_TIMEUNIT)
-	startTime := queryParams.Get(util.QUERY_PARAMETER_TIMEUNIT)
+	startTime := queryParams.Get(util.QUERY_PARAMETER_STARTTIME)
 	endTime := queryParams.Get(util.QUERY_PARAMETER_ENDTIME)
 	sorts := queryParams[util.QUERY_PARAMETER_SORT]
 
@@ -117,17 +117,13 @@ func makeTimeRange(timeUnit string, startTime string, endTime string, query stri
 
 	switch timeUnit {
 	case "hour":
-		query += "select * from metering.metering_hour"
-		break
+		query += "select * from metering_hour"
 	case "day":
-		query += "select * from metering.metering_day"
-		break
+		query += "select * from metering_day"
 	case "month":
-		query += "select * from metering.metering_month"
-		break
+		query += "select * from metering_month"
 	case "year":
-		query += "select * from metering.metering_year"
-		break
+		query += "select * from metering_year"
 	}
 	query += " where metering_time between '" + time.Unix(start, 0).Format("2006-01-02 15:04:05") + "' and '" + time.Unix(end, 0).Format("2006-01-02 15:04:05") + "'"
 	return query
