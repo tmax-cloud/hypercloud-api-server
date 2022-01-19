@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.10 start -------------------->
+
+## Hypercloud-api-server 5.0.26.10 (2022. 01. 19. (수) 16:54:24 KST)
+
+### Added
+
+### Changed
+  - [mod] GET /metering 수정, network I/O 쿼리 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.26.9 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.9 (2022. 01. 03. (월) 10:50:16 KST)
