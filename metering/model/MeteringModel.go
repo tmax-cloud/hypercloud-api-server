@@ -6,13 +6,13 @@ type Metering struct {
 	Id           string    `json:"id"`
 	Namespace    string    `json:"namespace"`
 	Cpu          float64   `json:"cpu"`
-	Memory       uint64    `json:"memory"`
-	Storage      uint64    `json:"storage"`
+	Memory       float64   `json:"memory"`
+	Storage      float64   `json:"storage"`
 	Gpu          float64   `json:"gpu"`
-	PublicIp     uint64    `json:"publicIp"`
-	PrivateIp    uint64    `json:"privateIp"`
-	TrafficIn    uint64    `json:"trafficIn"`
-	TrafficOut   uint64    `json:"trafficOut"`
+	PublicIp     int64     `json:"publicIp"`
+	PrivateIp    int64     `json:"privateIp"`
+	TrafficIn    float64   `json:"trafficIn"`
+	TrafficOut   float64   `json:"trafficOut"`
 	MeteringTime time.Time `json:"meteringTime"`
 }
 

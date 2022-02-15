@@ -189,11 +189,11 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 			keys = append(keys, k)
 		}
 		if util.Contains(keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].Memory, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			meteringData[metric.Metric["namespace"]].Memory, _ = strconv.ParseFloat(metric.Value[1], 64)
 		} else {
 			metering := new(meteringModel.Metering)
 			metering.Namespace = metric.Metric["namespace"]
-			metering.Memory, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			metering.Memory, _ = strconv.ParseFloat(metric.Value[1], 64)
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
@@ -205,11 +205,11 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 			keys = append(keys, k)
 		}
 		if util.Contains(keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].Storage, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			meteringData[metric.Metric["namespace"]].Storage, _ = strconv.ParseFloat(metric.Value[1], 64)
 		} else {
 			metering := new(meteringModel.Metering)
 			metering.Namespace = metric.Metric["namespace"]
-			metering.Storage, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			metering.Storage, _ = strconv.ParseFloat(metric.Value[1], 64)
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
@@ -221,11 +221,11 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 			keys = append(keys, k)
 		}
 		if util.Contains(keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].PublicIp, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			meteringData[metric.Metric["namespace"]].PublicIp, _ = strconv.ParseInt(metric.Value[1], 10, 64)
 		} else {
 			metering := new(meteringModel.Metering)
 			metering.Namespace = metric.Metric["namespace"]
-			metering.PublicIp, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			metering.PublicIp, _ = strconv.ParseInt(metric.Value[1], 10, 64)
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
@@ -238,11 +238,11 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 		}
 		//if strings.Contains(metric.Metric["destination_service"], "."+metric.Metric["namespace"]+".") {
 		if util.Contains(keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].TrafficIn, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			meteringData[metric.Metric["namespace"]].TrafficIn, _ = strconv.ParseFloat(metric.Value[1], 64)
 		} else {
 			metering := new(meteringModel.Metering)
 			metering.Namespace = metric.Metric["namespace"]
-			metering.TrafficIn, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			metering.TrafficIn, _ = strconv.ParseFloat(metric.Value[1], 64)
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
@@ -255,11 +255,11 @@ func makeMeteringMap() map[string]*meteringModel.Metering {
 		}
 		//if strings.Contains(metric.Metric["destination_service"], "."+metric.Metric["namespace"]+".") {
 		if util.Contains(keys, metric.Metric["namespace"]) {
-			meteringData[metric.Metric["namespace"]].TrafficOut, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			meteringData[metric.Metric["namespace"]].TrafficOut, _ = strconv.ParseFloat(metric.Value[1], 64)
 		} else {
 			metering := new(meteringModel.Metering)
 			metering.Namespace = metric.Metric["namespace"]
-			metering.TrafficOut, _ = strconv.ParseUint(metric.Value[1], 10, 64)
+			metering.TrafficOut, _ = strconv.ParseFloat(metric.Value[1], 64)
 			meteringData[metric.Metric["namespace"]] = metering
 		}
 	}
