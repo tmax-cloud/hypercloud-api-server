@@ -1,6 +1,23 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.11 start -------------------->
+
+## Hypercloud-api-server 5.0.26.11 (2022. 02. 15. (화) 16:18:29 KST)
+
+### Added
+
+### Changed
+  - [mod] metering type 변경 및 로그 출력 타입 수정 by Seungwon Lee
+  - [mod] metering type 오류 수정 by Seungwon Lee
+
+### Fixed
+  - [ims][278080] GET ~/metering namespace 파라미터 수정 by Seungwon Lee
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.26.10 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.10 (2022. 01. 19. (수) 16:54:24 KST)
