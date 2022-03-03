@@ -167,6 +167,7 @@ func main() {
 	}
 
 	mux.HandleFunc("/metadata", serveMetadata)
+	mux.HandleFunc("/redis", serveRedis)
 	mux.HandleFunc("/audit/member_suggestions", serveAuditMemberSuggestions)
 	mux.HandleFunc("/audit", serveAudit)
 	mux.HandleFunc("/audit/batch", serveAuditBatch)
@@ -476,6 +477,10 @@ func serveClusterInvitationAdmit(res http.ResponseWriter, req *http.Request) {
 func serveMetadata(w http.ResponseWriter, r *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	serve(w, r, admission.AddResourceMeta)
+}
+func serveRedis(w http.ResponseWriter, r *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	serve(w, r, admission.InjectAntiAffinity)
 }
 func serveSidecarInjectionForPod(w http.ResponseWriter, r *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
