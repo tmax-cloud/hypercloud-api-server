@@ -31,7 +31,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	query = makeTimeRange(timeUnit, startTime, endTime, query)
 
 	if namespace != "" {
-		query += "and namespace like '%" + namespace + "%'"
+		query += " and namespace='" + namespace + "'"
 	}
 
 	if len(sorts) > 0 {
