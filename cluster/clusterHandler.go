@@ -127,12 +127,12 @@ func InsertCLM(res http.ResponseWriter, req *http.Request) {
 	// }
 
 	if err := clusterDataFactory.Insert(clmInfo); err != nil {
-		msg := "Failed to delete cluster info from db"
+		msg := "Failed to insert cluster info from db"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusInternalServerError)
 		return
 	}
-	msg := "Success to delete cluster info from db"
+	msg := "Success to insert cluster info from db"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
 	return
