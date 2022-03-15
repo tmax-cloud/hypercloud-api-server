@@ -948,7 +948,7 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 			Name:      roleName,
 			Namespace: clusterManager.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				metav1.OwnerReference{
+				{
 					APIVersion:         util.CLUSTER_API_GROUP_VERSION,
 					Kind:               util.CLUSTER_API_Kind,
 					Name:               clusterManager.GetName(),
@@ -975,7 +975,7 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 		Name:      roleBindingName,
 		Namespace: clusterManager.Namespace,
 		OwnerReferences: []metav1.OwnerReference{
-			metav1.OwnerReference{
+			{
 				APIVersion:         util.CLUSTER_API_GROUP_VERSION,
 				Kind:               util.CLUSTER_API_Kind,
 				Name:               clusterManager.GetName(),
@@ -1088,7 +1088,7 @@ func CreateNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 		Name:      roleBindingName,
 		Namespace: clusterManager.Namespace,
 		OwnerReferences: []metav1.OwnerReference{
-			metav1.OwnerReference{
+			{
 				APIVersion:         util.CLUSTER_API_GROUP_VERSION,
 				Kind:               util.CLUSTER_API_Kind,
 				Name:               clusterManager.GetName(),
@@ -1285,11 +1285,9 @@ func UpdateAuditResourceList() {
 	}
 
 	// map to string
-
-	for k, _ := range tmp {
+	for k := range tmp {
 		AuditResourceList = append(AuditResourceList, k)
 	}
-
 }
 
 // func UpdateAuditResourceList() {
