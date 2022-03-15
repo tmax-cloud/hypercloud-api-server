@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -14,8 +15,8 @@ import (
 	client "github.com/tmax-cloud/hypercloud-api-server/client"
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	clusterDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/cluster"
-	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/v5/apis/claim/v1alpha1"
-	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/v5/apis/cluster/v1alpha1"
+	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
+	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
 	authApi "k8s.io/api/authorization/v1"
 	coreApi "k8s.io/api/core/v1"
@@ -1161,12 +1162,13 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 			Name:      clusterClaim.Spec.ClusterName,
 			Namespace: clusterClaim.Namespace,
 			Labels: map[string]string{
-				"type":   "created",
-				"parent": clusterClaim.Name,
+				clusterv1alpha1.LabelKeyClmClusterType: clusterv1alpha1.ClusterTypeCreated,
+				clusterv1alpha1.LabelKeyClcName:        clusterClaim.Name,
 			},
 			Annotations: map[string]string{
-				"owner":   clusterClaim.Annotations["creator"],
-				"creator": clusterClaim.Annotations["creator"],
+				"owner":                                clusterClaim.Annotations["creator"],
+				"creator":                              clusterClaim.Annotations["creator"],
+				clusterv1alpha1.AnnotationKeyClmDomain: os.Getenv("HC_DOMAIN"),
 			},
 		},
 		// todo-shkim

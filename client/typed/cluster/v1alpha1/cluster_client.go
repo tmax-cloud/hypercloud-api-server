@@ -1,7 +1,7 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/v5/apis/cluster/v1alpha1"
+	v1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 
 	"k8s.io/client-go/kubernetes/scheme"
 	rest "k8s.io/client-go/rest"
