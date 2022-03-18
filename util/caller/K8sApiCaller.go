@@ -1047,10 +1047,11 @@ func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 
 }
 
-func GetConsoleService(namespace string, name string) (*coreApi.Service, error) {
-	result, err := Clientset.CoreV1().Services(namespace).Get(context.TODO(), name, metav1.GetOptions{})
-	return result, err
-}
+// defunct
+// func GetConsoleService(namespace string, name string) (*coreApi.Service, error) {
+// 	result, err := Clientset.CoreV1().Services(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+// 	return result, err
+// }
 
 func GetFbc(namespace string, name string) (*configv1alpha1.FluentBitConfiguration, error) {
 	result, err := customClientset.ConfigV1alpha1().FluentBitConfigurations(namespace).Get(context.TODO(), name, metav1.GetOptions{})

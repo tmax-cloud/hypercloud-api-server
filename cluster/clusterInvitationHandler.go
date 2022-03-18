@@ -4,6 +4,7 @@ package cluster
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"strings"
 
 	gmux "github.com/gorilla/mux"
@@ -117,11 +118,14 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	consoleService, err := caller.GetConsoleService("console-system", "console")
-	ConsoleLB := consoleService.Status.LoadBalancer.Ingress[0].IP
-	if err != nil {
-		panic(err)
-	}
+	// consoleService, err := caller.GetConsoleService("console-system", "console")
+	// ConsoleLB := consoleService.Status.LoadBalancer.Ingress[0].IP
+	// if err != nil {
+	// 	panic(err)
+	// }
+
+	//consoleIngress, err := caller.GetConsoleIngress("api-gateway-system", "console")
+	ConsoleDomain := "console." + os.Getenv("HC_DOMAIN")
 
 	var b strings.Builder
 	b.WriteString(LINK)
@@ -142,7 +146,7 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	bodyParameter["@@OWNER_EMAIL@@"] = userId
 	bodyParameter["@@MEMBER_EMAIL@@"] = memberId
 	bodyParameter["@@OWNER_NAME@@"] = userId
-	bodyParameter["@@CONSOLE_LB@@"] = ConsoleLB
+	bodyParameter["@@CONSOLE_LB@@"] = ConsoleDomain
 	bodyParameter["@@NAMESPACE@@"] = clusterMember.Namespace
 	bodyParameter["@@MEMBER_ID@@"] = clusterMember.MemberId
 	bodyParameter["@@TOKEN@@"] = token
@@ -278,11 +282,13 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	consoleService, err := caller.GetConsoleService("console-system", "console")
-	ConsoleLB := consoleService.Status.LoadBalancer.Ingress[0].IP
-	if err != nil {
-		klog.Infoln(err)
-	}
+	// consoleService, err := caller.GetConsoleService("console-system", "console")
+	// ConsoleLB := consoleService.Status.LoadBalancer.Ingress[0].IP
+	// if err != nil {
+	// 	klog.Infoln(err)
+	// }
+
+	ConsoleDomain := "console." + os.Getenv("HC_DOMAIN")
 
 	clusterMember := util.ClusterMemberInfo{}
 	clusterMember.Namespace = namespace
@@ -319,7 +325,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	} else if pendingUser.Status == "invited" {
-		http.Redirect(res, req, "https://"+ConsoleLB, http.StatusSeeOther)
+		http.Redirect(res, req, "https://"+ConsoleDomain, http.StatusSeeOther)
 		msg := "User [" + userId + "] is already invtied to cluster [" + cluster + "]"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusOK)
@@ -364,7 +370,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	}
 
 	/// redirection
-	http.Redirect(res, req, "https://"+ConsoleLB+"/k8s/ns/"+namespace+"/clustermanagers", http.StatusSeeOther)
+	http.Redirect(res, req, "https://"+ConsoleDomain+"/k8s/ns/"+namespace+"/clustermanagers", http.StatusSeeOther)
 
 	msg := "User [" + userId + "] is added to cluster [" + cluster + "]"
 	klog.Infoln(msg)
@@ -409,18 +415,19 @@ func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	consoleService, err := caller.GetConsoleService("console-system", "console")
-	ConsoleLB := consoleService.Status.LoadBalancer.Ingress[0].IP
-	if err != nil {
-		klog.Infoln(err)
-	}
+	ConsoleDomain := "console." + os.Getenv("HC_DOMAIN")
+	// consoleService, err := caller.GetConsoleService("console-system", "console")
+	// ConsoleLB := consoleService.Status.LoadBalancer.Ingress[0].IP
+	// if err != nil {
+	// 	klog.Infoln(err)
+	// }
 	if pendingUser.Status == "" {
 		msg := "Invitation for user [" + userId + "] is expired to cluster [" + cluster + "]"
 		klog.Info(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	} else if pendingUser.Status == "invited" {
-		http.Redirect(res, req, "https://"+ConsoleLB, http.StatusSeeOther)
+		http.Redirect(res, req, "https://"+ConsoleDomain, http.StatusSeeOther)
 		msg := "User [" + userId + "] is already invtied to cluster [" + cluster + "]"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusOK)
