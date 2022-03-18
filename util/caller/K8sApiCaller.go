@@ -778,10 +778,11 @@ func ListAllCluster(userId string, userGroups []string) (*clusterv1alpha1.Cluste
 		}
 		return clmList, nil
 	} else {
-		msg := "User [ " + userId + " ] has No permission to list ClusterManager on all namespaces"
-		klog.Infoln(msg)
-		clmList.Items = []clusterv1alpha1.ClusterManager{}
-		return clmList, nil
+		return ListAccesibleCluster(userId, userGroups)
+		// msg := "User [ " + userId + " ] has No permission to list ClusterManager on all namespaces"
+		// klog.Infoln(msg)
+		// clmList.Items = []clusterv1alpha1.ClusterManager{}
+		// return clmList, nil
 	}
 }
 
