@@ -185,7 +185,7 @@ func Remove(slice []string, item string) []string {
 	// }
 
 	var newSlice []string
-	for k, _ := range set {
+	for k := range set {
 		newSlice = append(newSlice, k)
 	}
 	return newSlice
