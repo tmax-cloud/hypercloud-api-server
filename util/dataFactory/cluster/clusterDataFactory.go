@@ -168,7 +168,7 @@ func ListAllClusterUser(cluster string, namespace string) ([]util.ClusterMemberI
 	return clusterMemberList, nil
 }
 
-func ListClusterGroupMember(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
+func ListClusterOwnerAndGroupMember(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
 	clusterMemberList := []util.ClusterMemberInfo{}
 	var b strings.Builder
 
@@ -184,6 +184,95 @@ func ListClusterGroupMember(cluster string, namespace string) ([]util.ClusterMem
 
 	b.WriteString("and (attribute = 'group'")
 	b.WriteString("or status = 'owner')")
+
+	query := b.String()
+	klog.Infoln("Query: " + query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		clusterMember := util.ClusterMemberInfo{}
+		rows.Scan(
+			&clusterMember.Id,
+			&clusterMember.Namespace,
+			&clusterMember.Cluster,
+			&clusterMember.MemberId,
+			&clusterMember.MemberName,
+			&clusterMember.Attribute,
+			&clusterMember.Role,
+			&clusterMember.Status,
+			&clusterMember.CreatedTime,
+			&clusterMember.UpdatedTime,
+		)
+		clusterMemberList = append(clusterMemberList, clusterMember)
+	}
+	return clusterMemberList, nil
+}
+
+func ListClusterInvitedMember(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
+	clusterMemberList := []util.ClusterMemberInfo{}
+	var b strings.Builder
+
+	b.WriteString("select * from CLUSTER_MEMBER where 1=1 ")
+
+	b.WriteString("and namespace = '")
+	b.WriteString(namespace)
+	b.WriteString("' ")
+
+	b.WriteString("and cluster = '")
+	b.WriteString(cluster)
+	b.WriteString("' ")
+
+	b.WriteString("and (attribute = 'user'")
+	b.WriteString("and status = 'invited')")
+
+	query := b.String()
+	klog.Infoln("Query: " + query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
+	if err != nil {
+		klog.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		clusterMember := util.ClusterMemberInfo{}
+		rows.Scan(
+			&clusterMember.Id,
+			&clusterMember.Namespace,
+			&clusterMember.Cluster,
+			&clusterMember.MemberId,
+			&clusterMember.MemberName,
+			&clusterMember.Attribute,
+			&clusterMember.Role,
+			&clusterMember.Status,
+			&clusterMember.CreatedTime,
+			&clusterMember.UpdatedTime,
+		)
+		clusterMemberList = append(clusterMemberList, clusterMember)
+	}
+	return clusterMemberList, nil
+}
+
+func ListClusterGroup(cluster string, namespace string) ([]util.ClusterMemberInfo, error) {
+	clusterMemberList := []util.ClusterMemberInfo{}
+	var b strings.Builder
+
+	b.WriteString("select * from CLUSTER_MEMBER where 1=1 ")
+
+	b.WriteString("and namespace = '")
+	b.WriteString(namespace)
+	b.WriteString("' ")
+
+	b.WriteString("and cluster = '")
+	b.WriteString(cluster)
+	b.WriteString("' ")
+
+	b.WriteString("and (attribute = 'group')")
 
 	query := b.String()
 	klog.Infoln("Query: " + query)

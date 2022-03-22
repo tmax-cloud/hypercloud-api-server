@@ -150,20 +150,35 @@ func main() {
 
 	if hcMode != "single" {
 		// for multi mode only
-		mux.HandleFunc("/clusterclaims", serveClusterClaim)                                       // List all clusterclaim
-		mux.HandleFunc("/namespaces/{namespace}/clusterclaims", serveClusterClaim)                // list all clusterclaim in a specific namespace
-		mux.HandleFunc("/namespaces/{namespace}/clusterclaims/{clusterclaim}", serveClusterClaim) // Admit clusterclaim request
+		// List all clusterclaim
+		mux.HandleFunc("/clusterclaims", serveClusterClaim)
+		// list all clusterclaim in a specific namespace
+		mux.HandleFunc("/namespaces/{namespace}/clusterclaims", serveClusterClaim)
+		// Admit clusterclaim request
+		mux.HandleFunc("/namespaces/{namespace}/clusterclaims/{clusterclaim}", serveClusterClaim)
+		// list clustermanager for all namespaces (list page & all ns)
 		mux.HandleFunc("/clustermanagers", serveCluster)
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster) // list clustermanager for all namespaces (list page & all ns)
-		mux.HandleFunc("/clustermanagers/{access}", serveCluster)               // list accessible clustermanager for all namespaces (lnb & all ns)
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster) // list all clustermanager in a specific namespace
+		// list clustermanager for all namespaces (list page & all ns)
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster)
+		// list accessible clustermanager for all namespaces (lnb & all ns)
+		mux.HandleFunc("/clustermanagers/{access}", serveCluster)
+		// list all clustermanager in a specific namespace
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster)
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}", serveCluster)
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member", serveClusterMember)                                     // list all member
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation", serveClusterInvitation)                      // list a pending status user
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation/{attribute}/{member}", serveClusterInvitation) // 추가 요청 (db + token 발급)
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation/{admit}", serveClusterInvitationAdmit)         // 추가 요청 승인, 추가 요청 거절
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/remove_member/{attribute}/{member}", serveClusterMember)         // 멤버 삭제 (db)
-		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/update_role/{attribute}/{member}", serveClusterMember)           // 권한 변경 (db)
+		// list all member
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member", serveClusterMember)
+		// list a pending status user
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation", serveClusterInvitation)
+		// 추가 요청 (db + token 발급)
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation/{attribute}/{member}", serveClusterInvitation)
+		// 추가 요청 승인, 추가 요청 거절
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member_invitation/{admit}", serveClusterInvitationAdmit)
+		// 멤버 삭제 (db)
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/remove_member/{attribute}/{member}", serveClusterMember)
+		// 권한 변경 (db)
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/update_role/{attribute}/{member}", serveClusterMember)
+		// list invited member id
+		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member/{member}", serveClusterMember)
 	}
 
 	mux.HandleFunc("/metadata", serveMetadata)
@@ -425,11 +440,19 @@ func serveCluster(res http.ResponseWriter, req *http.Request) {
 
 func serveClusterMember(res http.ResponseWriter, req *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	vars := gmux.Vars(req)
 	switch req.Method {
 	case http.MethodPost:
 		cluster.RemoveMember(res, req)
 	case http.MethodGet:
-		cluster.ListClusterMember(res, req)
+		if vars["member"] == "invited" {
+			cluster.ListClusterInvitedMember(res, req)
+		} else if vars["member"] == "group" {
+			cluster.ListClusterGroup(res, req)
+		} else {
+			// if vars["status"] == ""
+			cluster.ListClusterMember(res, req)
+		}
 	case http.MethodPut:
 		cluster.UpdateMemberRole(res, req)
 	default:

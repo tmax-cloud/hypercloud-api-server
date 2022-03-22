@@ -35,7 +35,7 @@ func ListClusterMember(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
-		msg := "Cannot invite member to cluster in deleting phase or not ready status"
+		msg := "Cannot invite member to cluster: cluster is deleting or not ready"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
@@ -66,6 +66,78 @@ func ListClusterMember(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func ListClusterInvitedMember(res http.ResponseWriter, req *http.Request) {
+	queryParams := req.URL.Query()
+	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
+	vars := gmux.Vars(req)
+	cluster := vars["clustermanager"]
+	namespace := vars["namespace"]
+
+	if err := util.StringParameterException(userGroups, userId, cluster, namespace); err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
+		return
+	}
+
+	clm, err := caller.GetCluster(userId, userGroups, cluster, namespace)
+	if err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
+
+	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
+		msg := "Cannot list invited member in cluster: cluster is deleting or not ready"
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
+		return
+	}
+
+	clusterMemberList, err := clusterDataFactory.ListClusterInvitedMember(cluster, namespace)
+	if err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
+	msg := "List cluster invited member success"
+	klog.Infoln(msg)
+	util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
+	return
+}
+
+func ListClusterGroup(res http.ResponseWriter, req *http.Request) {
+	queryParams := req.URL.Query()
+	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
+	vars := gmux.Vars(req)
+	cluster := vars["clustermanager"]
+	namespace := vars["namespace"]
+
+	clm, err := caller.GetCluster(userId, userGroups, cluster, namespace)
+	if err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
+
+	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
+		msg := "Cannot list invited member in cluster: cluster is deleting or not ready"
+		klog.Infoln(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
+		return
+	}
+
+	clusterMemberList, err := clusterDataFactory.ListClusterGroup(cluster, namespace)
+	if err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
+	msg := "List cluster group success"
+	klog.Infoln(msg)
+	util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
+	return
+}
+
 func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
@@ -89,7 +161,7 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
-		msg := "Cannot invite member to cluster in deleting phase or not ready status"
+		msg := "Cannot remove member in cluster: cluster is deleting phase or not ready"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return

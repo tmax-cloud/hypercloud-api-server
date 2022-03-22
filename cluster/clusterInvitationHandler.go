@@ -207,7 +207,7 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// 클러스터에 속한 group들과 소유자(owner)반환
-	clusterMemberList, err := clusterDataFactory.ListClusterGroupMember(clusterMember.Cluster, clusterMember.Namespace)
+	clusterMemberList, err := clusterDataFactory.ListClusterOwnerAndGroupMember(clusterMember.Cluster, clusterMember.Namespace)
 	if err != nil {
 		klog.Errorln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
