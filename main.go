@@ -164,6 +164,7 @@ func main() {
 		mux.HandleFunc("/clustermanagers/{access}", serveCluster)
 		// list all clustermanager in a specific namespace
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers", serveCluster)
+		// Insert or delete clustermanager to database
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}", serveCluster)
 		// list all member
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member", serveClusterMember)
