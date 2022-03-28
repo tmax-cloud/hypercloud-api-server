@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"time"
 
 	gmux "github.com/gorilla/mux"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
@@ -320,20 +319,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 
 	// }
 
-	if time.Now().Sub(pendingUser.CreatedTime).Hours() > 23 {
-		msg := "Invitation for user [" + userId + "] to cluster [" + cluster + "] is expired"
-		klog.Info(msg)
-		util.SetResponse(res, msg, nil, http.StatusBadRequest)
-
-		if err := clusterDataFactory.Delete(*pendingUser); err != nil {
-			msg := "Failed to delete cluster info from db"
-			klog.Error(err, msg)
-			util.SetResponse(res, msg, nil, http.StatusInternalServerError)
-		}
-		return
-	}
-
-	if pendingUser == nil {
+	if pendingUser.Status == "" {
 		msg := "Invitation for user [" + userId + "] to cluster [" + cluster + "] is not exist"
 		klog.Info(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
