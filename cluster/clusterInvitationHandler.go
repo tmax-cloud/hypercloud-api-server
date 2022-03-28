@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	gmux "github.com/gorilla/mux"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
@@ -297,11 +298,11 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Attribute = "user"
 
 	// token validation
-	if _, err := util.TokenValid(req, clusterMember); err != nil {
-		klog.Errorln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
-		return
-	}
+	// if _, err := util.TokenValid(req, clusterMember); err != nil {
+	// 	klog.Errorln(err)
+	// 	util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
+	// 	return
+	// }
 	// 해당 클러스터에 사용자 있는지 조회
 	// res 없다면,,,  거절당한거 (timeout인거는 token에서 거를꺼고.. )
 	// 있는데 상태가 invited면 이미 있네
@@ -319,8 +320,21 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 
 	// }
 
-	if pendingUser.Status == "" {
-		msg := "Invitation for user [" + userId + "] is expired to cluster [" + cluster + "]"
+	if time.Now().Sub(pendingUser.CreatedTime).Hours() > 23 {
+		msg := "Invitation for user [" + userId + "] to cluster [" + cluster + "] is expired"
+		klog.Info(msg)
+		util.SetResponse(res, msg, nil, http.StatusBadRequest)
+
+		if err := clusterDataFactory.Delete(*pendingUser); err != nil {
+			msg := "Failed to delete cluster info from db"
+			klog.Error(err, msg)
+			util.SetResponse(res, msg, nil, http.StatusInternalServerError)
+		}
+		return
+	}
+
+	if pendingUser == nil {
+		msg := "Invitation for user [" + userId + "] to cluster [" + cluster + "] is not exist"
 		klog.Info(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
@@ -402,11 +416,11 @@ func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Status = "pending"
 
 	// token validation
-	if _, err := util.TokenValid(req, clusterMember); err != nil {
-		klog.Errorln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
-		return
-	}
+	// if _, err := util.TokenValid(req, clusterMember); err != nil {
+	// 	klog.Errorln(err)
+	// 	util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
+	// 	return
+	// }
 
 	pendingUser, err := clusterDataFactory.GetPendingUser(clusterMember)
 	if err != nil {
