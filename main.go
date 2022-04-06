@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
 
 	gmux "github.com/gorilla/mux"
+	"github.com/robfig/cron"
 	admission "github.com/tmax-cloud/hypercloud-api-server/admission"
 	"github.com/tmax-cloud/hypercloud-api-server/alert"
 	audit "github.com/tmax-cloud/hypercloud-api-server/audit"
@@ -29,12 +31,9 @@ import (
 	kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
 	"github.com/tmax-cloud/hypercloud-api-server/util/dataFactory"
 	version "github.com/tmax-cloud/hypercloud-api-server/version"
+
 	"k8s.io/api/admission/v1beta1"
 	"k8s.io/klog"
-
-	"net/http"
-
-	"github.com/robfig/cron"
 )
 
 type admitFunc func(v1beta1.AdmissionReview) *v1beta1.AdmissionResponse
@@ -112,7 +111,8 @@ func main() {
 		}
 		klog.Info("Log BackUp Success")
 		os.Truncate("./logs/api-server.log", 0)
-		file.Seek(0, os.SEEK_SET)
+		// file.Seek(0, os.SEEK_SET)
+		file.Seek(0, io.SeekStart)
 	})
 
 	// Metering Cron Job
@@ -203,7 +203,7 @@ func main() {
 	// HTTP Server Start
 	klog.Info("Starting Hypercloud5-API server...")
 	klog.Flush()
-	klog.Info("Setiing Grafana Admin...")
+	klog.Info("Setting Grafana Admin...")
 	hc_admin := caller.GetCRBAdmin()
 	caller.CreateGrafanaUser(hc_admin)
 	id := caller.GetGrafanaUser(hc_admin)
@@ -327,7 +327,7 @@ func serveNamespace(res http.ResponseWriter, req *http.Request) {
 	case http.MethodOptions:
 		namespace.Options(res, req)
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -340,7 +340,7 @@ func serveNamespaceClaim(res http.ResponseWriter, req *http.Request) {
 	case http.MethodOptions:
 		namespaceClaim.Options(res, req)
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -353,7 +353,7 @@ func serveUser(res http.ResponseWriter, req *http.Request) {
 	case http.MethodOptions:
 		user.Options(res, req)
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -364,7 +364,7 @@ func serveMetering(res http.ResponseWriter, req *http.Request) {
 	case http.MethodOptions:
 		metering.Options(res, req)
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -375,7 +375,7 @@ func serveAlert(res http.ResponseWriter, req *http.Request) {
 	case http.MethodGet:
 		alert.Get(res, req)
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 func serveGrafanaUser(res http.ResponseWriter, req *http.Request) {
@@ -384,7 +384,7 @@ func serveGrafanaUser(res http.ResponseWriter, req *http.Request) {
 	case http.MethodPost:
 		caller.CreateGrafanaUser("test12@tmax.co.kr")
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -396,7 +396,7 @@ func serveGrafanaDashboard(res http.ResponseWriter, req *http.Request) {
 	case http.MethodDelete:
 		caller.DeleteGrafanaDashboard(res, req)
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 func serveVersion(res http.ResponseWriter, req *http.Request) {
@@ -404,7 +404,7 @@ func serveVersion(res http.ResponseWriter, req *http.Request) {
 	case http.MethodGet:
 		version.Get(res, req)
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -416,6 +416,7 @@ func serveClusterClaim(res http.ResponseWriter, req *http.Request) {
 	case http.MethodPut:
 		claim.Put(res, req)
 	default:
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -429,13 +430,14 @@ func serveCluster(res http.ResponseWriter, req *http.Request) {
 		} else if vars["access"] == "" {
 			cluster.ListPage(res, req)
 		} else {
-			// errror
+			klog.Errorf("Http request error: some url params not found")
 		}
 	case http.MethodPost:
 		cluster.InsertCLM(res, req)
 	case http.MethodDelete:
 		cluster.DeleteCLM(res, req)
 	default:
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -457,6 +459,7 @@ func serveClusterMember(res http.ResponseWriter, req *http.Request) {
 	case http.MethodPut:
 		cluster.UpdateMemberRole(res, req)
 	default:
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -466,17 +469,16 @@ func serveClusterInvitation(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		cluster.ListInvitation(res, req)
-		break
 	case http.MethodPost:
 		if vars["attribute"] == "user" {
 			cluster.InviteUser(res, req)
 		} else if vars["attribute"] == "group" {
 			cluster.InviteGroup(res, req)
 		} else {
-			// errror
+			klog.Errorf("Http request error: some url params not found")
 		}
-		break
 	default:
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -490,10 +492,10 @@ func serveClusterInvitationAdmit(res http.ResponseWriter, req *http.Request) {
 		} else if vars["admit"] == "reject" {
 			cluster.DeclineInvitation(res, req)
 		} else {
-			// errror
+			klog.Errorf("Http request error: some url params not found")
 		}
-		break
 	default:
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -554,7 +556,7 @@ func serveAudit(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 	case http.MethodDelete:
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -564,7 +566,7 @@ func serveAuditVerb(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		audit.ListAuditVerb(w, r)
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -574,7 +576,7 @@ func serveAuditResources(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		audit.ListAuditResource(w, r)
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -584,6 +586,7 @@ func serveAuditMemberSuggestions(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		audit.MemberSuggestions(w, r)
 	default:
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -603,7 +606,7 @@ func serveAuditJson(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		audit.GetAuditBodyByJson(w, r)
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -655,7 +658,7 @@ func serveCloudCredential(res http.ResponseWriter, req *http.Request) {
 	case http.MethodPut:
 	case http.MethodOptions:
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
 
@@ -675,10 +678,10 @@ func serveGrafana(res http.ResponseWriter, req *http.Request) {
 		} else if postPath == "annotations" {
 			grafana.Annotations(res, req)
 		} else {
-			// error
+			klog.Errorf("Http request error: some url params not found")
 		}
 	case http.MethodOptions:
 	default:
-		//error
+		klog.Errorf("method not acceptable")
 	}
 }
