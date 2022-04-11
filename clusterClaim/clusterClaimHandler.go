@@ -110,8 +110,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	util.SetResponse(res, "Succes", updatedClusterClaim, http.StatusOK)
-	return
+	util.SetResponse(res, "Success", updatedClusterClaim, http.StatusOK)
 }
 
 func List(res http.ResponseWriter, req *http.Request) {
