@@ -102,7 +102,6 @@ func ListClusterInvitedMember(res http.ResponseWriter, req *http.Request) {
 	msg := "List cluster invited member success"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
-	return
 }
 
 func ListClusterGroup(res http.ResponseWriter, req *http.Request) {
@@ -135,7 +134,6 @@ func ListClusterGroup(res http.ResponseWriter, req *http.Request) {
 	msg := "List cluster group success"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
-	return
 }
 
 func RemoveMember(res http.ResponseWriter, req *http.Request) {
@@ -228,7 +226,6 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	msg := "User [" + memberId + "] is removed from cluster [" + clm.Name + "]"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
-	return
 }
 
 func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
@@ -320,6 +317,4 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	msg := attribute + " [" + memberId + "] role is updated to [" + remoteRole + "] in cluster [" + clm.Name + "]"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
-	return
-
 }

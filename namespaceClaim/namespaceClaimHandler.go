@@ -7,8 +7,6 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 
-	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
-
 	"k8s.io/klog"
 )
 
@@ -32,8 +30,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("limit : ", limit)
 	klog.Infoln("labelSelector : ", labelSelector)
 
-	var nscList claim.NamespaceClaimList
-	nscList = k8sApiCaller.GetAccessibleNSC(userId, userGroups, labelSelector)
+	nscList := k8sApiCaller.GetAccessibleNSC(userId, userGroups, labelSelector)
 
 	//make OutDO
 	if nscList.ResourceVersion != "" {
@@ -52,7 +49,6 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		status = http.StatusForbidden
 	}
 	util.SetResponse(res, "", nscList, status)
-	return
 }
 
 func Put(res http.ResponseWriter, req *http.Request) {
@@ -78,12 +74,10 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		out = "NameSpace Name is Duplicated"
 	}
 	util.SetResponse(res, out, nil, status)
-	return
 }
 
 func Options(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("**** OPTIONS/namespaceClaim")
 	out := "**** OPTIONS/namespaceClaim"
 	util.SetResponse(res, out, nil, http.StatusOK)
-	return
 }

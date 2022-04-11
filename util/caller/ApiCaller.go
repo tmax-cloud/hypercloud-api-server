@@ -153,7 +153,7 @@ func CreateGrafanaPermission(email string, userId int, dashboardId int) {
 			}
 		]
 	}`
-	json_body, _ = json.Marshal(permBody)
+	// json_body, _ = json.Marshal(permBody)
 	request, _ = http.NewRequest("POST", httpposturl_per, bytes.NewBuffer([]byte(permBody)))
 
 	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
@@ -2685,7 +2685,7 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 			  }
 		}
 	}`
-	json_body, _ = json.Marshal(DashBoardBody)
+	// json_body, _ = json.Marshal(DashBoardBody)
 
 	request_db, _ := http.NewRequest("POST", httpposturl_dashboard, bytes.NewBuffer([]byte(DashBoardBody)))
 	request_db.Header.Add("Content-Type", "application/json; charset=UTF-8")
@@ -2696,7 +2696,7 @@ func CreateDashBoard(res http.ResponseWriter, req *http.Request) {
 		klog.Errorln(err)
 	} else {
 		defer resp.Body.Close()
-		var grafana_resp_dash util.Grafana_Dashboad_resp
+		var grafana_resp_dash util.Grafana_Dashboard_resp
 
 		dashbody, _ := ioutil.ReadAll(resp.Body)
 

@@ -432,7 +432,7 @@ type Grafana_user struct {
 	Password string `json:"password"`
 }
 
-type Grafana_Dashboad_resp struct {
+type Grafana_Dashboard_resp struct {
 	Id      int    `json:"id"`
 	Uid     string `json:"uid"`
 	Url     string `json:"url"`

@@ -54,39 +54,41 @@ func LoginAsAdmin() string {
 
 	var resultJson map[string]interface{}
 	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
+		klog.Error(err)
 	}
 	accessToken := resultJson["access_token"].(string)
 	return accessToken
 }
 
-func getUserDetailWithoutToken(userId string) map[string]interface{} {
-	klog.Infoln(" [HyperAuth] HyperAuth Get User Detail Without Token Service")
+// defunct
+// func getUserDetailWithoutToken(userId string) map[string]interface{} {
+// 	klog.Infoln(" [HyperAuth] HyperAuth Get User Detail Without Token Service")
 
-	// Make Request Object
-	req, err := http.NewRequest("GET", setHyperAuthURL(util.HYPERAUTH_SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN)+userId, nil)
-	if err != nil {
-		klog.Error(err)
-		panic(err)
-	}
+// 	// Make Request Object
+// 	req, err := http.NewRequest("GET", setHyperAuthURL(util.HYPERAUTH_SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN)+userId, nil)
+// 	if err != nil {
+// 		klog.Error(err)
+// 		panic(err)
+// 	}
 
-	// Request with Client Object
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		klog.Error(err)
-		panic(err)
-	}
-	defer resp.Body.Close()
+// 	// Request with Client Object
+// 	client := &http.Client{}
+// 	resp, err := client.Do(req)
+// 	if err != nil {
+// 		klog.Error(err)
+// 		panic(err)
+// 	}
+// 	defer resp.Body.Close()
 
-	// Result
-	bytes, _ := ioutil.ReadAll(resp.Body)
-	str := string(bytes) // byte to string
-	klog.Infoln("Result string  : ", str)
+// 	// Result
+// 	bytes, _ := ioutil.ReadAll(resp.Body)
+// 	str := string(bytes) // byte to string
+// 	klog.Infoln("Result string  : ", str)
 
-	var resultJson map[string]interface{}
-	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
-		klog.Error(err)
-		panic(err)
-	}
-	return resultJson
-}
+// 	var resultJson map[string]interface{}
+// 	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
+// 		klog.Error(err)
+// 		panic(err)
+// 	}
+// 	return resultJson
+// }

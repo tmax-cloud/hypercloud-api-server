@@ -19,8 +19,7 @@ import (
 	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
 	authApi "k8s.io/api/authorization/v1"
-	coreApi "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	rbacApi "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -82,7 +81,7 @@ func init() {
 
 }
 
-func GetNamespace(nsName string) *v1.Namespace {
+func GetNamespace(nsName string) *corev1.Namespace {
 	namespace, err := Clientset.CoreV1().Namespaces().Get(context.TODO(), nsName, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
@@ -99,7 +98,7 @@ func GetNamespace(nsName string) *v1.Namespace {
 	}
 }
 
-func UpdateNamespace(namespace *v1.Namespace) *v1.Namespace {
+func UpdateNamespace(namespace *corev1.Namespace) *corev1.Namespace {
 	namespace, err := Clientset.CoreV1().Namespaces().Update(context.TODO(), namespace, metav1.UpdateOptions{})
 	if err != nil {
 		klog.Info("Update Namespace [ " + namespace.Name + " ] Failed")
@@ -132,8 +131,8 @@ func DeleteClusterRoleBinding(name string) {
 	}
 }
 
-func GetAccessibleNS(userId string, labelSelector string, userGroups []string) coreApi.NamespaceList {
-	var nsList = &coreApi.NamespaceList{}
+func GetAccessibleNS(userId string, labelSelector string, userGroups []string) corev1.NamespaceList {
+	var nsList = &corev1.NamespaceList{}
 	klog.Infoln("userId : ", userId)
 
 	// // 1. Get UserGroup List if Exists
@@ -193,7 +192,7 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) c
 		var wg sync.WaitGroup
 		wg.Add(len(potentialNsList.Items))
 		for _, potentialNs := range potentialNsList.Items {
-			go func(potentialNs coreApi.Namespace, userId string, userGroups []string, nsList *coreApi.NamespaceList) {
+			go func(potentialNs corev1.Namespace, userId string, userGroups []string, nsList *corev1.NamespaceList) {
 				defer wg.Done()
 				nsGetRuleReview := authApi.SubjectAccessReview{
 					Spec: authApi.SubjectAccessReviewSpec{
@@ -238,7 +237,7 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) c
 	return *nsList
 }
 
-// var nsList = &coreApi.NamespaceList{}
+// var nsList = &corev1.NamespaceList{}
 func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) claim.NamespaceClaimList {
 	var nscList = &claim.NamespaceClaimList{}
 
@@ -324,7 +323,7 @@ func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) 
 			nscList.ResourceVersion = potentialNscList.ResourceVersion
 			nscList.TypeMeta = potentialNscList.TypeMeta
 			// } else {
-			// 	klog.Infoln(" User [ " + userId + " ] has No owner annotaion in Any NamspaceClaim")
+			// 	klog.Infoln(" User [ " + userId + " ] has No owner annotation in Any NamspaceClaim")
 			// }
 		} else {
 			klog.Infoln(" User [ " + userId + " ] has no NamespaceClaim Get Role, User Cannot Access any NamespaceClaim")
@@ -345,6 +344,9 @@ func DeleteRQCWithUser(userId string) {
 	var rqcList = &claim.ResourceQuotaClaimList{}
 	//data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/").Namespace("").Resource("resourcequotaclaims").DoRaw(context.TODO()) // for hypercloud4 version
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/").Namespace("").Resource("resourcequotaclaims").DoRaw(context.TODO()) // for hypercloud5 version
+	if err != nil {
+		klog.Errorln(err)
+	}
 
 	if err = json.Unmarshal(data, &rqcList); err != nil {
 		klog.Errorln(err)
@@ -367,6 +369,9 @@ func DeleteNSCWithUser(userId string) {
 	var nscList = &claim.NamespaceClaimList{}
 	//data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/namespaceclaims").DoRaw(context.TODO()) // for hypercloud4 version
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/namespaceclaims").DoRaw(context.TODO()) // for hypercloud5 version
+	if err != nil {
+		klog.Errorln(err)
+	}
 
 	if err = json.Unmarshal(data, &nscList); err != nil {
 		klog.Errorln(err)
@@ -389,6 +394,9 @@ func DeleteRBCWithUser(userId string) {
 	var rbcList = &claim.RoleBindingClaimList{}
 	//data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/").Namespace("").Resource("rolebindingclaims").DoRaw(context.TODO()) // for hypercloud4 version
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/").Namespace("").Resource("rolebindingclaims").DoRaw(context.TODO()) // for hypercloud5 version
+	if err != nil {
+		klog.Errorln(err)
+	}
 
 	if err = json.Unmarshal(data, &rbcList); err != nil {
 		klog.Errorln(err)
@@ -476,7 +484,7 @@ func DeleteRBWithUser(userId string) {
 // ExecCommand sends a 'exec' command to specific pod.
 // It returns outputs of command.
 // If the container parameter == "", it chooses first container.
-func ExecCommand(pod v1.Pod, command []string, container string) (string, string, error) {
+func ExecCommand(pod corev1.Pod, command []string, container string) (string, string, error) {
 
 	var stdin io.Reader
 
@@ -487,7 +495,7 @@ func ExecCommand(pod v1.Pod, command []string, container string) (string, string
 		container = pod.Spec.Containers[0].Name
 	}
 
-	option := &v1.PodExecOptions{
+	option := &corev1.PodExecOptions{
 		Container: container,
 		Command:   command,
 		Stdin:     true,
@@ -526,7 +534,7 @@ func ExecCommand(pod v1.Pod, command []string, container string) (string, string
 // GetPodListByLabel returns a pod List using label and namespace.
 // If you want to find pods through all namespace, pass "" for namespace parameter.
 // If there is a pod list, it returns a list with 'true', if not, returns with 'false'
-func GetPodListByLabel(label string, namespace string) (v1.PodList, bool) {
+func GetPodListByLabel(label string, namespace string) (corev1.PodList, bool) {
 	// get PodList by Label
 	podList, err := Clientset.CoreV1().Pods(namespace).List(
 		context.TODO(),
@@ -536,13 +544,13 @@ func GetPodListByLabel(label string, namespace string) (v1.PodList, bool) {
 	)
 
 	if err != nil {
-		klog.Errorln("Error occured by " + label)
+		klog.Errorln("Error occurred by " + label)
 		klog.Errorln("Error content : " + err.Error())
 		return *podList, false
 	}
 
 	// check if podList is empty
-	nilTest := []v1.Pod{}
+	nilTest := []corev1.Pod{}
 	if reflect.DeepEqual(podList.Items, nilTest) {
 		klog.Errorln(label, " cannot be found")
 		return *podList, false
@@ -634,7 +642,7 @@ func AdmitClusterClaim(userId string, userGroups []string, clusterClaim *claimsv
 	if clusterClaimStatusUpdateRuleResult.Status.Allowed {
 		klog.Infoln(" User [ " + userId + " ] has ClusterClaims/status Update Role, Can Update ClusterClaims")
 
-		if admit == true {
+		if admit {
 			clusterClaim.Status.Phase = "Approved"
 			if reason == "" {
 				clusterClaim.Status.Reason = "Administrator approve the claim"
@@ -739,6 +747,9 @@ func ListAccessibleClusterClaims(userId string, userGroups []string, namespace s
 	}
 	if clusterClaimListRuleResult.Status.Allowed {
 		clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims(namespace).List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			klog.Error(err)
+		}
 		klog.Infoln("Success list clusterclaim in namespace [ " + namespace + " ]")
 		if len(clusterClaimList.Items) == 0 {
 			klog.Infoln(" User [ " + userId + " ] has No ClusterClaim")
@@ -778,7 +789,7 @@ func ListAllCluster(userId string, userGroups []string) (*clusterv1alpha1.Cluste
 		}
 		return clmList, nil
 	} else {
-		return ListAccesibleCluster(userId, userGroups)
+		return ListAccessibleCluster(userId, userGroups)
 		// msg := "User [ " + userId + " ] has No permission to list ClusterManager on all namespaces"
 		// klog.Infoln(msg)
 		// clmList.Items = []clusterv1alpha1.ClusterManager{}
@@ -786,7 +797,7 @@ func ListAllCluster(userId string, userGroups []string) (*clusterv1alpha1.Cluste
 	}
 }
 
-func ListAccesibleCluster(userId string, userGroups []string) (*clusterv1alpha1.ClusterManagerList, error) {
+func ListAccessibleCluster(userId string, userGroups []string) (*clusterv1alpha1.ClusterManagerList, error) {
 
 	var clmList = &clusterv1alpha1.ClusterManagerList{}
 
@@ -905,7 +916,7 @@ func GetClusterWithoutSAR(userId string, userGroups []string, clusterName string
 	return clm, nil
 }
 
-func CheckClusterManagerDupliation(clusterName string, namespace string) (bool, error) {
+func CheckClusterManagerDuplication(clusterName string, namespace string) (bool, error) {
 	if _, err := customClientset.ClusterV1alpha1().ClusterManagers(namespace).Get(context.TODO(), clusterName, metav1.GetOptions{}); err != nil {
 		if errors.IsNotFound(err) {
 			return false, nil
@@ -996,7 +1007,7 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 		klog.Errorln(err)
 		return err
 	}
-	msg := "ClusterMnager role [" + roleName + "] and rolebinding [ " + roleBindingName + "]  is created"
+	msg := "ClusterManager role [" + roleName + "] and rolebinding [ " + roleBindingName + "]  is created"
 	klog.Infoln(msg)
 
 	return nil
@@ -1049,7 +1060,7 @@ func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 }
 
 // defunct
-// func GetConsoleService(namespace string, name string) (*coreApi.Service, error) {
+// func GetConsoleService(namespace string, name string) (*corev1.Service, error) {
 // 	result, err := Clientset.CoreV1().Services(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 // 	return result, err
 // }
@@ -1214,21 +1225,21 @@ func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1
 		return nil, err
 	}
 
-	ccjson, err := json.Marshal(clusterClaim)
+	ccJson, err := json.Marshal(clusterClaim)
 	if err != nil {
 		klog.Info("***** json marshal error")
 		klog.Errorln(err)
 	}
-	klog.Info("*****" + string(ccjson))
+	klog.Info("*****" + string(ccJson))
 
-	clmjson, err := json.Marshal(clm)
+	clmJson, err := json.Marshal(clm)
 	if err != nil {
 		klog.Info("##### json marshal error")
 		klog.Errorln(err)
 	}
-	klog.Info("#####" + string(clmjson))
+	klog.Info("#####" + string(clmJson))
 
-	klog.Info("ClusterMnager is created")
+	klog.Info("ClusterManager is created")
 	return clm, nil
 }
 
@@ -1325,7 +1336,7 @@ func UpdateAuditResourceList() {
 // 		}
 // 	}
 
-// 	// msg := "ClusterMnager is created"
+// 	// msg := "ClusterManager is created"
 // 	// return clm, msg, http.StatusOK
 // }
 

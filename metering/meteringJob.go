@@ -305,6 +305,7 @@ func getMeteringData(query string) meteringModel.MetricDataList {
 	str := string(bytes) // byte to string
 
 	if err := json.Unmarshal([]byte(str), &metricResponse); err != nil {
+		klog.Error(err)
 	}
 	return metricResponse.Data
 }

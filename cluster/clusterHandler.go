@@ -70,7 +70,7 @@ func ListLNB(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if clmList, err := caller.ListAccesibleCluster(userId, userGroups); err != nil {
+	if clmList, err := caller.ListAccessibleCluster(userId, userGroups); err != nil {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 	} else {
 		util.SetResponse(res, "Success", clmList, http.StatusOK)

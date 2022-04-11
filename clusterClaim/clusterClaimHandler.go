@@ -62,7 +62,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// name duplicate
-	exist, err := caller.CheckClusterManagerDupliation(cc.Spec.ClusterName, clusterClaimNamespace)
+	exist, err := caller.CheckClusterManagerDuplication(cc.Spec.ClusterName, clusterClaimNamespace)
 	if err != nil {
 		klog.Errorln(err.Error())
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)

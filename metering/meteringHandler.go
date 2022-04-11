@@ -64,7 +64,6 @@ func Get(res http.ResponseWriter, req *http.Request) {
 
 	meteringDataList := getMeteringDataFromDB(query)
 	util.SetResponse(res, "", meteringDataList, http.StatusOK)
-	return
 }
 
 func getMeteringDataFromDB(query string) []meteringModel.Metering {
@@ -133,5 +132,4 @@ func Options(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("**** OPTIONS/metering")
 	out := "**** OPTIONS/metering"
 	util.SetResponse(res, out, nil, http.StatusOK)
-	return
 }

@@ -7,7 +7,6 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 
-	v1 "k8s.io/api/core/v1"
 	"k8s.io/klog"
 )
 
@@ -38,8 +37,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	// 	userGroups = strings.Split(userGroup, ",")
 	// }
 
-	var nsList v1.NamespaceList
-	nsList = k8sApiCaller.GetAccessibleNS(userId, labelSelector, userGroups)
+	nsList := k8sApiCaller.GetAccessibleNS(userId, labelSelector, userGroups)
 
 	//make OutDO
 	if nsList.ResourceVersion != "" {
@@ -57,7 +55,6 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		status = http.StatusForbidden
 	}
 	util.SetResponse(res, "", nsList, status)
-	return
 }
 
 func Put(res http.ResponseWriter, req *http.Request) {
@@ -95,12 +92,10 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		out := "namespace is not trial version"
 		util.SetResponse(res, out, nil, status)
 	}
-	return
 }
 
 func Options(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("**** OPTIONS/namespace")
 	out := "**** OPTIONS/namespace"
 	util.SetResponse(res, out, nil, http.StatusOK)
-	return
 }

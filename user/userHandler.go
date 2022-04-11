@@ -46,7 +46,6 @@ func Post(res http.ResponseWriter, req *http.Request) {
 	k8sApiCaller.CreateClusterRoleBinding(&clusterRoleBinding)
 	out := "Create ClusterRoleBinding for New User Success"
 	util.SetResponse(res, out, nil, http.StatusOK)
-	return
 }
 
 func Delete(res http.ResponseWriter, req *http.Request) {
@@ -79,5 +78,4 @@ func Options(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("**** OPTIONS/user")
 	out := "**** OPTIONS/user"
 	util.SetResponse(res, out, nil, http.StatusOK)
-	return
 }
