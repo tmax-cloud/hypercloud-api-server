@@ -1,6 +1,34 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.13 start -------------------->
+
+## Hypercloud-api-server 5.0.26.13 (2022. 04. 11. (월) 15:10:55 KST)
+
+### Added
+  - [feat] cluster 멤버, 그룹 조회 api 추가 by SISILIA
+  - [feat] multi-operator 26버전과 호환을 위한 패키지 및 코드 추가 by SISILIA
+
+### Changed
+  - [mod] expire 코드 제거 by SISILIA
+  - [mod] cluster invitation token 제거, invitation expire 로직 새로 추가 by SISILIA
+  - [mod] clm list권한이 없는 경우에도 접근가능한 전체 clm을 조회할 수 있도록 변경 by SISILIA
+  - [mod] console domain을 console service를 get하던 로직에서 env로 받게 변경 by SISILIA
+  - [mod] code warning 수정 by SISILIA
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] 오타 수정, warning 코드 수정 by SISILIA
+  - [etc] code refactoring(워닝 코드 제거, deprecated 제거, 오타 수정) by SISILIA
+  - [etc] 오타 수정 by SISILIA
+  - [etc] 주석 추가 by SISILIA
+  - [etc] code warning 수정 by SISILIA
+  - [etc] fix log typo error by SISILIA
+  - [etc] update gitignore by SISILIA
+
 <!-------------------- v5.0.26.12 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.12 (2022. 04. 07. (목) 18:30:30 KST)
