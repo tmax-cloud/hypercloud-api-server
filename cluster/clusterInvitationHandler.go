@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	LINK = "https://@@CONSOLE_LB@@/api/hypercloud/namespaces/@@NAMESPACE@@/clustermanagers/@@CLUSTER_NAME@@/member_invitation/accept?userId=@@MEMBER_EMAIL@@&token=@@TOKEN@@"
+	// LINK = "https://@@CONSOLE_LB@@/api/hypercloud/namespaces/@@NAMESPACE@@/clustermanagers/@@CLUSTER_NAME@@/member_invitation/accept?userId=@@MEMBER_EMAIL@@&token=@@TOKEN@@"
+	LINK = "https://@@CONSOLE_LB@@/k8s/ns/@@NAMESPACE@@/clustermanagers/@@CLUSTER_NAME@@/access/accept"
 )
 
 func InviteUser(res http.ResponseWriter, req *http.Request) {
@@ -108,8 +109,8 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// create Token
-	token, err := util.CreateToken(clusterMember)
-	klog.Info("token = \n" + token)
+	// token, err := util.CreateToken(clusterMember)
+	// klog.Info("token = \n" + token)
 
 	// insert db
 	if err := clusterDataFactory.Insert(clusterMember); err != nil {
@@ -129,10 +130,10 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 
 	var b strings.Builder
 	b.WriteString(LINK)
-	for _, userGroup := range userGroups {
-		b.WriteString("&userGroup=")
-		b.WriteString(userGroup)
-	}
+	// for _, userGroup := range userGroups {
+	// 	b.WriteString("&userGroup=")
+	// 	b.WriteString(userGroup)
+	// }
 
 	to := []string{memberId}
 	from := "no-reply-tc@tmax.co.kr"
@@ -140,7 +141,7 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	bodyParameter := map[string]string{}
 	bodyParameter["@@LINK@@"] = b.String()
 	fmt.Println("#########################" + bodyParameter["@@LINK@@"])
-	// bodyParameter["@@LINK@@"] = "https://" + ConsoleLB + "/k8s/" + namespace + "/clustermanagers"
+	bodyParameter["@@LINK@@"] = "https://" + ConsoleDomain + "/k8s/ns/" + namespace + "/clustermanagers/" + cluster + "/access/accept"
 	bodyParameter["@@CLUSTER_NAME@@"] = cluster
 	bodyParameter["@@VALID_TIME@@"] = util.ValidTime
 	bodyParameter["@@OWNER_EMAIL@@"] = userId
@@ -149,7 +150,7 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	bodyParameter["@@CONSOLE_LB@@"] = ConsoleDomain
 	bodyParameter["@@NAMESPACE@@"] = clusterMember.Namespace
 	bodyParameter["@@MEMBER_ID@@"] = clusterMember.MemberId
-	bodyParameter["@@TOKEN@@"] = token
+	// bodyParameter["@@TOKEN@@"] = token
 	bodyParameter["@@ROLE@@"] = remoteRole
 
 	if err := util.SendEmail(from, to, subject, bodyParameter); err != nil {
@@ -162,10 +163,9 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	msg := "User inivtation is successed"
+	msg := "User is invited successfully"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
-	return
 }
 
 func InviteGroup(res http.ResponseWriter, req *http.Request) {
