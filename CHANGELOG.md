@@ -1,6 +1,23 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.14 start -------------------->
+
+## Hypercloud-api-server 5.0.26.14 (2022. 04. 13. (수) 16:22:03 KST)
+
+### Added
+
+### Changed
+  - [mod] 클러스터 초대 메일 링크 수정 by SISILIA
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] warning 코드 제거, log 오타 수정 by SISILIA
+  - [etc] 오타 수정, warning code 제거 by SISILIA
+
 <!-------------------- v5.0.26.13 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.13 (2022. 04. 11. (월) 15:10:55 KST)
