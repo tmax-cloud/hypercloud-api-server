@@ -26,5 +26,4 @@ func ListClusterNamespace(res http.ResponseWriter, req *http.Request) {
 	// msg = "User [" + memberId + "] is removed from cluster [" + clm.Name + "]"
 	// klog.Infoln(msg)
 	// util.SetResponse(res, msg, nil, status)
-	return
 }

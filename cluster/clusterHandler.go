@@ -75,8 +75,6 @@ func ListLNB(res http.ResponseWriter, req *http.Request) {
 	} else {
 		util.SetResponse(res, "Success", clmList, http.StatusOK)
 	}
-
-	return
 }
 
 func InsertCLM(res http.ResponseWriter, req *http.Request) {
@@ -135,7 +133,6 @@ func InsertCLM(res http.ResponseWriter, req *http.Request) {
 	msg := "Success to insert cluster info from db"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
-	return
 }
 
 func DeleteCLM(res http.ResponseWriter, req *http.Request) {
@@ -159,5 +156,4 @@ func DeleteCLM(res http.ResponseWriter, req *http.Request) {
 	msg := "Success to delete cluster info from db"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
-	return
 }

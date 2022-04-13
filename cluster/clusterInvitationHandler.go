@@ -55,7 +55,7 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
@@ -199,7 +199,7 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	if clm.Status.Ready == false || clm.Status.Phase == "Deleting" {
+	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
 		klog.Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
@@ -262,10 +262,9 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	msg := "Group inivtation is successed"
+	msg := "Invite group to cluster successfully"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
-	return
 }
 
 func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
@@ -375,7 +374,6 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	msg := "User [" + userId + "] is added to cluster [" + cluster + "]"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
-	return
 }
 
 func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
@@ -439,10 +437,9 @@ func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	msg := "Invtiation for User [" + userId + "] is rejected in a cluster [" + cluster + "]"
+	msg := "Invitation for User [" + userId + "] is rejected in a cluster [" + cluster + "]"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
-	return
 }
 
 func ListInvitation(res http.ResponseWriter, req *http.Request) {
@@ -499,5 +496,4 @@ func ListInvitation(res http.ResponseWriter, req *http.Request) {
 	msg := "List cluster success"
 	klog.Infoln(msg)
 	util.SetResponse(res, msg, pendingUser, http.StatusOK)
-	return
 }
