@@ -18,7 +18,7 @@ type Metering struct {
 
 type Metric struct {
 	Metric map[string]string `json:"metric"`
-	Value  []string          `json:"value"`
+	Value  []interface{}     `json:"value"`
 }
 
 type MetricDataList struct {
