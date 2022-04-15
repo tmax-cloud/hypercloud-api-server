@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.15 start -------------------->
+
+## Hypercloud-api-server 5.0.26.15 (2022. 04. 15. (금) 12:59:00 KST)
+
+### Added
+
+### Changed
+  - [mod] metering 서비스 Metric 구조체의 Value 타입 변경 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.26.14 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.14 (2022. 04. 13. (수) 16:22:03 KST)
