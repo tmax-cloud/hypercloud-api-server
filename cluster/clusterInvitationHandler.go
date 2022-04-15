@@ -126,7 +126,7 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	// }
 
 	//consoleIngress, err := caller.GetConsoleIngress("api-gateway-system", "console")
-	ConsoleDomain := "console." + os.Getenv("HC_DOMAIN")
+	ConsoleDomain := os.Getenv("CONSOLE_SUBDOMAIN") + "." + os.Getenv("HC_DOMAIN")
 
 	var b strings.Builder
 	b.WriteString(LINK)
@@ -287,7 +287,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	// 	klog.Infoln(err)
 	// }
 
-	ConsoleDomain := "console." + os.Getenv("HC_DOMAIN")
+	ConsoleDomain := os.Getenv("CONSOLE_SUBDOMAIN") + "." + os.Getenv("HC_DOMAIN")
 
 	clusterMember := util.ClusterMemberInfo{}
 	clusterMember.Namespace = namespace
@@ -413,7 +413,7 @@ func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	ConsoleDomain := "console." + os.Getenv("HC_DOMAIN")
+	ConsoleDomain := os.Getenv("CONSOLE_SUBDOMAIN") + "." + os.Getenv("HC_DOMAIN")
 	// consoleService, err := caller.GetConsoleService("console-system", "console")
 	// ConsoleLB := consoleService.Status.LoadBalancer.Ingress[0].IP
 	// if err != nil {
