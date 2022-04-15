@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.16 start -------------------->
+
+## Hypercloud-api-server 5.0.26.16 (2022. 04. 15. (금) 16:13:36 KST)
+
+### Added
+
+### Changed
+  - [mod] console 주소를 사용자가 입력한 subdomain을 이용하여 찾도록 수정 by SISILIA
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.26.15 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.15 (2022. 04. 15. (금) 12:59:00 KST)
