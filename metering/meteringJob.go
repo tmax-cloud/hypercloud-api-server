@@ -3,11 +3,13 @@ package metering
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -58,6 +60,11 @@ const (
 		"TRUNC(CAST(SUM(gpu)/COUNT(*) as numeric) ,2) as gpu, SUM(public_ip)/COUNT(*) as public_ip, SUM(private_ip)/COUNT(*) as private_ip, " +
 		"TRUNC(CAST(SUM(traffic_in)/COUNT(*) as numeric) ,0) as traffic_in, TRUNC(CAST(SUM(traffic_out)/COUNT(*) as numeric) ,0) as traffic_out, " +
 		"DATE_TRUNC('year', metering_time) as metering_time, status FROM metering_month WHERE status='Success' GROUP BY DATE_TRUNC('year', metering_time), namespace, status"
+
+	FORCE_DELETE_HOUR_QUERY  = "DELETE FROM metering WHERE namespace=$1 and metering_time between $2 and $3"
+	FORCE_UPDATE_DAY_QUERY   = "UPDATE metering_hour SET status = 'Merged' WHERE namespace=$1 and status = 'Success' and metering_time between $2 and $3"
+	FORCE_UPDATE_MONTH_QUERY = "UPDATE metering_day SET status = 'Merged' WHERE namespace=$1 and status = 'Success' and metering_time between $2 and $3"
+	FORCE_UPDATE_YEAR_QUERY  = "UPDATE metering_month SET status = 'Merged' WHERE namespace=$1 and status = 'Success' and metering_time between $2 and $3"
 
 	PROMETHEUS_URI = "http://prometheus-k8s.monitoring:9090/api/v1/query"
 	//PROMETHEUS_GET_CPU_QUERY         = "namespace:container_cpu_usage_seconds_total:sum_rate"
@@ -359,7 +366,13 @@ func insertMeteringYear() {
 			status)
 		if err != nil {
 			fmt.Fprintf(file, "%v\n", err)
-			return
+			if strings.Contains(err.Error(), "duplicate key") {
+				if err := HandleDuplicateError("year", meteringData); err != nil {
+					fmt.Fprintf(file, "%v\n", err)
+				}
+			} else {
+				return
+			}
 		}
 	}
 	fmt.Fprintf(file,
@@ -435,7 +448,13 @@ func insertMeteringMonth() {
 			status)
 		if err != nil {
 			fmt.Fprintf(file, "%v\n", err)
-			return
+			if strings.Contains(err.Error(), "duplicate key") {
+				if err := HandleDuplicateError("month", meteringData); err != nil {
+					fmt.Fprintf(file, "%v\n", err)
+				}
+			} else {
+				return
+			}
 		}
 	}
 	fmt.Fprintf(file,
@@ -509,7 +528,13 @@ func insertMeteringDay() {
 			status)
 		if err != nil {
 			fmt.Fprintf(file, "%v\n", err)
-			return
+			if strings.Contains(err.Error(), "duplicate key") {
+				if err := HandleDuplicateError("day", meteringData); err != nil {
+					fmt.Fprintf(file, "%v\n", err)
+				}
+			} else {
+				return
+			}
 		}
 	}
 	fmt.Fprintf(file,
@@ -583,7 +608,13 @@ func insertMeteringHour() {
 			status)
 		if err != nil {
 			fmt.Fprintf(file, "%v\n", err)
-			return
+			if strings.Contains(err.Error(), "duplicate key") {
+				if err := HandleDuplicateError("hour", meteringData); err != nil {
+					fmt.Fprintf(file, "%v\n", err)
+				}
+			} else {
+				return
+			}
 		}
 	}
 	fmt.Fprintf(file,
@@ -596,4 +627,52 @@ func insertMeteringHour() {
 		return
 	}
 	fmt.Fprintf(file, "Update METERING Past data to 'Merged' Success!!\n")
+}
+
+// HandleDuplicateError handles error of duplicate key
+func HandleDuplicateError(table string, m meteringModel.Metering) error {
+	fmt.Fprintf(file, "Duplicate key error detected when inserting to metering_"+table+" where namespace="+m.Namespace+"\n")
+	fmt.Fprintf(file, "Delete already merged previous data...\n")
+
+	switch table {
+	case "year":
+		_, err = db.Dbpool.Exec(context.TODO(), FORCE_UPDATE_YEAR_QUERY,
+			m.Namespace,
+			m.MeteringTime,
+			m.MeteringTime.AddDate(0, 12, 0))
+		if err != nil {
+			fmt.Fprintf(file, "%v\n", err)
+			return err
+		}
+	case "month":
+		_, err = db.Dbpool.Exec(context.TODO(), FORCE_UPDATE_MONTH_QUERY,
+			m.Namespace,
+			m.MeteringTime,
+			m.MeteringTime.AddDate(0, 0, 31))
+		if err != nil {
+			fmt.Fprintf(file, "%v\n", err)
+			return err
+		}
+	case "day":
+		_, err = db.Dbpool.Exec(context.TODO(), FORCE_UPDATE_DAY_QUERY,
+			m.Namespace,
+			m.MeteringTime,
+			m.MeteringTime.Add(time.Hour*23))
+		if err != nil {
+			fmt.Fprintf(file, "%v\n", err)
+			return err
+		}
+	case "hour":
+		_, err = db.Dbpool.Exec(context.TODO(), FORCE_DELETE_HOUR_QUERY,
+			m.Namespace,
+			m.MeteringTime,
+			m.MeteringTime.Add(time.Minute*59))
+		if err != nil {
+			fmt.Fprintf(file, "%v\n", err)
+			return err
+		}
+	default:
+		return errors.New("Invaild parameter for HandleDuplicateError func")
+	}
+	return nil
 }
