@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.17 start -------------------->
+
+## Hypercloud-api-server 5.0.26.17 (2022. 05. 08. (일) 17:50:27 KST)
+
+### Added
+
+### Changed
+  - [mod] DB connection이 에러로 끊긴 이후, metering 데이터가 쌓이지 않던 버그 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.26.16 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.16 (2022. 04. 15. (금) 16:13:36 KST)
