@@ -189,8 +189,8 @@ func init_variable() {
 		kafkaConsumer.KafkaGroupId = os.Getenv("HOSTNAME")
 	}
 
-	util.ReadFile()
 	util.TokenExpiredDate = os.Getenv("INVITATION_TOKEN_EXPIRED_DATE")
+	util.ReadFile()
 
 	caller.UpdateAuditResourceList()
 }
