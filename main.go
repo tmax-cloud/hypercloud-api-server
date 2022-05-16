@@ -39,94 +39,32 @@ import (
 type admitFunc func(v1beta1.AdmissionReview) *v1beta1.AdmissionResponse
 
 var (
-	port     int
-	certFile string
-	keyFile  string
+	port          int
+	certFile      string
+	keyFile       string
+	hcMode        string
+	file          *os.File
+	kafka_enabled string
+	mux           *gmux.Router
 )
 
-func main() {
-	// For tls
-	flag.IntVar(&port, "port", 443, "hypercloud5-api-server port")
-	flag.StringVar(&certFile, "certFile", "/run/secrets/tls/tls.crt", "hypercloud5-api-server cert")
-	flag.StringVar(&keyFile, "keyFile", "/run/secrets/tls/tls.key", "hypercloud5-api-server key")
-	flag.StringVar(&admission.SidecarContainerImage, "sidecarImage", "fluent/fluent-bit:1.5-debug", "Fluent-bit image name.")
-	flag.StringVar(&util.SMTPHost, "smtpHost", "mail.tmax.co.kr", "SMTP Server Host Address")
-	flag.IntVar(&util.SMTPPort, "smtpPort", 25, "SMTP Server Port")
-	flag.StringVar(&util.SMTPUsernamePath, "smtpUsername", "/run/secrets/smtp/username", "SMTP Server Username")
-	flag.StringVar(&util.SMTPPasswordPath, "smtpPassword", "/run/secrets/smtp/password", "SMTP Server Password")
-	flag.StringVar(&util.AccessSecretPath, "accessSecret", "/run/secrets/token/accessSecret", "Token Access Secret")
-	flag.StringVar(&util.HtmlHomePath, "htmlPath", "/run/configs/html/", "Invite html path")
-	// flag.StringVar(&dataFactory.DBPassWordPath, "dbPassword", "/run/secrets/timescaledb/password", "Timescaledb Server Password")
-	// flag.StringVar(&util.TokenExpiredDate, "tokenExpiredDate", "24hours", "Token Expired Date")
-
-	// Get Hypercloud Operating Mode!!!
-	hcMode := os.Getenv("HC_MODE")
-	dataFactory.CreateConnection()
-	defer dataFactory.Dbpool.Close()
-	util.TokenExpiredDate = os.Getenv("INVITATION_TOKEN_EXPIRED_DATE")
-	kafkaConsumer.KafkaGroupId = os.Getenv("KAFKA_GROUP_ID")
-	if len(kafkaConsumer.KafkaGroupId) == 0 || kafkaConsumer.KafkaGroupId == "{KAFKA_GROUP_ID}" {
-		klog.Infoln("KAFKA_GROUP_ID was not given. Please set KAFKA_GROUP_ID.")
-		klog.Infoln("Temporary give HOSTNAME for KAFKA_GROUP_ID :", os.Getenv("HOSTNAME"))
-		kafkaConsumer.KafkaGroupId = os.Getenv("HOSTNAME")
-	}
-	util.ReadFile()
-	caller.UpdateAuditResourceList()
-
-	// For Log file
-	klog.InitFlags(nil)
-	flag.Set("logtostderr", "false")
-	flag.Set("alsologtostderr", "false")
-	flag.Parse()
-
-	if _, err := os.Stat("./logs"); os.IsNotExist(err) {
-		os.Mkdir("./logs", os.ModeDir)
-	}
-
-	file, err := os.OpenFile(
-		"./logs/api-server.log",
-		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
-		os.FileMode(0644),
-	)
-	if err != nil {
-		klog.Error(err, "Error Open", "./logs/api-server")
-		return
-	}
-	defer file.Close()
-	w := io.MultiWriter(file, os.Stdout)
-	klog.SetOutput(w)
-
-	// Logging Cron Job
-	cronJob := cron.New()
-	cronJob.AddFunc("1 0 0 * * ?", func() {
-		input, err := ioutil.ReadFile("./logs/api-server.log")
-		if err != nil {
-			klog.Error(err)
-			return
-		}
-		err = ioutil.WriteFile("./logs/api-server"+time.Now().Format("2006-01-02")+".log", input, 0644)
-		if err != nil {
-			klog.Error(err, "Error creating", "./logs/api-server")
-			return
-		}
-		klog.Info("Log BackUp Success")
-		os.Truncate("./logs/api-server.log", 0)
-		// file.Seek(0, os.SEEK_SET)
-		file.Seek(0, io.SeekStart)
-	})
-
-	// Metering Cron Job
-	cronJob.AddFunc("0 */1 * ? * *", metering.MeteringJob)
-	// cronJob.AddFunc("@hourly", audit.UpdateAuditResource)
-	cronJob.Start()
-
-	// Hyperauth Event Consumer
-	kafka_enabled := os.Getenv("KAFKA_ENABLED")
+func init() {
+	init_variable()
+	init_logging()
+	init_db_connection()
+	init_cronJob()
 	if kafka_enabled == "true" || kafka_enabled == "TRUE" {
-		go kafkaConsumer.HyperauthConsumer()
+		init_kafka()
 	} else {
 		klog.Infoln("KAFKA_ENABLED is false")
 	}
+	init_grafana()
+}
+
+func main() {
+	// Intialize every needed requiredments via init() function
+	defer file.Close()
+	defer dataFactory.Dbpool.Close()
 
 	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
@@ -134,7 +72,25 @@ func main() {
 	}
 
 	// Req multiplexer
-	mux := gmux.NewRouter()
+	mux = gmux.NewRouter()
+	register_multiplexer()
+
+	// HTTP Server Start
+	klog.Info("Starting Hypercloud5-API server...")
+	klog.Flush()
+
+	whsvr := &http.Server{
+		Addr:      fmt.Sprintf(":%d", port),
+		Handler:   mux,
+		TLSConfig: &tls.Config{Certificates: []tls.Certificate{keyPair}},
+	}
+
+	if err := whsvr.ListenAndServeTLS("", ""); err != nil {
+		klog.Errorf("Failed to listen and serve Hypercloud5-API server: %s", err)
+	}
+}
+
+func register_multiplexer() {
 	// mux := http.NewServeMux()
 	mux.HandleFunc("/user", serveUser)
 	mux.HandleFunc("/metering", serveMetering)
@@ -147,6 +103,23 @@ func main() {
 	mux.HandleFunc("/cloudCredential", serveCloudCredential)
 	mux.HandleFunc("/grafana/{path}", serveGrafana)
 	mux.HandleFunc("/grafana/", serveGrafana)
+	mux.HandleFunc("/metadata", serveMetadata)
+	mux.HandleFunc("/audit/member_suggestions", serveAuditMemberSuggestions)
+	mux.HandleFunc("/audit", serveAudit)
+	mux.HandleFunc("/audit/batch", serveAuditBatch)
+	mux.HandleFunc("/audit/resources", serveAuditResources)
+	mux.HandleFunc("/audit/verb", serveAuditVerb)
+	mux.HandleFunc("/audit/websocket", serveAuditWss)
+	mux.HandleFunc("/audit/json", serveAuditJson)
+	mux.HandleFunc("/inject/pod", serveSidecarInjectionForPod)
+	mux.HandleFunc("/inject/deployment", serveSidecarInjectionForDeploy)
+	mux.HandleFunc("/inject/replicaset", serveSidecarInjectionForRs)
+	mux.HandleFunc("/inject/statefulset", serveSidecarInjectionForSts)
+	mux.HandleFunc("/inject/daemonset", serveSidecarInjectionForDs)
+	mux.HandleFunc("/inject/cronjob", serveSidecarInjectionForCj)
+	mux.HandleFunc("/inject/job", serveSidecarInjectionForJob)
+	mux.HandleFunc("/inject/test", serveSidecarInjectionForTest)
+	mux.HandleFunc("/test", serveTest)
 
 	if hcMode != "single" {
 		// for multi mode only
@@ -181,28 +154,103 @@ func main() {
 		// list invited member id
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member/{member}", serveClusterMember)
 	}
+}
 
-	mux.HandleFunc("/metadata", serveMetadata)
-	mux.HandleFunc("/audit/member_suggestions", serveAuditMemberSuggestions)
-	mux.HandleFunc("/audit", serveAudit)
-	mux.HandleFunc("/audit/batch", serveAuditBatch)
-	mux.HandleFunc("/audit/resources", serveAuditResources)
-	mux.HandleFunc("/audit/verb", serveAuditVerb)
-	mux.HandleFunc("/audit/websocket", serveAuditWss)
-	mux.HandleFunc("/audit/json", serveAuditJson)
-	mux.HandleFunc("/inject/pod", serveSidecarInjectionForPod)
-	mux.HandleFunc("/inject/deployment", serveSidecarInjectionForDeploy)
-	mux.HandleFunc("/inject/replicaset", serveSidecarInjectionForRs)
-	mux.HandleFunc("/inject/statefulset", serveSidecarInjectionForSts)
-	mux.HandleFunc("/inject/daemonset", serveSidecarInjectionForDs)
-	mux.HandleFunc("/inject/cronjob", serveSidecarInjectionForCj)
-	mux.HandleFunc("/inject/job", serveSidecarInjectionForJob)
-	mux.HandleFunc("/inject/test", serveSidecarInjectionForTest)
-	mux.HandleFunc("/test", serveTest)
+func init_variable() {
+	// For tls
+	flag.IntVar(&port, "port", 443, "hypercloud5-api-server port")
+	flag.StringVar(&certFile, "certFile", "/run/secrets/tls/tls.crt", "hypercloud5-api-server cert")
+	flag.StringVar(&keyFile, "keyFile", "/run/secrets/tls/tls.key", "hypercloud5-api-server key")
+	flag.StringVar(&admission.SidecarContainerImage, "sidecarImage", "fluent/fluent-bit:1.5-debug", "Fluent-bit image name.")
+	flag.StringVar(&util.SMTPHost, "smtpHost", "mail.tmax.co.kr", "SMTP Server Host Address")
+	flag.IntVar(&util.SMTPPort, "smtpPort", 25, "SMTP Server Port")
+	flag.StringVar(&util.SMTPUsernamePath, "smtpUsername", "/run/secrets/smtp/username", "SMTP Server Username")
+	flag.StringVar(&util.SMTPPasswordPath, "smtpPassword", "/run/secrets/smtp/password", "SMTP Server Password")
+	flag.StringVar(&util.AccessSecretPath, "accessSecret", "/run/secrets/token/accessSecret", "Token Access Secret")
+	flag.StringVar(&util.HtmlHomePath, "htmlPath", "/run/configs/html/", "Invite html path")
+	// flag.StringVar(&dataFactory.DBPassWordPath, "dbPassword", "/run/secrets/timescaledb/password", "Timescaledb Server Password")
+	// flag.StringVar(&util.TokenExpiredDate, "tokenExpiredDate", "24hours", "Token Expired Date")
 
-	// HTTP Server Start
-	klog.Info("Starting Hypercloud5-API server...")
-	klog.Flush()
+	// For Log file
+	klog.InitFlags(nil)
+	flag.Set("logtostderr", "false")
+	flag.Set("alsologtostderr", "false")
+	flag.Parse()
+
+	// Get Hypercloud Operating Mode!!!
+	hcMode = os.Getenv("HC_MODE")
+
+	// Initailize kafka related variables
+	kafka_enabled = os.Getenv("KAFKA_ENABLED")
+	kafkaConsumer.KafkaGroupId = os.Getenv("KAFKA_GROUP_ID")
+	if len(kafkaConsumer.KafkaGroupId) == 0 || kafkaConsumer.KafkaGroupId == "{KAFKA_GROUP_ID}" {
+		klog.Infoln("KAFKA_GROUP_ID was not given. Please set KAFKA_GROUP_ID.")
+		klog.Infoln("Temporary give HOSTNAME for KAFKA_GROUP_ID :", os.Getenv("HOSTNAME"))
+		kafkaConsumer.KafkaGroupId = os.Getenv("HOSTNAME")
+	}
+
+	util.ReadFile()
+	util.TokenExpiredDate = os.Getenv("INVITATION_TOKEN_EXPIRED_DATE")
+
+	caller.UpdateAuditResourceList()
+}
+
+func init_logging() {
+	if _, err := os.Stat("./logs"); os.IsNotExist(err) {
+		os.Mkdir("./logs", os.ModeDir)
+	}
+
+	var err error
+	file, err = os.OpenFile(
+		"./logs/api-server.log",
+		os.O_CREATE|os.O_RDWR|os.O_TRUNC,
+		os.FileMode(0644),
+	)
+	if err != nil {
+		klog.Error(err, "Error Open", "./logs/api-server")
+		return
+	}
+
+	w := io.MultiWriter(file, os.Stdout)
+	klog.SetOutput(w)
+}
+
+func init_db_connection() {
+	dataFactory.CreateConnection()
+}
+
+func init_cronJob() {
+	// Logging Cron Job
+	cronJob := cron.New()
+	cronJob.AddFunc("1 0 0 * * ?", func() {
+		input, err := ioutil.ReadFile("./logs/api-server.log")
+		if err != nil {
+			klog.Error(err)
+			return
+		}
+		err = ioutil.WriteFile("./logs/api-server"+time.Now().Format("2006-01-02")+".log", input, 0644)
+		if err != nil {
+			klog.Error(err, "Error creating", "./logs/api-server")
+			return
+		}
+		klog.Info("Log BackUp Success")
+		os.Truncate("./logs/api-server.log", 0)
+		// file.Seek(0, os.SEEK_SET)
+		file.Seek(0, io.SeekStart)
+	})
+
+	// Metering Cron Job
+	cronJob.AddFunc("0 */1 * ? * *", metering.MeteringJob)
+	// cronJob.AddFunc("@hourly", audit.UpdateAuditResource)
+	cronJob.Start()
+}
+
+func init_kafka() {
+	// Hyperauth Event Consumer
+	go kafkaConsumer.HyperauthConsumer()
+}
+
+func init_grafana() {
 	klog.Info("Setting Grafana Admin...")
 	hc_admin := caller.GetCRBAdmin()
 	caller.CreateGrafanaUser(hc_admin)
@@ -306,15 +354,6 @@ func main() {
 		defer response.Body.Close()
 		resbody, _ := ioutil.ReadAll(response.Body)
 		klog.Infof(string(resbody))
-	}
-	whsvr := &http.Server{
-		Addr:      fmt.Sprintf(":%d", port),
-		Handler:   mux,
-		TLSConfig: &tls.Config{Certificates: []tls.Certificate{keyPair}},
-	}
-
-	if err := whsvr.ListenAndServeTLS("", ""); err != nil {
-		klog.Errorf("Failed to listen and serve Hypercloud5-API server: %s", err)
 	}
 }
 

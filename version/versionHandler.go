@@ -137,7 +137,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 			}
 
 			if !exist {
-				klog.Errorln(mod.Name, " cannot found pods using given label : ", labels)
+				//klog.Errorln(mod.Name, " cannot found pods using given label : ", labels)
 				result[idx].Status = "Not Installed"
 			} else if ps.Data["Running"] == len(podList.Items) {
 				// if every pod is 'Running', the module is normal
@@ -160,7 +160,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 			}
 
 			if !exist {
-				klog.Errorln(mod.Name, " cannot found pods using given label : ", labels)
+				//klog.Errorln(mod.Name, " cannot found pods using given label : ", labels)
 				result[idx].Version = "Not Installed"
 			} else if mod.VersionProbe.Exec.Command != nil {
 				// by exec command
