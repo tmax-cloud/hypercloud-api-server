@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"flag"
@@ -31,6 +32,9 @@ import (
 	kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
 	"github.com/tmax-cloud/hypercloud-api-server/util/dataFactory"
 	version "github.com/tmax-cloud/hypercloud-api-server/version"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/tools/leaderelection"
+	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
 	"k8s.io/api/admission/v1beta1"
 	"k8s.io/klog"
@@ -39,13 +43,16 @@ import (
 type admitFunc func(v1beta1.AdmissionReview) *v1beta1.AdmissionResponse
 
 var (
-	port          int
-	certFile      string
-	keyFile       string
-	hcMode        string
-	file          *os.File
-	kafka_enabled string
-	mux           *gmux.Router
+	port             int
+	certFile         string
+	keyFile          string
+	hcMode           string
+	file             *os.File
+	kafka_enabled    string
+	mux              *gmux.Router
+	cronJob_Metering *cron.Cron
+	ctx              context.Context
+	cancel           context.CancelFunc
 )
 
 func init() {
@@ -65,6 +72,7 @@ func main() {
 	// Intialize every needed requiredments via init() function
 	defer file.Close()
 	defer dataFactory.Dbpool.Close()
+	defer cancel()
 
 	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
@@ -189,8 +197,8 @@ func init_variable() {
 		kafkaConsumer.KafkaGroupId = os.Getenv("HOSTNAME")
 	}
 
-	util.ReadFile()
 	util.TokenExpiredDate = os.Getenv("INVITATION_TOKEN_EXPIRED_DATE")
+	util.ReadFile()
 
 	caller.UpdateAuditResourceList()
 }
@@ -221,8 +229,8 @@ func init_db_connection() {
 
 func init_cronJob() {
 	// Logging Cron Job
-	cronJob := cron.New()
-	cronJob.AddFunc("1 0 0 * * ?", func() {
+	cronJob_Logging := cron.New()
+	cronJob_Logging.AddFunc("1 0 0 * * ?", func() {
 		input, err := ioutil.ReadFile("./logs/api-server.log")
 		if err != nil {
 			klog.Error(err)
@@ -238,11 +246,16 @@ func init_cronJob() {
 		// file.Seek(0, os.SEEK_SET)
 		file.Seek(0, io.SeekStart)
 	})
+	cronJob_Logging.Start()
 
 	// Metering Cron Job
-	cronJob.AddFunc("0 */1 * ? * *", metering.MeteringJob)
+	cronJob_Metering = cron.New()
+	cronJob_Metering.AddFunc("0 */1 * ? * *", metering.MeteringJob)
 	// cronJob.AddFunc("@hourly", audit.UpdateAuditResource)
-	cronJob.Start()
+	ctx, cancel = context.WithCancel(context.Background())
+	podName, _ := os.Hostname()
+	lock := getNewLock("hypercloud5-api-server", podName, "hypercloud5-system")
+	go runLeaderElection(lock, ctx, podName)
 }
 
 func init_kafka() {
@@ -723,4 +736,43 @@ func serveGrafana(res http.ResponseWriter, req *http.Request) {
 	default:
 		klog.Errorf("method not acceptable")
 	}
+}
+
+func getNewLock(lockname, podname, namespace string) *resourcelock.LeaseLock {
+	return &resourcelock.LeaseLock{
+		LeaseMeta: metav1.ObjectMeta{
+			Name:      lockname,
+			Namespace: namespace,
+		},
+		Client: caller.Clientset.CoordinationV1(),
+		LockConfig: resourcelock.ResourceLockConfig{
+			Identity: podname,
+		},
+	}
+}
+
+func runLeaderElection(lock *resourcelock.LeaseLock, ctx context.Context, id string) {
+	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
+		Lock:            lock,
+		ReleaseOnCancel: true,
+		LeaseDuration:   15 * time.Second,
+		RenewDeadline:   10 * time.Second,
+		RetryPeriod:     2 * time.Second,
+		Callbacks: leaderelection.LeaderCallbacks{
+			OnStartedLeading: func(c context.Context) {
+				cronJob_Metering.Start()
+			},
+			OnStoppedLeading: func() {
+				klog.Info("no longer the leader, staying inactive and stop metering service")
+				cronJob_Metering.Stop()
+			},
+			OnNewLeader: func(current_id string) {
+				if current_id == id {
+					klog.Info("still the leader!")
+					return
+				}
+				klog.Info("new leader is ", current_id)
+			},
+		},
+	})
 }
