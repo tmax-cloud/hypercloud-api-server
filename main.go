@@ -59,11 +59,9 @@ func init() {
 	init_variable()
 	init_logging()
 	init_db_connection()
-	init_cronJob()
+	init_leader_election()
 	if kafka_enabled == "true" || kafka_enabled == "TRUE" {
 		init_kafka()
-	} else {
-		klog.Infoln("KAFKA_ENABLED is false")
 	}
 	init_grafana()
 }
@@ -221,13 +219,7 @@ func init_logging() {
 
 	w := io.MultiWriter(file, os.Stdout)
 	klog.SetOutput(w)
-}
 
-func init_db_connection() {
-	dataFactory.CreateConnection()
-}
-
-func init_cronJob() {
 	// Logging Cron Job
 	cronJob_Logging := cron.New()
 	cronJob_Logging.AddFunc("1 0 0 * * ?", func() {
@@ -247,7 +239,13 @@ func init_cronJob() {
 		file.Seek(0, io.SeekStart)
 	})
 	cronJob_Logging.Start()
+}
 
+func init_db_connection() {
+	dataFactory.CreateConnection()
+}
+
+func init_leader_election() {
 	// Metering Cron Job
 	cronJob_Metering = cron.New()
 	cronJob_Metering.AddFunc("0 */1 * ? * *", metering.MeteringJob)
@@ -255,6 +253,8 @@ func init_cronJob() {
 	ctx, cancel = context.WithCancel(context.Background())
 	podName, _ := os.Hostname()
 	lock := getNewLock("hypercloud5-api-server", podName, "hypercloud5-system")
+
+	// Leader Election for Metring
 	go runLeaderElection(lock, ctx, podName)
 }
 
