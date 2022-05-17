@@ -59,7 +59,7 @@ func init() {
 	init_variable()
 	init_logging()
 	init_db_connection()
-	init_leader_election()
+	init_metering()
 	if kafka_enabled == "true" || kafka_enabled == "TRUE" {
 		init_kafka()
 	}
@@ -245,7 +245,7 @@ func init_db_connection() {
 	dataFactory.CreateConnection()
 }
 
-func init_leader_election() {
+func init_metering() {
 	// Metering Cron Job
 	cronJob_Metering = cron.New()
 	cronJob_Metering.AddFunc("0 */1 * ? * *", metering.MeteringJob)
