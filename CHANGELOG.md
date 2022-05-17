@@ -1,6 +1,23 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.18 start -------------------->
+
+## Hypercloud-api-server 5.0.26.18 (2022. 05. 17. (화) 11:28:06 KST)
+
+### Added
+  - [feat] HA 지원을 위한 leader-election 적용 by Seungwon Lee
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] leader election 최대 유휴시간 10초로 감소 by Seungwon Lee
+  - [etc] main.go 리팩토링 by Seungwon Lee
+
 <!-------------------- v5.0.26.17 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.17 (2022. 05. 08. (일) 17:50:27 KST)
