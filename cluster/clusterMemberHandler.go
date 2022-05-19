@@ -66,6 +66,24 @@ func ListClusterMember(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func ListClusterMemberWithOutPending(res http.ResponseWriter, req *http.Request) {
+	vars := gmux.Vars(req)
+	cluster := vars["clustermanager"]
+	namespace := vars["namespace"]
+	klog.Infoln("in func ListClusterMemberWithOutPending")
+	klog.Infoln("cluster = " + cluster + ", namespace = " + namespace)
+
+	clusterMemberList, err := clusterDataFactory.ListClusterMemberWithOutPending(cluster, namespace)
+	if err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
+	msg := "List cluster success"
+	klog.Infoln(msg)
+	util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
+}
+
 func ListClusterInvitedMember(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)

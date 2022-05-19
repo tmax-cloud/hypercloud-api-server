@@ -500,7 +500,9 @@ func serveClusterMember(res http.ResponseWriter, req *http.Request) {
 	case http.MethodPost:
 		cluster.RemoveMember(res, req)
 	case http.MethodGet:
-		if vars["member"] == "invited" {
+		if vars["member"] == "all" {
+			cluster.ListClusterMemberWithOutPending(res, req)
+		} else if vars["member"] == "invited" {
 			cluster.ListClusterInvitedMember(res, req)
 		} else if vars["member"] == "group" {
 			cluster.ListClusterGroup(res, req)
