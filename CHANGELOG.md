@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.26.19 start -------------------->
+
+## Hypercloud-api-server 5.0.26.19 (2022. 05. 19. (목) 13:59:39 KST)
+
+### Added
+  - [feat] 초대된 cluster 멤버 목록 조회 api 추가 by sihyunglee823
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] main.go init() 리팩토링 by Seungwon Lee
+
 <!-------------------- v5.0.26.18 start -------------------->
 
 ## Hypercloud-api-server 5.0.26.18 (2022. 05. 17. (화) 11:28:06 KST)
