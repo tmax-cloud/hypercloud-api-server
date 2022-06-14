@@ -373,7 +373,12 @@ func init_grafana() {
 func serveNamespace(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
-		namespace.Get(res, req)
+		conn := req.Header["Connection"]
+		if len(conn) != 0 && conn[0] == "Upgrade" {
+			namespace.Websocket(res, req)
+		} else {
+			namespace.Get(res, req)
+		}
 	case http.MethodPut:
 		namespace.Put(res, req)
 	case http.MethodOptions:

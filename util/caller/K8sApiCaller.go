@@ -7,8 +7,12 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
+
+	gsocket "github.com/gorilla/websocket"
 
 	configv1alpha1 "github.com/tmax-cloud/efk-operator/api/v1alpha1"
 	alertModel "github.com/tmax-cloud/hypercloud-api-server/alert/model"
@@ -20,11 +24,14 @@ import (
 	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
 	authApi "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	rbacApi "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/scheme"
@@ -128,6 +135,83 @@ func DeleteClusterRoleBinding(name string) {
 		//panic(err)
 	} else {
 		klog.Info(" Delete ClusterRoleBinding " + name + " Success ")
+	}
+}
+
+// WatchNamespace sends the updated namespace list to the websocket client
+// whenever Add/Delete for namespace occurs.
+func WatchNamespace(c *gsocket.Conn, userId string, labelSelector string, userGroups []string, limit string) {
+	watchlist := cache.NewListWatchFromClient(
+		Clientset.CoreV1().RESTClient(),
+		"namespaces",
+		v1.NamespaceAll,
+		fields.Everything(),
+	)
+	_, controller := cache.NewInformer(
+		watchlist,
+		&v1.Namespace{},
+		0,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				nsList := GetAccessibleNS(userId, labelSelector, userGroups)
+
+				if nsList.ResourceVersion != "" {
+					if len(nsList.Items) > 0 {
+						if limit != "" {
+							limitInt, _ := strconv.Atoi(limit)
+							if len(nsList.Items) < limitInt {
+								limitInt = len(nsList.Items)
+							}
+							nsList.Items = nsList.Items[:limitInt]
+						}
+					}
+				}
+
+				nsListBytes, err := json.Marshal(nsList)
+				if err != nil {
+					klog.Errorln(err)
+					return
+				}
+				err = c.WriteMessage(gsocket.TextMessage, nsListBytes)
+				if err != nil {
+					klog.Errorln(err)
+					return
+				}
+			},
+			DeleteFunc: func(obj interface{}) {
+				nsList := GetAccessibleNS(userId, labelSelector, userGroups)
+
+				if nsList.ResourceVersion != "" {
+					if len(nsList.Items) > 0 {
+						if limit != "" {
+							limitInt, _ := strconv.Atoi(limit)
+							if len(nsList.Items) < limitInt {
+								limitInt = len(nsList.Items)
+							}
+							nsList.Items = nsList.Items[:limitInt]
+						}
+					}
+				}
+
+				nsListBytes, err := json.Marshal(nsList)
+				if err != nil {
+					klog.Errorln(err)
+					return
+				}
+				err = c.WriteMessage(gsocket.TextMessage, nsListBytes)
+				if err != nil {
+					klog.Errorln(err)
+					return
+				}
+			},
+		},
+	)
+	stop := make(chan struct{})
+	defer close(stop)
+	defer c.Close()
+	go controller.Run(stop)
+	for {
+		time.Sleep(time.Second)
 	}
 }
 

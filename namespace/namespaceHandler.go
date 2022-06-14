@@ -99,3 +99,37 @@ func Options(res http.ResponseWriter, req *http.Request) {
 	out := "**** OPTIONS/namespace"
 	util.SetResponse(res, out, nil, http.StatusOK)
 }
+
+func Websocket(res http.ResponseWriter, req *http.Request) {
+	klog.Infoln("**** Websocket/namespace")
+
+	// Get parameters
+	queryParams := req.URL.Query()
+	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
+	limit := queryParams.Get(util.QUERY_PARAMETER_LIMIT)
+	labelSelector := queryParams.Get(util.QUERY_PARAMETER_LABEL_SELECTOR)
+	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
+	var status int
+
+	klog.Infoln("userId : ", userId)
+	if userId == "" {
+		out := "userId is missing"
+		status = http.StatusBadRequest
+		util.SetResponse(res, out, nil, status)
+		return
+	}
+
+	klog.Infoln("limit : ", limit)
+	klog.Infoln("labelSelector : ", labelSelector)
+
+	// Upgrade to Websocket
+	c, err := util.UpgradeWebsocket(res, req)
+	if err != nil {
+		klog.Errorln(err)
+		return
+	}
+	defer c.Close()
+
+	// Give a list whenever the list is updated
+	k8sApiCaller.WatchNamespace(c, userId, labelSelector, userGroups, limit)
+}
