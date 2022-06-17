@@ -64,20 +64,18 @@ func (c *Client) readPump() {
 	// c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	// c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 	for {
-		err := c.conn.ReadJSON(&c.cond)
+		_, _, err := c.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				klog.Info(err)
 			}
 			break
 		}
-
 		nsList, err := GetNSList(c.cond.UserId, c.cond.LabelSelector, c.cond.UserGroup, c.cond.Limit)
 		if err != nil {
 			resp := "Failed to get namespace list"
 			c.conn.WriteMessage(websocket.TextMessage, []byte(resp))
 		}
-
 		err = c.conn.WriteMessage(websocket.TextMessage, nsList)
 		if err != nil {
 			klog.Error(err)
