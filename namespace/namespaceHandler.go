@@ -1,6 +1,7 @@
 package namespace
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -94,8 +95,62 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func Post(res http.ResponseWriter, req *http.Request) {
+	klog.Infoln("**** Post/namespace")
+	hub.broadcast <- true
+	klog.Infoln("broadcast namespace list to all websocket client")
+	out := "broadcast namespace list to all websocket client"
+	util.SetResponse(res, out, nil, http.StatusOK)
+}
+
 func Options(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("**** OPTIONS/namespace")
 	out := "**** OPTIONS/namespace"
 	util.SetResponse(res, out, nil, http.StatusOK)
+}
+
+func Websocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := util.UpgradeWebsocket(w, r)
+	if err != nil {
+		klog.Errorln(err)
+		return
+	}
+
+	queryParams := r.URL.Query()
+	cond := urlParam{
+		UserId:        queryParams.Get(util.QUERY_PARAMETER_USER_ID),
+		Limit:         queryParams.Get(util.QUERY_PARAMETER_LIMIT),
+		LabelSelector: queryParams.Get(util.QUERY_PARAMETER_LABEL_SELECTOR),
+		UserGroup:     queryParams[util.QUERY_PARAMETER_USER_GROUP],
+	}
+
+	client := &Client{hub: hub, conn: conn, cond: cond, send: make(chan []byte, 256)}
+	client.hub.register <- client
+
+	go client.writePump()
+	go client.readPump()
+}
+
+func GetNSList(userId string, labelSelector string, userGroups []string, limit string) ([]byte, error) {
+	nsList := k8sApiCaller.GetAccessibleNS(userId, labelSelector, userGroups)
+
+	if nsList.ResourceVersion != "" {
+		if len(nsList.Items) > 0 {
+			if limit != "" {
+				limitInt, _ := strconv.Atoi(limit)
+				if len(nsList.Items) < limitInt {
+					limitInt = len(nsList.Items)
+				}
+				nsList.Items = nsList.Items[:limitInt]
+			}
+		}
+	}
+
+	nsListBytes, err := json.Marshal(nsList)
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err
+	}
+
+	return nsListBytes, nil
 }
