@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.28.0 start -------------------->
+
+## Hypercloud-api-server 5.0.28.0 (2022. 06. 20. (월) 12:34:03 KST)
+
+### Added
+  - [feat] 웹소켓을 통해 namespace list를 받는 기능 추가, audit 웹소켓 기능 리팩토링 by Seungwon Lee
+
+### Changed
+  - [mod] websocket 클라이언트가 아무 메시지나 보낼 시, namespace list 반환 하도록 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.27.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.27.0 (2022. 05. 24. (화) 15:44:47 KST)
