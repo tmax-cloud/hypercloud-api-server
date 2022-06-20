@@ -447,9 +447,23 @@ func Websocket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO : handle query parameter
+	queryParams := r.URL.Query()
+	cond := urlParam{
+		UserId:    queryParams.Get(util.QUERY_PARAMETER_USER_ID),
+		Limit:     queryParams.Get(util.QUERY_PARAMETER_LIMIT),
+		Search:    queryParams.Get("search"),
+		Namespace: queryParams.Get(util.QUERY_PARAMETER_NAMESPACE),
+		Resource:  queryParams.Get(util.QUERY_PARAMETER_RESOURCE),
+		Offset:    queryParams.Get(util.QUERY_PARAMETER_OFFSET),
+		Code:      queryParams.Get(util.QUERY_PARAMETER_CODE),
+		Verb:      queryParams.Get("verb"),
+		Sort:      queryParams[util.QUERY_PARAMETER_SORT],
+		StartTime: queryParams.Get(util.QUERY_PARAMETER_STARTTIME),
+		EndTime:   queryParams.Get(util.QUERY_PARAMETER_ENDTIME),
+		Status:    queryParams.Get("status"),
+	}
 
-	client := &Client{hub: hub, conn: conn, send: make(chan audit.EventList, 256)}
+	client := &Client{hub: hub, conn: conn, cond: cond, send: make(chan audit.EventList, 256)}
 	client.hub.register <- client
 
 	go client.writePump()
