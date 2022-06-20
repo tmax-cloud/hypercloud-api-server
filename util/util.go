@@ -10,6 +10,7 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt"
+	gsocket "github.com/gorilla/websocket"
 
 	"errors"
 
@@ -392,6 +393,21 @@ func Search(NamespacedNameList []types.NamespacedName, clmList *clusterv1alpha1.
 	}
 
 	return ret
+}
+
+func UpgradeWebsocket(res http.ResponseWriter, req *http.Request) (*gsocket.Conn, error) {
+	upgrader := gsocket.Upgrader{
+		// TODO : FIX ME for specific domain
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+	c, err := upgrader.Upgrade(res, req, nil)
+	if err != nil {
+		klog.Errorln(err)
+		return nil, err
+	}
+	return c, err
 }
 
 type GrafanaUser struct {

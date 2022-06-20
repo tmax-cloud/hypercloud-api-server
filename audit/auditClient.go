@@ -6,8 +6,6 @@ package audit
 
 import (
 	"encoding/json"
-	"log"
-	"net/http"
 
 	"github.com/gorilla/websocket"
 	auditDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/audit"
@@ -105,18 +103,4 @@ func (c *Client) writePump() {
 			c.conn.WriteMessage(websocket.TextMessage, t)
 		}
 	}
-}
-
-func ServeWss(w http.ResponseWriter, r *http.Request) {
-	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	client := &Client{hub: hub, conn: conn, send: make(chan audit.EventList, 256)}
-	client.hub.register <- client
-
-	go client.writePump()
-	go client.readPump()
 }

@@ -439,3 +439,19 @@ func queryBuilderJson(param urlParam) string {
 
 	return jquery
 }
+
+func Websocket(w http.ResponseWriter, r *http.Request) {
+	conn, err := util.UpgradeWebsocket(w, r)
+	if err != nil {
+		klog.Errorln(err)
+		return
+	}
+
+	// TODO : handle query parameter
+
+	client := &Client{hub: hub, conn: conn, send: make(chan audit.EventList, 256)}
+	client.hub.register <- client
+
+	go client.writePump()
+	go client.readPump()
+}

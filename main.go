@@ -115,7 +115,7 @@ func register_multiplexer() {
 	mux.HandleFunc("/audit/batch", serveAuditBatch)
 	mux.HandleFunc("/audit/resources", serveAuditResources)
 	mux.HandleFunc("/audit/verb", serveAuditVerb)
-	mux.HandleFunc("/audit/websocket", serveAuditWss)
+	//mux.HandleFunc("/audit/websocket", serveAuditWss)
 	mux.HandleFunc("/audit/json", serveAuditJson)
 	mux.HandleFunc("/inject/pod", serveSidecarInjectionForPod)
 	mux.HandleFunc("/inject/deployment", serveSidecarInjectionForDeploy)
@@ -125,6 +125,7 @@ func register_multiplexer() {
 	mux.HandleFunc("/inject/cronjob", serveSidecarInjectionForCj)
 	mux.HandleFunc("/inject/job", serveSidecarInjectionForJob)
 	mux.HandleFunc("/inject/test", serveSidecarInjectionForTest)
+	mux.HandleFunc("/websocket/{api}", serveWebsocket)
 	mux.HandleFunc("/test", serveTest)
 
 	if hcMode != "single" {
@@ -376,6 +377,8 @@ func serveNamespace(res http.ResponseWriter, req *http.Request) {
 		namespace.Get(res, req)
 	case http.MethodPut:
 		namespace.Put(res, req)
+	case http.MethodPost:
+		namespace.Post(res, req)
 	case http.MethodOptions:
 		namespace.Options(res, req)
 	default:
@@ -649,10 +652,10 @@ func serveAuditBatch(w http.ResponseWriter, r *http.Request) {
 	audit.AddAuditBatch(w, r)
 }
 
-func serveAuditWss(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
-	audit.ServeWss(w, r)
-}
+// func serveAuditWss(w http.ResponseWriter, r *http.Request) {
+// 	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+// 	audit.ServeWss(w, r)
+// }
 
 func serveAuditJson(w http.ResponseWriter, r *http.Request) {
 	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
@@ -735,6 +738,24 @@ func serveGrafana(res http.ResponseWriter, req *http.Request) {
 			klog.Errorf("Http request error: some url params not found")
 		}
 	case http.MethodOptions:
+	default:
+		klog.Errorf("method not acceptable")
+	}
+}
+
+func serveWebsocket(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	vars := gmux.Vars(req)
+	switch req.Method {
+	case http.MethodGet:
+		api := vars["api"]
+		if api == "namespace" {
+			namespace.Websocket(res, req)
+		} else if api == "audit" {
+			audit.Websocket(res, req)
+		} else {
+			klog.Errorf("Http request error: unsupported websocket/{api} path parameter")
+		}
 	default:
 		klog.Errorf("method not acceptable")
 	}
