@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.28.1 start -------------------->
+
+## Hypercloud-api-server 5.0.28.1 (2022. 06. 20. (월) 13:42:47 KST)
+
+### Added
+
+### Changed
+  - [mod] audit websocket 클라이언트 등록 시, 쿼리 파라미터도 받도록 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.28.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.28.0 (2022. 06. 20. (월) 12:34:03 KST)
