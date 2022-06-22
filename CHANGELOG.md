@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.28.2 start -------------------->
+
+## Hypercloud-api-server 5.0.28.2 (2022. 06. 22. (수) 19:27:53 KST)
+
+### Added
+
+### Changed
+  - [mod] namespace spec에 " 문자가 들어간 경우의 에러 수정 및 NamespaceEvent 구조체 정의 by Seungwon Lee
+  - [mod] namespace websocket 메시지 형식 변경 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.28.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.28.1 (2022. 06. 20. (월) 13:42:47 KST)
