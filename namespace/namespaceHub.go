@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/klog/v2"
 )
 
@@ -16,6 +17,11 @@ type Hub struct {
 	register chan *Client
 
 	unregister chan *Client
+}
+
+type NamespaceEvent struct {
+	Type   string           `json:"type"`
+	Object corev1.Namespace `json:"object"`
 }
 
 func newHub() *Hub {
@@ -47,16 +53,17 @@ func (h *Hub) run() {
 				close(client.send)
 			}
 		case ns_body_byte := <-h.broadcast:
-			body := strings.Replace(string(ns_body_byte), `\`, "", -1) // Remove `\` character
-			body = body[1 : len(body)-1]                               // Trim both side of `"` character
-			var data map[string]interface{}
+			body := strings.Replace(string(ns_body_byte), `\"`, `"`, -1) // Remove `\` character
+			body = body[1 : len(body)-1]                                 // Trim both side of `"` character
+			body = strings.Replace(body, `\\`, `\`, -1)                  // remove duplicate '\' character to only one character
+			var data NamespaceEvent
 			if err := json.Unmarshal([]byte(body), &data); err != nil {
 				klog.Error(err, " Failed to unmarshal namespace body")
 				continue
 			}
-			event := data["type"].(string)
-			ns := data["object"].(map[string]interface{})["metadata"].(map[string]interface{})["name"].(string)
-			klog.Infoln("namespace [" + ns + "]" + event + " detected")
+			event := data.Type
+			ns := data.Object.Name
+			klog.Infoln("namespace [" + ns + "] " + event + " detected")
 
 			for client := range h.clients {
 				isAccessible, err := k8sApiCaller.IsAccessibleNS(ns, client.cond.UserId, client.cond.LabelSelector, client.cond.UserGroup)
