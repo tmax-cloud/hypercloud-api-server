@@ -2,6 +2,7 @@ package namespace
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -97,7 +98,13 @@ func Put(res http.ResponseWriter, req *http.Request) {
 
 func Post(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("**** Post/namespace")
-	hub.broadcast <- true
+
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		klog.Error(err, " Failed to read request body")
+	}
+	hub.broadcast <- body
+
 	klog.Infoln("broadcast namespace list to all websocket client")
 	out := "broadcast namespace list to all websocket client"
 	util.SetResponse(res, out, nil, http.StatusOK)
