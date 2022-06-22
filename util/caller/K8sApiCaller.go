@@ -131,6 +131,60 @@ func DeleteClusterRoleBinding(name string) {
 	}
 }
 
+func IsAccessibleNS(ns string, userId string, labelSelector string, userGroups []string) (bool, error) {
+	klog.Infoln("userId : ", userId)
+	for _, userGroup := range userGroups {
+		klog.Infoln("userGroupName : ", userGroup)
+	}
+
+	// 1. Check If User has NS List Role
+	nsListRuleReview := authApi.SubjectAccessReview{
+		Spec: authApi.SubjectAccessReviewSpec{
+			ResourceAttributes: &authApi.ResourceAttributes{
+				Resource: "namespaces",
+				Verb:     "list",
+				Group:    "",
+			},
+			User:   userId,
+			Groups: userGroups,
+		},
+	}
+	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsListRuleReview, metav1.CreateOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		return false, err
+	}
+	if sarResult.Status.Allowed {
+		klog.Infoln(" User [ " + userId + " ] has Namespace List Role, Can Access All Namespace")
+		return true, nil
+	}
+
+	// 2. Check If User has NS Get Role
+	klog.Infoln(" User [ " + userId + " ] has No Namespace List Role, Check If user has Namespace Get Role to Certain Namespace")
+	nsGetRuleReview := authApi.SubjectAccessReview{
+		Spec: authApi.SubjectAccessReviewSpec{
+			ResourceAttributes: &authApi.ResourceAttributes{
+				Resource:  "namespaces",
+				Verb:      "get",
+				Group:     "",
+				Namespace: ns,
+			},
+			User:   userId,
+			Groups: userGroups,
+		},
+	}
+	sarResult, err = Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsGetRuleReview, metav1.CreateOptions{})
+	if err != nil {
+		klog.Errorln(err)
+		return false, err
+	}
+	if sarResult.Status.Allowed {
+		klog.Infoln(" User [ " + userId + " ] has Namespace Get Role in Namspace [ " + ns + " ]")
+		return true, nil
+	}
+	return false, nil
+}
+
 func GetAccessibleNS(userId string, labelSelector string, userGroups []string) corev1.NamespaceList {
 	var nsList = &corev1.NamespaceList{}
 	klog.Infoln("userId : ", userId)
