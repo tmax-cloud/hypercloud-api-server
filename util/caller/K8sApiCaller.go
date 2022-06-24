@@ -77,8 +77,6 @@ func init() {
 		panic(err.Error())
 	}
 
-	///// get grafana api key
-
 }
 
 func GetNamespace(nsName string) *corev1.Namespace {

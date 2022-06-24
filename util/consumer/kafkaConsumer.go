@@ -219,8 +219,6 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			// Delete RoleBinding
 			k8sApiCaller.DeleteRBWithUser(topicEvent.UserName)
 
-			k8sApiCaller.DeleteGrafanaUser(topicEvent.UserName)
-
 			// 사용자에 대해서..
 			// cluster의 주인인 경우.. 클러스터와 관련된 모든걸 지운다.
 			// 1. master에서 clm 지우면 됨 (+db)
@@ -232,8 +230,6 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			// 3. remote에서 rolebinding도 삭제
 			break
 		case "REGISTER":
-			k8sApiCaller.CreateGrafanaUser(topicEvent.UserName)
-			klog.Info("Grafana User [ " + topicEvent.UserName + " ] Created !")
 		case "LOGIN":
 			klog.Info("login")
 			event := audit.Event{
