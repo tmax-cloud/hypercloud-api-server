@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.29.0 start -------------------->
+
+## Hypercloud-api-server 5.0.29.0 (2022. 06. 28. (화) 11:27:13 KST)
+
+### Added
+
+### Changed
+  - [mod] grafana 관련 로직 제거 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.28.2 start -------------------->
 
 ## Hypercloud-api-server 5.0.28.2 (2022. 06. 22. (수) 19:27:53 KST)
