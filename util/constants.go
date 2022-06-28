@@ -42,8 +42,7 @@ const (
 	CLUSTER_API_GROUP_VERSION   = "cluster.tmax.io/v1alpha1"
 	HYPERCLOUD_SYSTEM_NAMESPACE = "hypercloud5-system"
 
-	GRAFANA_URI = "grafana.monitoring.svc.cluster.local:3000/"
-	TEST        = "<!DOCTYPE html>\r\n" +
+	TEST = "<!DOCTYPE html>\r\n" +
 		"<html lang=\"en\">\r\n" +
 		"<head>\r\n" +
 		"    <meta charset=\"UTF-8\">\r\n" +

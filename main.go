@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"encoding/json"
@@ -11,7 +10,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	gmux "github.com/gorilla/mux"
@@ -63,7 +61,6 @@ func init() {
 	if kafka_enabled == "true" || kafka_enabled == "TRUE" {
 		init_kafka()
 	}
-	init_grafana()
 }
 
 func main() {
@@ -102,13 +99,13 @@ func register_multiplexer() {
 	mux.HandleFunc("/metering", serveMetering)
 	mux.HandleFunc("/namespace", serveNamespace)
 	mux.HandleFunc("/alert", serveAlert)
-	mux.HandleFunc("/grafanaUser", serveGrafanaUser)
-	mux.HandleFunc("/grafanaDashboard", serveGrafanaDashboard)
+
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
 	mux.HandleFunc("/cloudCredential", serveCloudCredential)
 	mux.HandleFunc("/grafana/{path}", serveGrafana)
 	mux.HandleFunc("/grafana/", serveGrafana)
+
 	mux.HandleFunc("/metadata", serveMetadata)
 	mux.HandleFunc("/audit/member_suggestions", serveAuditMemberSuggestions)
 	mux.HandleFunc("/audit", serveAudit)
@@ -264,113 +261,6 @@ func init_kafka() {
 	go kafkaConsumer.HyperauthConsumer()
 }
 
-func init_grafana() {
-	klog.Info("Setting Grafana Admin...")
-	hc_admin := caller.GetCRBAdmin()
-	caller.CreateGrafanaUser(hc_admin)
-	id := caller.GetGrafanaUser(hc_admin)
-	adminBody := `{"isGrafanaAdmin": true}`
-	grafanaId, grafanaPw := "admin", "admin"
-	httpgeturl := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/admin/users/" + strconv.Itoa(id) + "/permissions"
-
-	request, _ := http.NewRequest("PUT", httpgeturl, bytes.NewBuffer([]byte(adminBody)))
-
-	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	client := &http.Client{}
-	response, err := client.Do(request)
-	if err != nil {
-		klog.Errorln(err)
-
-	} else {
-		defer response.Body.Close()
-		resbody, _ := ioutil.ReadAll(response.Body)
-		klog.Infof(string(resbody))
-	}
-
-	//get grafana key
-	httpposturl := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/auth/keys"
-	var GrafanaKeyBody util.GrafanaKeyBody
-
-	GrafanaKeyBody.Name = caller.RandomString(8)
-	GrafanaKeyBody.Role = "Admin"
-	GrafanaKeyBody.SecondsToLive = 300
-	json_body, _ := json.Marshal(GrafanaKeyBody)
-	request, _ = http.NewRequest("POST", httpposturl, bytes.NewBuffer(json_body))
-
-	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
-	client = &http.Client{}
-	response, err = client.Do(request)
-	if err != nil {
-		klog.Errorln(err)
-
-	} else {
-		body, _ := ioutil.ReadAll(response.Body)
-
-		klog.Infof(string(body))
-		var grafana_resp util.Grafana_key
-		json.Unmarshal([]byte(body), &grafana_resp)
-		util.GrafanaKey = "Bearer " + grafana_resp.Key
-		klog.Infof(util.GrafanaKey)
-	}
-
-	//org permission
-	httpgeturlorg := "http://" + grafanaId + ":" + grafanaPw + "@" + util.GRAFANA_URI + "api/orgs/1/users/" + strconv.Itoa(id)
-	adminorgBody := `{"role":"Admin"}`
-	request, _ = http.NewRequest("PATCH", httpgeturlorg, bytes.NewBuffer([]byte(adminorgBody)))
-	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	//request.Header.Set("Authorization", util.GrafanaKey)
-	client2 := &http.Client{}
-	response, err = client2.Do(request)
-	if err != nil {
-		klog.Errorln(err)
-
-	} else {
-		defer response.Body.Close()
-		resbody, _ := ioutil.ReadAll(response.Body)
-
-		klog.Infof(string(resbody))
-	}
-
-	//default dashboard permission to only admin
-
-	klog.Infof("default dashboard permission setting(admin)")
-	permBody := `{
-		"items": []
-	}`
-	httpposturl_per := "http://" + util.GRAFANA_URI + "api/dashboards/id/1/permissions"
-	request, _ = http.NewRequest("POST", httpposturl_per, bytes.NewBuffer([]byte(permBody)))
-
-	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	request.Header.Set("Authorization", util.GrafanaKey)
-	client = &http.Client{}
-	response, err = client.Do(request)
-	if err != nil {
-		klog.Errorln(err)
-
-	} else {
-		defer response.Body.Close()
-		resbody, _ := ioutil.ReadAll(response.Body)
-		klog.Infof(string(resbody))
-	}
-	httpposturl_per = "http://" + util.GRAFANA_URI + "api/dashboards/id/2/permissions"
-	request, _ = http.NewRequest("POST", httpposturl_per, bytes.NewBuffer([]byte(permBody)))
-
-	request.Header.Set("Content-Type", "application/json; charset=UTF-8")
-	request.Header.Set("Authorization", util.GrafanaKey)
-	client = &http.Client{}
-	response, err = client.Do(request)
-	if err != nil {
-		klog.Errorln(err)
-
-	} else {
-		defer response.Body.Close()
-		resbody, _ := ioutil.ReadAll(response.Body)
-		klog.Infof(string(resbody))
-	}
-}
-
 func serveNamespace(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
@@ -433,27 +323,7 @@ func serveAlert(res http.ResponseWriter, req *http.Request) {
 		klog.Errorf("method not acceptable")
 	}
 }
-func serveGrafanaUser(res http.ResponseWriter, req *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
-	switch req.Method {
-	case http.MethodPost:
-		caller.CreateGrafanaUser("test12@tmax.co.kr")
-	default:
-		klog.Errorf("method not acceptable")
-	}
-}
 
-func serveGrafanaDashboard(res http.ResponseWriter, req *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
-	switch req.Method {
-	case http.MethodPost:
-		caller.CreateDashBoard(res, req)
-	case http.MethodDelete:
-		caller.DeleteGrafanaDashboard(res, req)
-	default:
-		klog.Errorf("method not acceptable")
-	}
-}
 func serveVersion(res http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
