@@ -18,6 +18,7 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/alert"
 	audit "github.com/tmax-cloud/hypercloud-api-server/audit"
 	cloudCredential "github.com/tmax-cloud/hypercloud-api-server/cloudCredential"
+	grafana "github.com/tmax-cloud/hypercloud-api-server/cloudCredential/grafana"
 	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
 	claim "github.com/tmax-cloud/hypercloud-api-server/clusterClaim"
 	metering "github.com/tmax-cloud/hypercloud-api-server/metering"
@@ -102,6 +103,8 @@ func register_multiplexer() {
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
 	mux.HandleFunc("/cloudCredential", serveCloudCredential)
+	mux.HandleFunc("/grafana/{path}", serveGrafana)
+	mux.HandleFunc("/grafana/", serveGrafana)
 
 	mux.HandleFunc("/metadata", serveMetadata)
 	mux.HandleFunc("/audit/member_suggestions", serveAuditMemberSuggestions)
@@ -580,6 +583,30 @@ func serveCloudCredential(res http.ResponseWriter, req *http.Request) {
 	case http.MethodGet:
 		cloudCredential.Get(res, req)
 	case http.MethodPut:
+	case http.MethodOptions:
+	default:
+		klog.Errorf("method not acceptable")
+	}
+}
+
+func serveGrafana(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	vars := gmux.Vars(req)
+	switch req.Method {
+	case http.MethodGet:
+		grafana.Get(res, req)
+	case http.MethodPost:
+		postPath := vars["path"]
+
+		if postPath == "search" {
+			grafana.Search(res, req)
+		} else if postPath == "query" {
+			grafana.Query(res, req)
+		} else if postPath == "annotations" {
+			grafana.Annotations(res, req)
+		} else {
+			klog.Errorf("Http request error: some url params not found")
+		}
 	case http.MethodOptions:
 	default:
 		klog.Errorf("method not acceptable")
