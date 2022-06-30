@@ -15,7 +15,6 @@ import (
 	gmux "github.com/gorilla/mux"
 	"github.com/robfig/cron"
 	admission "github.com/tmax-cloud/hypercloud-api-server/admission"
-	"github.com/tmax-cloud/hypercloud-api-server/alert"
 	audit "github.com/tmax-cloud/hypercloud-api-server/audit"
 	cloudCredential "github.com/tmax-cloud/hypercloud-api-server/cloudCredential"
 	grafana "github.com/tmax-cloud/hypercloud-api-server/cloudCredential/grafana"
@@ -98,7 +97,6 @@ func register_multiplexer() {
 	mux.HandleFunc("/user", serveUser)
 	mux.HandleFunc("/metering", serveMetering)
 	mux.HandleFunc("/namespace", serveNamespace)
-	mux.HandleFunc("/alert", serveAlert)
 
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
@@ -308,17 +306,6 @@ func serveMetering(res http.ResponseWriter, req *http.Request) {
 		metering.Get(res, req)
 	case http.MethodOptions:
 		metering.Options(res, req)
-	default:
-		klog.Errorf("method not acceptable")
-	}
-}
-
-func serveAlert(res http.ResponseWriter, req *http.Request) {
-	switch req.Method {
-	case http.MethodPost:
-		alert.Post(res, req)
-	case http.MethodGet:
-		alert.Get(res, req)
 	default:
 		klog.Errorf("method not acceptable")
 	}
