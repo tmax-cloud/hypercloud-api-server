@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.29.1 start -------------------->
+
+## Hypercloud-api-server 5.0.29.1 (2022. 06. 30. (목) 17:48:24 KST)
+
+### Added
+
+### Changed
+  - [mod] alert 관련 로직 제거 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] K8sApiCaller.go의 함수가 error를 리턴하도록 리팩토링 by Seungwon Lee
+
 <!-------------------- v5.0.29.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.29.0 (2022. 06. 28. (화) 11:27:13 KST)
