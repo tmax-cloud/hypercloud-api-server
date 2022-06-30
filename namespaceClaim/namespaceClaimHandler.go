@@ -7,6 +7,7 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/klog"
 )
 
@@ -30,7 +31,12 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("limit : ", limit)
 	klog.Infoln("labelSelector : ", labelSelector)
 
-	nscList := k8sApiCaller.GetAccessibleNSC(userId, userGroups, labelSelector)
+	nscList, err := k8sApiCaller.GetAccessibleNSC(userId, userGroups, labelSelector)
+	if err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
 
 	//make OutDO
 	if nscList.ResourceVersion != "" {
@@ -65,7 +71,14 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, out, nil, status)
 		return
 	}
-	namespace := k8sApiCaller.GetNamespace(nsName)
+
+	namespace, err := k8sApiCaller.GetNamespace(nsName)
+	if err != nil && !errors.IsNotFound(err) {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
+
 	if namespace == nil {
 		status = http.StatusOK
 		out = "Namespace Duplication verify Success"

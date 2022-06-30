@@ -197,7 +197,11 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 		}
 		tmp := []string{}
 		// list ns w/ labelselector
-		if nsList = caller.GetAccessibleNS(userId, "", userGroups); len(nsList.Items) == 0 {
+		if nsList, err = caller.GetAccessibleNS(userId, "", userGroups); err != nil {
+			klog.Errorln(err)
+			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+			return
+		} else if len(nsList.Items) == 0 {
 			util.SetResponse(res, "no ns", nil, http.StatusOK)
 			return
 		}
@@ -272,7 +276,11 @@ func GetAuditBodyByJson(res http.ResponseWriter, req *http.Request) {
 		}
 		tmp := []string{}
 		// list ns w/ labelselector
-		if nsList = caller.GetAccessibleNS(userId, "", userGroups); len(nsList.Items) == 0 {
+		if nsList, err = caller.GetAccessibleNS(userId, "", userGroups); err != nil {
+			klog.Errorln(err)
+			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+			return
+		} else if len(nsList.Items) == 0 {
 			util.SetResponse(res, "no ns", nil, http.StatusOK)
 			return
 		}

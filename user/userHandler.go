@@ -43,7 +43,11 @@ func Post(res http.ResponseWriter, req *http.Request) {
 			},
 		},
 	}
-	k8sApiCaller.CreateClusterRoleBinding(&clusterRoleBinding)
+	if err := k8sApiCaller.CreateClusterRoleBinding(&clusterRoleBinding); err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
 	out := "Create ClusterRoleBinding for New User Success"
 	util.SetResponse(res, out, nil, http.StatusOK)
 }
@@ -63,15 +67,42 @@ func Delete(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("userId is : " + userId)
 
 	//Call Delete resource function for New User
-	k8sApiCaller.DeleteClusterRoleBinding(userId)
-	k8sApiCaller.DeleteRQCWithUser(userId)
-	k8sApiCaller.DeleteNSCWithUser(userId)
-	k8sApiCaller.DeleteRBCWithUser(userId)
-	k8sApiCaller.DeleteCRBWithUser(userId)
-	k8sApiCaller.DeleteRBWithUser(userId)
-	out := "Successfully delete related resources with " + userId
-	klog.Infoln(out)
-	util.SetResponse(res, out, nil, http.StatusOK)
+	isErr := false
+	if err := k8sApiCaller.DeleteClusterRoleBinding(userId); err != nil {
+		klog.Errorln(err)
+		isErr = true
+	}
+	if err := k8sApiCaller.DeleteRQCWithUser(userId); err != nil {
+		klog.Errorln(err)
+		isErr = true
+	}
+	if err := k8sApiCaller.DeleteNSCWithUser(userId); err != nil {
+		klog.Errorln(err)
+		isErr = true
+	}
+	if err := k8sApiCaller.DeleteRBCWithUser(userId); err != nil {
+		klog.Errorln(err)
+		isErr = true
+	}
+	if err := k8sApiCaller.DeleteCRBWithUser(userId); err != nil {
+		klog.Errorln(err)
+		isErr = true
+	}
+	if err := k8sApiCaller.DeleteRBWithUser(userId); err != nil {
+		klog.Errorln(err)
+		isErr = true
+	}
+
+	var out string
+	if isErr {
+		out = "Failed to completely delete related resources with " + userId
+		klog.Infoln(out)
+		util.SetResponse(res, out, nil, http.StatusOK)
+	} else {
+		out = "Successfully delete related resources with " + userId
+		klog.Infoln(out)
+		util.SetResponse(res, out, nil, http.StatusOK)
+	}
 }
 
 func Options(res http.ResponseWriter, req *http.Request) {
