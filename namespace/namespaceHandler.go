@@ -9,6 +9,7 @@ import (
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	k8sApiCaller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/klog"
 )
 
@@ -39,7 +40,12 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	// 	userGroups = strings.Split(userGroup, ",")
 	// }
 
-	nsList := k8sApiCaller.GetAccessibleNS(userId, labelSelector, userGroups)
+	nsList, err := k8sApiCaller.GetAccessibleNS(userId, labelSelector, userGroups)
+	if err != nil {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
 
 	//make OutDO
 	if nsList.ResourceVersion != "" {
@@ -69,10 +75,14 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	klog.Infoln("Namespace Name : " + nsName)
 	klog.Infoln("Add Period : " + addPeriod)
 
-	namespace := k8sApiCaller.GetNamespace(nsName)
+	namespace, err := k8sApiCaller.GetNamespace(nsName)
+	if err != nil && !errors.IsNotFound(err) {
+		klog.Errorln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
 
 	if namespace == nil {
-		klog.Infoln("333")
 		status := http.StatusBadRequest
 		out := "namespace is not exist"
 		util.SetResponse(res, out, nil, status)
@@ -84,7 +94,11 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		addPeriodInt, _ := strconv.Atoi(addPeriod)
 		newPeriod := strconv.Itoa(oldPeriodInt + addPeriodInt)
 		namespace.Labels["period"] = newPeriod
-		k8sApiCaller.UpdateNamespace(namespace)
+		if _, err := k8sApiCaller.UpdateNamespace(namespace); err != nil {
+			klog.Errorln(err)
+			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+			return
+		}
 
 		status := http.StatusOK
 		out := "Trial Namespace Period Extend Service Success"
@@ -139,7 +153,10 @@ func Websocket(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetNSList(userId string, labelSelector string, userGroups []string, limit string) ([]byte, error) {
-	nsList := k8sApiCaller.GetAccessibleNS(userId, labelSelector, userGroups)
+	nsList, err := k8sApiCaller.GetAccessibleNS(userId, labelSelector, userGroups)
+	if err != nil {
+		return nil, err
+	}
 
 	if nsList.ResourceVersion != "" {
 		if len(nsList.Items) > 0 {
