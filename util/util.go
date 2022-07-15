@@ -64,22 +64,22 @@ type PatchOps struct {
 func ReadFile() {
 	content, err := ioutil.ReadFile(AccessSecretPath)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return
 	}
 	accessSecret = string(content)
-	// klog.Infoln(accessSecret)
+	// klog.V(3).Infoln(accessSecret)
 
 	content, err = ioutil.ReadFile(SMTPUsernamePath)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return
 	}
 	username = string(content)
 
 	content, err = ioutil.ReadFile(SMTPPasswordPath)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return
 	}
 	password = string(content)
@@ -245,7 +245,7 @@ func SendEmail(from string, to []string, subject string, bodyParameter map[strin
 	// func SendEmail(from string, to []string, subject string, body string, imgPath string, imgCid string) error {
 	content, err := ioutil.ReadFile(HtmlHomePath + "cluster-invitation.html")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 	inviteMail = string(content)
@@ -255,7 +255,7 @@ func SendEmail(from string, to []string, subject string, bodyParameter map[strin
 		inviteMail = strings.Replace(inviteMail, k, v, -1)
 	}
 
-	klog.Infoln(inviteMail)
+	klog.V(3).Infoln(inviteMail)
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", username)
@@ -266,7 +266,7 @@ func SendEmail(from string, to []string, subject string, bodyParameter map[strin
 	d := gomail.NewDialer(SMTPHost, SMTPPort, username, password)
 
 	if err := d.DialAndSend(m); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 	return nil
@@ -292,14 +292,14 @@ func CreateToken(clusterMember ClusterMemberInfo) (string, error) {
 func StringParameterException(userGroups []string, args ...string) error {
 	if userGroups == nil {
 		msg := "UserGroups is empty."
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		return errors.New(msg)
 	}
 
 	for _, arg := range args {
 		if arg == "" {
 			msg := arg + "Something is empty."
-			klog.Infoln(msg)
+			klog.V(3).Infoln(msg)
 			return errors.New(msg)
 		}
 	}
@@ -402,7 +402,7 @@ func UpgradeWebsocket(res http.ResponseWriter, req *http.Request) (*gsocket.Conn
 	}
 	c, err := upgrader.Upgrade(res, req, nil)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 	return c, err

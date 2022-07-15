@@ -14,7 +14,7 @@ import (
 )
 
 func Get(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** GET /metering")
+	klog.V(3).Infoln("**** GET /metering")
 	queryParams := req.URL.Query()
 	offset := queryParams.Get(util.QUERY_PARAMETER_OFFSET)
 	limit := queryParams.Get(util.QUERY_PARAMETER_LIMIT)
@@ -67,11 +67,11 @@ func Get(res http.ResponseWriter, req *http.Request) {
 }
 
 func getMeteringDataFromDB(query string) []meteringModel.Metering {
-	klog.Infoln("=== query ===")
-	klog.Infoln(query)
+	klog.V(3).Infoln("=== query ===")
+	klog.V(3).Infoln(query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return nil
 	}
 
@@ -95,7 +95,7 @@ func getMeteringDataFromDB(query string) []meteringModel.Metering {
 			&meteringData.MeteringTime,
 			&status)
 		if err != nil {
-			klog.Error(err)
+			klog.V(1).Info(err)
 			return nil
 		}
 		meteringList = append(meteringList, meteringData)
@@ -129,7 +129,7 @@ func makeTimeRange(timeUnit string, startTime string, endTime string, query stri
 }
 
 func Options(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** OPTIONS/metering")
+	klog.V(3).Infoln("**** OPTIONS/metering")
 	out := "**** OPTIONS/metering"
 	util.SetResponse(res, out, nil, http.StatusOK)
 }

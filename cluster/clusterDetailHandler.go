@@ -12,7 +12,7 @@ func ListClusterNamespace(res http.ResponseWriter, req *http.Request) {
 	// accessOnly := queryParams.Get(QUERY_PARAMETER_ACCESS_ONLY)
 
 	// if err := util.StringParameterException(userGroups, userId, accessOnly); err != nil {
-	// 	klog.Errorln(err)
+	// 	klog.V(1).Infoln(err)
 	// 	util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 	// 	return
 	// }
@@ -24,6 +24,6 @@ func ListClusterNamespace(res http.ResponseWriter, req *http.Request) {
 	// }
 
 	// msg = "User [" + memberId + "] is removed from cluster [" + clm.Name + "]"
-	// klog.Infoln(msg)
+	// klog.V(3).Infoln(msg)
 	// util.SetResponse(res, msg, nil, status)
 }

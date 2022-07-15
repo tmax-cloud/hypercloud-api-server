@@ -58,12 +58,12 @@ func (h *Hub) run() {
 			body = strings.Replace(body, `\\`, `\`, -1)                  // remove duplicate '\' character to only one character
 			var data NamespaceEvent
 			if err := json.Unmarshal([]byte(body), &data); err != nil {
-				klog.Error(err, " Failed to unmarshal namespace body")
+				klog.V(1).Info(err, " Failed to unmarshal namespace body")
 				continue
 			}
 			event := data.Type
 			ns := data.Object.Name
-			klog.Infoln("namespace [" + ns + "] " + event + " detected")
+			klog.V(3).Infoln("namespace [" + ns + "] " + event + " detected")
 
 			for client := range h.clients {
 				isAccessible, err := k8sApiCaller.IsAccessibleNS(ns, client.cond.UserId, client.cond.LabelSelector, client.cond.UserGroup)

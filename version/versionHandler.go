@@ -24,19 +24,19 @@ import (
 
 // Get handles ~/version get method
 func Get(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** GET /version")
+	klog.V(3).Infoln("**** GET /version")
 	var conf versionModel.Config
 
 	// 1. READ CONFIG FILE
 	// File path should be same with what declared on volume mount in yaml file.
 	yamlFile, err := ioutil.ReadFile("/go/src/version/version.config")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return
 	}
 	err = yaml.Unmarshal(yamlFile, &conf)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 	}
 	configSize := len(conf.Modules)
 	result := make([]versionModel.Module, configSize)
@@ -48,7 +48,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	for idx, mod := range conf.Modules {
 		go func(idx int, mod versionModel.ModuleInfo) { // GoRoutine
 			defer wg.Done()
-			// klog.Infoln("Module Name = ", mod.Name)
+			// klog.V(3).Infoln("Module Name = ", mod.Name)
 			result[idx].Name = mod.Name
 
 			// If the moudle is HyperAuth,
@@ -81,7 +81,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 						output := stderr + stdout
 
 						if err != nil {
-							klog.Errorln(mod.Name, " exec command error : ", err)
+							klog.V(1).Infoln(mod.Name, " exec command error : ", err)
 							break
 						} else {
 							ps.Data[output]++
@@ -104,7 +104,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 						}
 						response, err := client.Get(url)
 						if err != nil {
-							klog.Errorln(mod.Name, " HTTP Error : ", err)
+							klog.V(1).Infoln(mod.Name, " HTTP Error : ", err)
 							break
 						} else if response.StatusCode >= 200 && response.StatusCode < 400 {
 							ps.Data["Running"]++
@@ -120,7 +120,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 						conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, port), timeout)
 						defer conn.Close()
 						if err != nil {
-							klog.Errorln(mod.Name, " TCP Error : ", err)
+							klog.V(1).Infoln(mod.Name, " TCP Error : ", err)
 							break
 						} else {
 							ps.Data["Running"]++
@@ -137,7 +137,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 			}
 
 			if !exist {
-				//klog.Errorln(mod.Name, " cannot found pods using given label : ", labels)
+				//klog.V(1).Infoln(mod.Name, " cannot found pods using given label : ", labels)
 				result[idx].Status = "Not Installed"
 			} else if ps.Data["Running"] == len(podList.Items) {
 				// if every pod is 'Running', the module is normal
@@ -160,14 +160,14 @@ func Get(res http.ResponseWriter, req *http.Request) {
 			}
 
 			if !exist {
-				//klog.Errorln(mod.Name, " cannot found pods using given label : ", labels)
+				//klog.V(1).Infoln(mod.Name, " cannot found pods using given label : ", labels)
 				result[idx].Version = "Not Installed"
 			} else if mod.VersionProbe.Exec.Command != nil {
 				// by exec command
 				stdout, stderr, err := k8sApiCaller.ExecCommand(podList.Items[0], mod.VersionProbe.Exec.Command, mod.VersionProbe.Container)
 				output := stderr + stdout
 				if err != nil {
-					klog.Errorln(mod.Name, " exec command error : ", err)
+					klog.V(1).Infoln(mod.Name, " exec command error : ", err)
 				} else {
 					result[idx].Version = ParsingVersion(output)
 				}
@@ -187,8 +187,8 @@ func Get(res http.ResponseWriter, req *http.Request) {
 					}
 				}
 			}
-			// klog.Infoln(mod.Name + " status = " + result[idx].Status)
-			// klog.Infoln(mod.Name + " version = " + result[idx].Version)
+			// klog.V(3).Infoln(mod.Name + " status = " + result[idx].Status)
+			// klog.V(3).Infoln(mod.Name + " version = " + result[idx].Version)
 		}(idx, mod)
 	}
 	wg.Wait()
@@ -211,14 +211,14 @@ func AppendStatusResult(p versionModel.PodStatus) string {
 func ParsingVersion(str string) string {
 	isLatest, err := regexp.MatchString("latest", str)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 	} else if isLatest {
 		return "latest"
 	}
 
 	r, err := regexp.Compile(":[a-z]*[A-Z]*[0-9]*(\\.[0-9]+)+")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 	}
 
 	return strings.TrimLeft(r.FindString(str), ":")
@@ -237,13 +237,13 @@ func AskToHyperAuth(mod versionModel.ModuleInfo) (string, string) {
 	response, err := client.Get(url)
 	if err != nil {
 		hyperauth_status = "Abnormal"
-		klog.Errorln(mod.Name, " HTTPS Error : ", err)
+		klog.V(1).Infoln(mod.Name, " HTTPS Error : ", err)
 		return "", ""
 	} else if response.StatusCode >= 200 && response.StatusCode < 300 {
 		hyperauth_status = "Normal"
 		bodyBytes, err := ioutil.ReadAll(response.Body)
 		if err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 		} else {
 			bodyString := string(bodyBytes)
 			hyperauth_version = bodyString

@@ -59,7 +59,7 @@ func ListAuditResource(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateAuditResource() {
-	klog.Infoln("Update Audit resource list")
+	klog.V(3).Infoln("Update Audit resource list")
 	caller.UpdateAuditResourceList()
 	return
 }
@@ -79,7 +79,7 @@ func AddAudit(w http.ResponseWriter, r *http.Request) {
 
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
-		klog.Errorf("contentType=%s, expect application/json", contentType)
+		klog.V(1).Infof("contentType=%s, expect application/json", contentType)
 		return
 	}
 
@@ -97,7 +97,7 @@ func AddAudit(w http.ResponseWriter, r *http.Request) {
 }
 
 func AddAuditBatch(w http.ResponseWriter, r *http.Request) {
-	klog.Info("AddAuditBatch")
+	klog.V(3).Info("AddAuditBatch")
 	var body []byte
 	var event audit.Event
 	if r.Body != nil {
@@ -107,13 +107,13 @@ func AddAuditBatch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.Unmarshal(body, &event); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		util.SetResponse(w, "", nil, http.StatusInternalServerError)
 	}
 
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
-		klog.Errorf("contentType=%s, expect application/json", contentType)
+		klog.V(1).Infof("contentType=%s, expect application/json", contentType)
 		return
 	}
 
@@ -125,7 +125,7 @@ func AddAuditBatch(w http.ResponseWriter, r *http.Request) {
 	if len(EventBuffer.Buffer) < BufferSize {
 		EventBuffer.Buffer <- event
 	} else {
-		klog.Error("event is dropped.")
+		klog.V(1).Info("event is dropped.")
 	}
 	util.SetResponse(w, "", nil, http.StatusOK)
 }
@@ -134,7 +134,7 @@ func MemberSuggestions(res http.ResponseWriter, r *http.Request) {
 	userId := r.URL.Query().Get("userId")
 	if userId == "" {
 		msg := "UserId is empty."
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
@@ -144,7 +144,7 @@ func MemberSuggestions(res http.ResponseWriter, r *http.Request) {
 	b.WriteString("select username, count(*) from audit where 1=1 ")
 
 	if sarResult, err := caller.CreateSubjectAccessReview(userId, nil, "", "namespaces", "", "", "list"); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 	} else if sarResult.Status.Allowed == false {
 		b.WriteString("and username = '")
 		b.WriteString(userId)
@@ -158,7 +158,7 @@ func MemberSuggestions(res http.ResponseWriter, r *http.Request) {
 		b.WriteString("' group by username order by count desc limit 5")
 	}
 	query := b.String()
-	klog.Info("query: ", query)
+	klog.V(3).Info("query: ", query)
 	memberList, _ := auditDataFactory.GetMemberList(query)
 
 	memberListResponse := MemberListResponse{
@@ -177,7 +177,7 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 
 	if userId == "" {
 		msg := "UserId is empty."
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
@@ -185,7 +185,7 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 	// ns get줘도 감사기록은 안보이게..
 	nsListSAR, err := caller.CreateSubjectAccessReview(userId, userGroups, "", "namespaces", "", "", "list")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, "", nil, http.StatusInternalServerError)
 		return
 	}
@@ -198,7 +198,7 @@ func GetAudit(res http.ResponseWriter, req *http.Request) {
 		tmp := []string{}
 		// list ns w/ labelselector
 		if nsList, err = caller.GetAccessibleNS(userId, "", userGroups); err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 			return
 		} else if len(nsList.Items) == 0 {
@@ -255,7 +255,7 @@ func GetAuditBodyByJson(res http.ResponseWriter, req *http.Request) {
 
 	if len(key) == 0 || value == "" {
 		msg := "key or value is empty."
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
@@ -263,7 +263,7 @@ func GetAuditBodyByJson(res http.ResponseWriter, req *http.Request) {
 	// admin 권한 체크
 	nsListSAR, err := caller.CreateSubjectAccessReview(userId, userGroups, "", "namespaces", "", "", "list")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, "", nil, http.StatusInternalServerError)
 		return
 	}
@@ -277,7 +277,7 @@ func GetAuditBodyByJson(res http.ResponseWriter, req *http.Request) {
 		tmp := []string{}
 		// list ns w/ labelselector
 		if nsList, err = caller.GetAccessibleNS(userId, "", userGroups); err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 			return
 		} else if len(nsList.Items) == 0 {
@@ -421,7 +421,7 @@ func queryBuilder(param urlParam) string {
 	}
 	query := b.String()
 
-	klog.Info("query: ", query)
+	klog.V(3).Info("query: ", query)
 	return query
 }
 
@@ -451,7 +451,7 @@ func queryBuilderJson(param urlParam) string {
 func Websocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := util.UpgradeWebsocket(w, r)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return
 	}
 

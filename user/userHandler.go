@@ -12,18 +12,18 @@ import (
 )
 
 func Post(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** POST /user")
+	klog.V(3).Infoln("**** POST /user")
 	queryParams := req.URL.Query()
 	userId := queryParams.Get("userId")
 
 	if userId == "" {
 		out := "userId is Missing"
 		util.SetResponse(res, out, nil, http.StatusBadRequest)
-		klog.Errorf("userId is Missing")
+		klog.V(1).Infof("userId is Missing")
 		return
 	}
 
-	klog.Infoln("userId is : " + userId)
+	klog.V(3).Infoln("userId is : " + userId)
 
 	//Call CreateClusterRoleBinding for New User
 	clusterRoleBinding := rbacApi.ClusterRoleBinding{
@@ -44,7 +44,7 @@ func Post(res http.ResponseWriter, req *http.Request) {
 		},
 	}
 	if err := k8sApiCaller.CreateClusterRoleBinding(&clusterRoleBinding); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -53,60 +53,60 @@ func Post(res http.ResponseWriter, req *http.Request) {
 }
 
 func Delete(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** DELETE /user")
+	klog.V(3).Infoln("**** DELETE /user")
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
 
 	if userId == "" {
 		out := "userId is Missing"
 		util.SetResponse(res, out, nil, http.StatusBadRequest)
-		klog.Errorf("userId is Missing")
+		klog.V(1).Infof("userId is Missing")
 		return
 	}
 
-	klog.Infoln("userId is : " + userId)
+	klog.V(3).Infoln("userId is : " + userId)
 
 	//Call Delete resource function for New User
 	isErr := false
 	if err := k8sApiCaller.DeleteClusterRoleBinding(userId); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		isErr = true
 	}
 	if err := k8sApiCaller.DeleteRQCWithUser(userId); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		isErr = true
 	}
 	if err := k8sApiCaller.DeleteNSCWithUser(userId); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		isErr = true
 	}
 	if err := k8sApiCaller.DeleteRBCWithUser(userId); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		isErr = true
 	}
 	if err := k8sApiCaller.DeleteCRBWithUser(userId); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		isErr = true
 	}
 	if err := k8sApiCaller.DeleteRBWithUser(userId); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		isErr = true
 	}
 
 	var out string
 	if isErr {
 		out = "Failed to completely delete related resources with " + userId
-		klog.Infoln(out)
+		klog.V(3).Infoln(out)
 		util.SetResponse(res, out, nil, http.StatusOK)
 	} else {
 		out = "Successfully delete related resources with " + userId
-		klog.Infoln(out)
+		klog.V(3).Infoln(out)
 		util.SetResponse(res, out, nil, http.StatusOK)
 	}
 }
 
 func Options(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** OPTIONS/user")
+	klog.V(3).Infoln("**** OPTIONS/user")
 	out := "**** OPTIONS/user"
 	util.SetResponse(res, out, nil, http.StatusOK)
 }

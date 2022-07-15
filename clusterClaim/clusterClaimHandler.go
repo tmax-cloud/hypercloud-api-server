@@ -36,7 +36,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	clusterClaimNamespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, admit, memberName, clusterClaimName, clusterClaimNamespace); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -44,7 +44,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	admitBool, err := strconv.ParseBool(admit)
 	if err != nil {
 		msg := "Admit parameter has invalid syntax."
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
@@ -56,7 +56,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	}
 	if cc.Status.Phase != "Awaiting" {
 		msg := "ClusterClaim is already admitted or rejected by admin"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
@@ -64,27 +64,27 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	// name duplicate
 	exist, err := caller.CheckClusterManagerDuplication(cc.Spec.ClusterName, clusterClaimNamespace)
 	if err != nil {
-		klog.Errorln(err.Error())
+		klog.V(1).Infoln(err.Error())
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
 	if exist {
 		msg := "Cluster [" + cc.Spec.ClusterName + "] is already existed."
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, "Cluster ["+cc.Spec.ClusterName+"] is already existed.", nil, http.StatusBadRequest)
 		return
 	}
 
 	var updatedClusterClaim *claimsv1alpha1.ClusterClaim
 	if updatedClusterClaim, err = caller.AdmitClusterClaim(userId, userGroups, cc, admitBool, reason); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 	if updatedClusterClaim.Status.Phase == "Rejected" {
 		msg := "ClusterClaim is rejected by admin"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusOK)
 		return
 	}
@@ -99,13 +99,13 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Status = "owner"
 
 	if _, err := caller.CreateClusterManager(updatedClusterClaim); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
 	if err := clusterDataFactory.Insert(clusterMember); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -121,7 +121,7 @@ func List(res http.ResponseWriter, req *http.Request) {
 	clusterClaimNamespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}

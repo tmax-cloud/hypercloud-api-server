@@ -49,12 +49,12 @@ func Query(res http.ResponseWriter, req *http.Request) {
 	bytes, _ := ioutil.ReadAll(req.Body)
 	str := string(bytes)
 	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
-		klog.Errorln(err.Error())
+		klog.V(1).Infoln(err.Error())
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 	targets := resultJson["targets"].([]interface{})
-	klog.Infoln("targets =", targets)
+	klog.V(3).Infoln("targets =", targets)
 
 	/* SAMPLE TARGETS STRUCT
 	[
@@ -77,16 +77,16 @@ func Query(res http.ResponseWriter, req *http.Request) {
 
 		// TODO : additional data로 cc의 이름 받아서 특정 cloudcredential api server에 보내도록 짜야함
 		// cc_name := query["data"].(map[string]interface{})["cloudcredential"]
-		// klog.Infoln("cloudcredential resource name =", cc_name)
+		// klog.V(3).Infoln("cloudcredential resource name =", cc_name)
 
 		switch target {
 		case BILLING_BY_ACCOUNT:
-			klog.Infoln("Handling billing_by_account...")
+			klog.V(3).Infoln("Handling billing_by_account...")
 			requestURL := "https://localhost:443/cloudCredential?api=billing&resource=swlee-aws&namespace=hypercloud5-system&startTime=1625717822&endTime=" + strconv.FormatInt(time, 10)
 			http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // skip TLS
 			resp, err := http.Get(requestURL)
 			if err != nil {
-				klog.Errorln(err.Error())
+				klog.V(1).Infoln(err.Error())
 				util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 				return
 			}
@@ -94,7 +94,7 @@ func Query(res http.ResponseWriter, req *http.Request) {
 
 			body, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				klog.Errorln(err.Error())
+				klog.V(1).Infoln(err.Error())
 				util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 				return
 			}
@@ -102,19 +102,19 @@ func Query(res http.ResponseWriter, req *http.Request) {
 			var data []model.Awscost
 			err = json.Unmarshal(body, &data)
 			if err != nil {
-				klog.Errorln(err.Error())
+				klog.V(1).Infoln(err.Error())
 			}
 
 			addData(BILLING_BY_ACCOUNT, data)
 
 		case BILLING_BY_REGION:
-			klog.Infoln("Handling billing_by_region...")
+			klog.V(3).Infoln("Handling billing_by_region...")
 		case BILLING_BY_INSTANCE:
-			klog.Infoln("Handling billing_by_instance...")
+			klog.V(3).Infoln("Handling billing_by_instance...")
 		case BILLING_BY_METRICS:
-			klog.Infoln("Handling billing_by_metrics...")
+			klog.V(3).Infoln("Handling billing_by_metrics...")
 		default:
-			klog.Errorln("Invalid target")
+			klog.V(1).Infoln("Invalid target")
 			util.SetResponse(res, "", nil, http.StatusBadRequest)
 			return
 		}

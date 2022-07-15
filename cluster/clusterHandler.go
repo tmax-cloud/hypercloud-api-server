@@ -35,7 +35,7 @@ func ListPage(res http.ResponseWriter, req *http.Request) {
 	namespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -65,7 +65,7 @@ func ListLNB(res http.ResponseWriter, req *http.Request) {
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 
 	if err := util.StringParameterException(userGroups, userId); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -84,20 +84,20 @@ func InsertCLM(res http.ResponseWriter, req *http.Request) {
 	clustermanager := vars["clustermanager"]
 
 	if err := util.StringParameterException([]string{}, namespace, clustermanager); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
 
 	clm := &clusterv1alpha1.ClusterManager{}
 	if err := json.Unmarshal(body, clm); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 	}
 
@@ -115,7 +115,7 @@ func InsertCLM(res http.ResponseWriter, req *http.Request) {
 	// var res string
 	// if res, err := clusterDataFactory.GetOwner(clmInfo); err != nil {
 	// 	msg := "Failed to get cluster owner from db"
-	// 	klog.Infoln(msg)
+	// 	klog.V(3).Infoln(msg)
 	// 	util.SetResponse(res, msg, nil, http.StatusInternalServerError)
 	// 	return
 	// }
@@ -126,12 +126,12 @@ func InsertCLM(res http.ResponseWriter, req *http.Request) {
 
 	if err := clusterDataFactory.Insert(clmInfo); err != nil {
 		msg := "Failed to insert cluster info from db"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusInternalServerError)
 		return
 	}
 	msg := "Success to insert cluster info from db"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
 }
 
@@ -142,18 +142,18 @@ func DeleteCLM(res http.ResponseWriter, req *http.Request) {
 	clustermanager := vars["clustermanager"]
 
 	if err := util.StringParameterException([]string{}, namespace, clustermanager); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
 
 	if err := clusterDataFactory.DeleteALL(namespace, clustermanager); err != nil {
 		msg := "Failed to delete cluster info from db"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusInternalServerError)
 		return
 	}
 	msg := "Success to delete cluster info from db"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
 }

@@ -67,7 +67,7 @@ func HyperauthConsumer() {
 		"./etc/ssl/ca.crt")
 
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return
 	}
 	// This can be used on test server if domain does not match cert:
@@ -105,7 +105,7 @@ func HyperauthConsumer() {
 
 	client, err := sarama.NewConsumerGroup([]string{kafka1_addr}, consumerGroupId, consumerConfig)
 	if err != nil {
-		klog.Errorln("Error creating consumer group client: %v", err)
+		klog.V(1).Infoln("Error creating consumer group client: %v", err)
 		time.Sleep(time.Minute * 1)
 		panic("Try Reconnection to Kafka...")
 	}
@@ -120,7 +120,7 @@ func HyperauthConsumer() {
 			// server-side rebalance happens, the consumer session will need to be
 			// recreated to get the new claims
 			if err := client.Consume(ctx, []string{topic}, &consumer); err != nil {
-				klog.Error("Error from consumer: %v", err)
+				klog.V(1).Info("Error from consumer: %v", err)
 			}
 			// check if context was cancelled, signaling that the consumer should stop
 			if ctx.Err() != nil {
@@ -131,20 +131,20 @@ func HyperauthConsumer() {
 	}()
 
 	<-consumer.ready // Await till the consumer has been set up
-	klog.Info("hypercloud-api-server consumer up and running!...")
+	klog.V(3).Info("hypercloud-api-server consumer up and running!...")
 
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)
 	select {
 	case <-ctx.Done():
-		klog.Info("terminating: context cancelled")
+		klog.V(3).Info("terminating: context cancelled")
 	case <-sigterm:
-		klog.Info("terminating: via signal")
+		klog.V(3).Info("terminating: via signal")
 	}
 	cancel()
 	wg.Wait()
 	if err = client.Close(); err != nil {
-		klog.Errorf("Error closing client: %v", err)
+		klog.V(1).Infof("Error closing client: %v", err)
 	}
 }
 
@@ -192,18 +192,18 @@ func (consumer *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 
 	for message := range claim.Messages() {
-		klog.Infof("Message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic)
+		klog.V(3).Infof("Message claimed: value = %s, timestamp = %v, topic = %s", string(message.Value), message.Timestamp, message.Topic)
 		session.MarkMessage(message, "")
 
 		var topicEvent TopicEvent
 		if err := json.Unmarshal(message.Value, &topicEvent); err != nil {
-			klog.Error("make topicEvent Struct failed : ", err)
+			klog.V(1).Info("make topicEvent Struct failed : ", err)
 		}
 
 		//LOGIC HERE!!
 		switch topicEvent.Type {
 		case "USER_DELETE":
-			klog.Info("User [ " + topicEvent.UserName + " ] Deleted !")
+			klog.V(3).Info("User [ " + topicEvent.UserName + " ] Deleted !")
 			// Delete NamespaceClaim
 			k8sApiCaller.DeleteNSCWithUser(topicEvent.UserName)
 
@@ -231,7 +231,7 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			break
 		case "REGISTER":
 		case "LOGIN":
-			klog.Info("login")
+			klog.V(3).Info("login")
 			event := audit.Event{
 				AuditID: types.UID(guuid.New().String()),
 				User: authv1.UserInfo{
@@ -258,12 +258,12 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 				if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {
 					haudit.EventBuffer.Buffer <- event
 				} else {
-					klog.Error("###########   event is dropped.     ############")
+					klog.V(1).Info("###########   event is dropped.     ############")
 				}
 			}
 
 		case "LOGOUT":
-			klog.Info("LOGOUT")
+			klog.V(3).Info("LOGOUT")
 			event := audit.Event{
 				AuditID: types.UID(guuid.New().String()),
 				User: authv1.UserInfo{
@@ -290,12 +290,12 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 				if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {
 					haudit.EventBuffer.Buffer <- event
 				} else {
-					klog.Error("###########   event is dropped.     ############")
+					klog.V(1).Info("###########   event is dropped.     ############")
 				}
 			}
 
 		case "LOGIN_ERROR":
-			klog.Info("LOGIN_ERROR")
+			klog.V(3).Info("LOGIN_ERROR")
 			// if topicEvent.
 			event := audit.Event{
 				AuditID: types.UID(guuid.New().String()),
@@ -324,12 +324,12 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 				if len(haudit.EventBuffer.Buffer) < haudit.BufferSize {
 					haudit.EventBuffer.Buffer <- event
 				} else {
-					klog.Error("###########   event is dropped.     ############")
+					klog.V(1).Info("###########   event is dropped.     ############")
 				}
 			}
 
 		default:
-			// klog.Info("Unknown Event Published from Hyperauth, Do nothing!")
+			// klog.V(3).Info("Unknown Event Published from Hyperauth, Do nothing!")
 		}
 
 	}

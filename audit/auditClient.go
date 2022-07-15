@@ -62,7 +62,7 @@ func (c *Client) readPump() {
 		err := c.conn.ReadJSON(&c.cond)
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				klog.Info(err)
+				klog.V(3).Info(err)
 			}
 			break
 		}
@@ -74,7 +74,7 @@ func (c *Client) readPump() {
 
 		c.conn.WriteMessage(websocket.TextMessage, respMsg)
 		if err != nil {
-			klog.Error(err)
+			klog.V(1).Info(err)
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 			}
 			break
@@ -97,7 +97,7 @@ func (c *Client) writePump() {
 			}
 			t, err := json.Marshal(message)
 			if err != nil {
-				klog.Info(err)
+				klog.V(3).Info(err)
 				return
 			}
 			c.conn.WriteMessage(websocket.TextMessage, t)
