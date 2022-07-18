@@ -173,8 +173,33 @@ func init_variable() {
 	// flag.StringVar(&dataFactory.DBPassWordPath, "dbPassword", "/run/secrets/timescaledb/password", "Timescaledb Server Password")
 	// flag.StringVar(&util.TokenExpiredDate, "tokenExpiredDate", "24hours", "Token Expired Date")
 
-	// For Log file
+	// For Log Level
 	klog.InitFlags(nil)
+	logLevel, isLogLevelSet := os.LookupEnv("LOG_LEVEL")
+	if isLogLevelSet {
+		klog.Infoln("LOG_LEVEL = " + logLevel)
+	} else {
+		klog.Infoln("LOG_LEVEL = INFO")
+	}
+
+	if logLevel == "TRACE" || logLevel == "trace" {
+		logLevel = "5"
+	} else if logLevel == "DEBUG" || logLevel == "debug" {
+		logLevel = "4"
+	} else if logLevel == "INFO" || logLevel == "info" {
+		logLevel = "3"
+	} else if logLevel == "WARN" || logLevel == "warn" {
+		logLevel = "2"
+	} else if logLevel == "ERROR" || logLevel == "error" {
+		logLevel = "1"
+	} else if logLevel == "FATAL" || logLevel == "fatal" {
+		logLevel = "0"
+	} else {
+		logLevel = "3" // Default level is INFO
+	}
+	flag.Set("v", logLevel)
+
+	// For Log file
 	flag.Set("logtostderr", "false")
 	flag.Set("alsologtostderr", "false")
 	flag.Parse()
