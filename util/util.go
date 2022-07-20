@@ -52,6 +52,7 @@ var (
 	TokenExpiredDate       string
 	ParsedTokenExpiredDate time.Duration
 	ValidTime              string
+	LogLevel               string
 )
 
 //Jsonpatch를 담을 수 있는 구조체
