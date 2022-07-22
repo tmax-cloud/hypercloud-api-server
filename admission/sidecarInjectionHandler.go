@@ -29,12 +29,12 @@ func InjectionForPod(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		configName = val
 	} else {
 		err := errors.New("Log collector configuration is empty.")
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	}
 	var logRootPath string
 	if res, err := k8sApiCaller.GetFbc(pod.GetNamespace(), configName); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	} else {
 		logRootPath = res.Status.LogRootPath
@@ -56,7 +56,7 @@ func InjectionForPod(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if patchData, err := json.Marshal(patch); err != nil {
 		return ToAdmissionResponse(err) //msg: error
 	} else {
-		klog.Infof("JsonPatch=%s", string(patchData))
+		klog.V(3).Infof("JsonPatch=%s", string(patchData))
 		reviewResponse.Patch = patchData
 	}
 
@@ -80,12 +80,12 @@ func InjectionForDeploy(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		configName = val
 	} else {
 		err := errors.New("Log collector configuration is empty.")
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(errors.New("Log collector configuration is empty."))
 	}
 	var logRootPath string
 	if res, err := k8sApiCaller.GetFbc(deploy.GetNamespace(), configName); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	} else {
 		logRootPath = res.Status.LogRootPath
@@ -107,7 +107,7 @@ func InjectionForDeploy(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if patchData, err := json.Marshal(patch); err != nil {
 		return ToAdmissionResponse(err) //msg: error
 	} else {
-		klog.Infof("JsonPatch=%s", string(patchData))
+		klog.V(3).Infof("JsonPatch=%s", string(patchData))
 		reviewResponse.Patch = patchData
 	}
 
@@ -131,12 +131,12 @@ func InjectionForRs(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		configName = val
 	} else {
 		err := errors.New("Log collector configuration is empty.")
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	}
 	var logRootPath string
 	if res, err := k8sApiCaller.GetFbc(rs.GetNamespace(), configName); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	} else {
 		logRootPath = res.Status.LogRootPath
@@ -158,7 +158,7 @@ func InjectionForRs(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if patchData, err := json.Marshal(patch); err != nil {
 		return ToAdmissionResponse(err) //msg: error
 	} else {
-		klog.Infof("JsonPatch=%s", string(patchData))
+		klog.V(3).Infof("JsonPatch=%s", string(patchData))
 		reviewResponse.Patch = patchData
 	}
 
@@ -182,12 +182,12 @@ func InjectionForSts(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		configName = val
 	} else {
 		err := errors.New("Log collector configuration is empty.")
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	}
 	var logRootPath string
 	if res, err := k8sApiCaller.GetFbc(sts.GetNamespace(), configName); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	} else {
 		logRootPath = res.Status.LogRootPath
@@ -209,7 +209,7 @@ func InjectionForSts(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if patchData, err := json.Marshal(patch); err != nil {
 		return ToAdmissionResponse(err) //msg: error
 	} else {
-		klog.Infof("JsonPatch=%s", string(patchData))
+		klog.V(3).Infof("JsonPatch=%s", string(patchData))
 		reviewResponse.Patch = patchData
 	}
 
@@ -233,12 +233,12 @@ func InjectionForDs(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		configName = val
 	} else {
 		err := errors.New("Log collector configuration is empty.")
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	}
 	var logRootPath string
 	if res, err := k8sApiCaller.GetFbc(ds.GetNamespace(), configName); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	} else {
 		logRootPath = res.Status.LogRootPath
@@ -260,7 +260,7 @@ func InjectionForDs(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if patchData, err := json.Marshal(patch); err != nil {
 		return ToAdmissionResponse(err) //msg: error
 	} else {
-		klog.Infof("JsonPatch=%s", string(patchData))
+		klog.V(3).Infof("JsonPatch=%s", string(patchData))
 		reviewResponse.Patch = patchData
 	}
 
@@ -284,12 +284,12 @@ func InjectionForCj(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		configName = val
 	} else {
 		err := errors.New("Log collector configuration is empty.")
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	}
 	var logRootPath string
 	if res, err := k8sApiCaller.GetFbc(cj.GetNamespace(), configName); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	} else {
 		logRootPath = res.Status.LogRootPath
@@ -311,7 +311,7 @@ func InjectionForCj(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if patchData, err := json.Marshal(patch); err != nil {
 		return ToAdmissionResponse(err) //msg: error
 	} else {
-		klog.Infof("JsonPatch=%s", string(patchData))
+		klog.V(3).Infof("JsonPatch=%s", string(patchData))
 		reviewResponse.Patch = patchData
 	}
 
@@ -335,12 +335,12 @@ func InjectionForJob(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		configName = val
 	} else {
 		err := errors.New("Log collector configuration is empty.")
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	}
 	var logRootPath string
 	if res, err := k8sApiCaller.GetFbc(job.GetNamespace(), configName); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return ToAdmissionResponse(err)
 	} else {
 		logRootPath = res.Status.LogRootPath
@@ -362,7 +362,7 @@ func InjectionForJob(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if patchData, err := json.Marshal(patch); err != nil {
 		return ToAdmissionResponse(err) //msg: error
 	} else {
-		klog.Infof("JsonPatch=%s", string(patchData))
+		klog.V(3).Infof("JsonPatch=%s", string(patchData))
 		reviewResponse.Patch = patchData
 	}
 
@@ -380,7 +380,7 @@ func InjectionForTest(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		return ToAdmissionResponse(err)
 	}
 
-	klog.Info(string(ar.Request.Object.Raw))
+	klog.V(3).Info(string(ar.Request.Object.Raw))
 
 	reviewResponse.Allowed = true
 

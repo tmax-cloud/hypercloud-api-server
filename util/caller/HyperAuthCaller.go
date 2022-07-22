@@ -22,7 +22,7 @@ func setHyperAuthURL(serviceName string) string {
 }
 
 func LoginAsAdmin() string {
-	klog.Infoln(" [HyperAuth] Login as Admin Service")
+	klog.V(3).Infoln(" [HyperAuth] Login as Admin Service")
 	// Make Body for Content-Type (application/x-www-form-urlencoded)
 	data := url.Values{}
 	data.Set("grant_type", "password")
@@ -33,7 +33,7 @@ func LoginAsAdmin() string {
 	// Make Request Object
 	req, err := http.NewRequest("POST", setHyperAuthURL(util.HYPERAUTH_SERVICE_NAME_LOGIN_AS_ADMIN), strings.NewReader(data.Encode()))
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		panic(err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -42,7 +42,7 @@ func LoginAsAdmin() string {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		panic(err)
 	}
 	defer resp.Body.Close()
@@ -50,11 +50,11 @@ func LoginAsAdmin() string {
 	// Result
 	bytes, _ := ioutil.ReadAll(resp.Body)
 	str := string(bytes) // byte to string
-	klog.Infoln("Result string  : ", str)
+	klog.V(3).Infoln("Result string  : ", str)
 
 	var resultJson map[string]interface{}
 	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 	}
 	accessToken := resultJson["access_token"].(string)
 	return accessToken
@@ -62,12 +62,12 @@ func LoginAsAdmin() string {
 
 // defunct
 // func getUserDetailWithoutToken(userId string) map[string]interface{} {
-// 	klog.Infoln(" [HyperAuth] HyperAuth Get User Detail Without Token Service")
+// 	klog.V(3).Infoln(" [HyperAuth] HyperAuth Get User Detail Without Token Service")
 
 // 	// Make Request Object
 // 	req, err := http.NewRequest("GET", setHyperAuthURL(util.HYPERAUTH_SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN)+userId, nil)
 // 	if err != nil {
-// 		klog.Error(err)
+// 		klog.V(1).Info(err)
 // 		panic(err)
 // 	}
 
@@ -75,7 +75,7 @@ func LoginAsAdmin() string {
 // 	client := &http.Client{}
 // 	resp, err := client.Do(req)
 // 	if err != nil {
-// 		klog.Error(err)
+// 		klog.V(1).Info(err)
 // 		panic(err)
 // 	}
 // 	defer resp.Body.Close()
@@ -83,11 +83,11 @@ func LoginAsAdmin() string {
 // 	// Result
 // 	bytes, _ := ioutil.ReadAll(resp.Body)
 // 	str := string(bytes) // byte to string
-// 	klog.Infoln("Result string  : ", str)
+// 	klog.V(3).Infoln("Result string  : ", str)
 
 // 	var resultJson map[string]interface{}
 // 	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
-// 		klog.Error(err)
+// 		klog.V(1).Info(err)
 // 		panic(err)
 // 	}
 // 	return resultJson

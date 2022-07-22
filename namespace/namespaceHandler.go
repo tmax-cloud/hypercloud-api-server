@@ -14,7 +14,7 @@ import (
 )
 
 func Get(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** GET/namespace")
+	klog.V(3).Infoln("**** GET/namespace")
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
 	limit := queryParams.Get(util.QUERY_PARAMETER_LIMIT)
@@ -23,7 +23,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	// userGroups := queryParams.Get(util.QUERY_PARAMETER_USER_GROUP) //ex) hypercloud4,tmaxcloud,.....
 	var status int
 
-	klog.Infoln("userId : ", userId)
+	klog.V(3).Infoln("userId : ", userId)
 	if userId == "" {
 		out := "userId is missing"
 		status = http.StatusBadRequest
@@ -31,8 +31,8 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	klog.Infoln("limit : ", limit)
-	klog.Infoln("labelSelector : ", labelSelector)
+	klog.V(3).Infoln("limit : ", limit)
+	klog.V(3).Infoln("labelSelector : ", labelSelector)
 
 	// var userGroups []string
 
@@ -42,7 +42,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 
 	nsList, err := k8sApiCaller.GetAccessibleNS(userId, labelSelector, userGroups)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -66,18 +66,18 @@ func Get(res http.ResponseWriter, req *http.Request) {
 }
 
 func Put(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** PUT/namespace")
-	klog.Infoln("Trial Namespace Period Extend Service Start")
+	klog.V(3).Infoln("**** PUT/namespace")
+	klog.V(3).Infoln("Trial Namespace Period Extend Service Start")
 
 	queryParams := req.URL.Query()
 	nsName := queryParams.Get(util.QUERY_PARAMETER_NAMESPACE)
 	addPeriod := queryParams.Get(util.QUERY_PARAMETER_PERIOD)
-	klog.Infoln("Namespace Name : " + nsName)
-	klog.Infoln("Add Period : " + addPeriod)
+	klog.V(3).Infoln("Namespace Name : " + nsName)
+	klog.V(3).Infoln("Add Period : " + addPeriod)
 
 	namespace, err := k8sApiCaller.GetNamespace(nsName)
 	if err != nil && !errors.IsNotFound(err) {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -95,7 +95,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		newPeriod := strconv.Itoa(oldPeriodInt + addPeriodInt)
 		namespace.Labels["period"] = newPeriod
 		if _, err := k8sApiCaller.UpdateNamespace(namespace); err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 			return
 		}
@@ -111,21 +111,21 @@ func Put(res http.ResponseWriter, req *http.Request) {
 }
 
 func Post(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** Post/namespace")
+	klog.V(3).Infoln("**** Post/namespace")
 
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		klog.Error(err, " Failed to read request body")
+		klog.V(1).Info(err, " Failed to read request body")
 	}
 	hub.broadcast <- body
 
-	klog.Infoln("broadcast namespace list to all websocket client")
+	klog.V(3).Infoln("broadcast namespace list to all websocket client")
 	out := "broadcast namespace list to all websocket client"
 	util.SetResponse(res, out, nil, http.StatusOK)
 }
 
 func Options(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** OPTIONS/namespace")
+	klog.V(3).Infoln("**** OPTIONS/namespace")
 	out := "**** OPTIONS/namespace"
 	util.SetResponse(res, out, nil, http.StatusOK)
 }
@@ -133,7 +133,7 @@ func Options(res http.ResponseWriter, req *http.Request) {
 func Websocket(w http.ResponseWriter, r *http.Request) {
 	conn, err := util.UpgradeWebsocket(w, r)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return
 	}
 
@@ -172,7 +172,7 @@ func GetNSList(userId string, labelSelector string, userGroups []string, limit s
 
 	nsListBytes, err := json.Marshal(nsList)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 

@@ -70,7 +70,7 @@ func main() {
 
 	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		klog.Errorf("Failed to load key pair: %s", err)
+		klog.V(1).Infof("Failed to load key pair: %s", err)
 	}
 
 	// Req multiplexer
@@ -78,7 +78,7 @@ func main() {
 	register_multiplexer()
 
 	// HTTP Server Start
-	klog.Info("Starting Hypercloud5-API server...")
+	klog.V(3).Info("Starting Hypercloud5-API server...")
 	klog.Flush()
 
 	whsvr := &http.Server{
@@ -88,7 +88,7 @@ func main() {
 	}
 
 	if err := whsvr.ListenAndServeTLS("", ""); err != nil {
-		klog.Errorf("Failed to listen and serve Hypercloud5-API server: %s", err)
+		klog.V(1).Infof("Failed to listen and serve Hypercloud5-API server: %s", err)
 	}
 }
 
@@ -172,11 +172,34 @@ func init_variable() {
 	flag.StringVar(&util.HtmlHomePath, "htmlPath", "/run/configs/html/", "Invite html path")
 	// flag.StringVar(&dataFactory.DBPassWordPath, "dbPassword", "/run/secrets/timescaledb/password", "Timescaledb Server Password")
 	// flag.StringVar(&util.TokenExpiredDate, "tokenExpiredDate", "24hours", "Token Expired Date")
+	flag.StringVar(&util.LogLevel, "log-level", "INFO", "Log Level; TRACE, DEBUG, INFO, WARN, ERROR, FATAL")
 
 	// For Log file
-	klog.InitFlags(nil)
 	flag.Set("logtostderr", "false")
 	flag.Set("alsologtostderr", "false")
+	flag.Parse()
+
+	// For Log Level
+	klog.InitFlags(nil)
+	klog.Infoln("LOG_LEVEL = " + util.LogLevel)
+
+	if util.LogLevel == "TRACE" || util.LogLevel == "trace" {
+		util.LogLevel = "5"
+	} else if util.LogLevel == "DEBUG" || util.LogLevel == "debug" {
+		util.LogLevel = "4"
+	} else if util.LogLevel == "INFO" || util.LogLevel == "info" {
+		util.LogLevel = "3"
+	} else if util.LogLevel == "WARN" || util.LogLevel == "warn" {
+		util.LogLevel = "2"
+	} else if util.LogLevel == "ERROR" || util.LogLevel == "error" {
+		util.LogLevel = "1"
+	} else if util.LogLevel == "FATAL" || util.LogLevel == "fatal" {
+		util.LogLevel = "0"
+	} else {
+		klog.Infoln("Unknown log-level paramater. Set to default level INFO")
+		util.LogLevel = "3"
+	}
+	flag.Set("v", util.LogLevel)
 	flag.Parse()
 
 	// Get Hypercloud Operating Mode!!!
@@ -186,8 +209,8 @@ func init_variable() {
 	kafka_enabled = os.Getenv("KAFKA_ENABLED")
 	kafkaConsumer.KafkaGroupId = os.Getenv("KAFKA_GROUP_ID")
 	if len(kafkaConsumer.KafkaGroupId) == 0 || kafkaConsumer.KafkaGroupId == "{KAFKA_GROUP_ID}" {
-		klog.Infoln("KAFKA_GROUP_ID was not given. Please set KAFKA_GROUP_ID.")
-		klog.Infoln("Temporary give HOSTNAME for KAFKA_GROUP_ID :", os.Getenv("HOSTNAME"))
+		klog.V(3).Infoln("KAFKA_GROUP_ID was not given. Please set KAFKA_GROUP_ID.")
+		klog.V(3).Infoln("Temporary give HOSTNAME for KAFKA_GROUP_ID :", os.Getenv("HOSTNAME"))
 		kafkaConsumer.KafkaGroupId = os.Getenv("HOSTNAME")
 	}
 
@@ -209,7 +232,7 @@ func init_logging() {
 		os.FileMode(0644),
 	)
 	if err != nil {
-		klog.Error(err, "Error Open", "./logs/api-server")
+		klog.V(1).Info(err, "Error Open", "./logs/api-server")
 		return
 	}
 
@@ -221,15 +244,15 @@ func init_logging() {
 	cronJob_Logging.AddFunc("1 0 0 * * ?", func() {
 		input, err := ioutil.ReadFile("./logs/api-server.log")
 		if err != nil {
-			klog.Error(err)
+			klog.V(1).Info(err)
 			return
 		}
 		err = ioutil.WriteFile("./logs/api-server"+time.Now().Format("2006-01-02")+".log", input, 0644)
 		if err != nil {
-			klog.Error(err, "Error creating", "./logs/api-server")
+			klog.V(1).Info(err, "Error creating", "./logs/api-server")
 			return
 		}
-		klog.Info("Log BackUp Success")
+		klog.V(3).Info("Log BackUp Success")
 		os.Truncate("./logs/api-server.log", 0)
 		// file.Seek(0, os.SEEK_SET)
 		file.Seek(0, io.SeekStart)
@@ -270,7 +293,7 @@ func serveNamespace(res http.ResponseWriter, req *http.Request) {
 	case http.MethodOptions:
 		namespace.Options(res, req)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
@@ -283,7 +306,7 @@ func serveNamespaceClaim(res http.ResponseWriter, req *http.Request) {
 	case http.MethodOptions:
 		namespaceClaim.Options(res, req)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
@@ -296,7 +319,7 @@ func serveUser(res http.ResponseWriter, req *http.Request) {
 	case http.MethodOptions:
 		user.Options(res, req)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
@@ -307,7 +330,7 @@ func serveMetering(res http.ResponseWriter, req *http.Request) {
 	case http.MethodOptions:
 		metering.Options(res, req)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
@@ -316,24 +339,24 @@ func serveVersion(res http.ResponseWriter, req *http.Request) {
 	case http.MethodGet:
 		version.Get(res, req)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveClusterClaim(res http.ResponseWriter, req *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {
 	case http.MethodGet:
 		claim.List(res, req)
 	case http.MethodPut:
 		claim.Put(res, req)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveCluster(res http.ResponseWriter, req *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	vars := gmux.Vars(req)
 	switch req.Method {
 	case http.MethodGet:
@@ -342,19 +365,19 @@ func serveCluster(res http.ResponseWriter, req *http.Request) {
 		} else if vars["access"] == "" {
 			cluster.ListPage(res, req)
 		} else {
-			klog.Errorf("Http request error: some url params not found")
+			klog.V(1).Infof("Http request error: some url params not found")
 		}
 	case http.MethodPost:
 		cluster.InsertCLM(res, req)
 	case http.MethodDelete:
 		cluster.DeleteCLM(res, req)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveClusterMember(res http.ResponseWriter, req *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	vars := gmux.Vars(req)
 	switch req.Method {
 	case http.MethodPost:
@@ -373,12 +396,12 @@ func serveClusterMember(res http.ResponseWriter, req *http.Request) {
 	case http.MethodPut:
 		cluster.UpdateMemberRole(res, req)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveClusterInvitation(res http.ResponseWriter, req *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	vars := gmux.Vars(req)
 	switch req.Method {
 	case http.MethodGet:
@@ -389,15 +412,15 @@ func serveClusterInvitation(res http.ResponseWriter, req *http.Request) {
 		} else if vars["attribute"] == "group" {
 			cluster.InviteGroup(res, req)
 		} else {
-			klog.Errorf("Http request error: some url params not found")
+			klog.V(1).Infof("Http request error: some url params not found")
 		}
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveClusterInvitationAdmit(res http.ResponseWriter, req *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	vars := gmux.Vars(req)
 	switch req.Method {
 	case http.MethodGet:
@@ -406,62 +429,62 @@ func serveClusterInvitationAdmit(res http.ResponseWriter, req *http.Request) {
 		} else if vars["admit"] == "reject" {
 			cluster.DeclineInvitation(res, req)
 		} else {
-			klog.Errorf("Http request error: some url params not found")
+			klog.V(1).Infof("Http request error: some url params not found")
 		}
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveMetadata(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	serve(w, r, admission.AddResourceMeta)
 }
 func serveSidecarInjectionForPod(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	serve(w, r, admission.InjectionForPod)
 }
 func serveSidecarInjectionForDeploy(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	serve(w, r, admission.InjectionForDeploy)
 }
 func serveSidecarInjectionForRs(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	serve(w, r, admission.InjectionForRs)
 }
 func serveSidecarInjectionForSts(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	serve(w, r, admission.InjectionForSts)
 }
 func serveSidecarInjectionForDs(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	serve(w, r, admission.InjectionForDs)
 }
 func serveSidecarInjectionForCj(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	serve(w, r, admission.InjectionForCj)
 }
 func serveSidecarInjectionForJob(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	serve(w, r, admission.InjectionForJob)
 }
 func serveSidecarInjectionForTest(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	serve(w, r, admission.InjectionForTest)
 }
 func serveTest(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	var body []byte
 	if r.Body != nil {
 		if data, err := ioutil.ReadAll(r.Body); err == nil {
 			body = data
 		}
 	}
-	klog.Info("Request body: \n", string(body))
+	klog.V(3).Info("Request body: \n", string(body))
 }
 
 func serveAudit(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	switch r.Method {
 	case http.MethodGet:
 		audit.GetAudit(w, r)
@@ -470,57 +493,57 @@ func serveAudit(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPut:
 	case http.MethodDelete:
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveAuditVerb(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	switch r.Method {
 	case http.MethodGet:
 		audit.ListAuditVerb(w, r)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveAuditResources(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	switch r.Method {
 	case http.MethodGet:
 		audit.ListAuditResource(w, r)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveAuditMemberSuggestions(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	switch r.Method {
 	case http.MethodGet:
 		audit.MemberSuggestions(w, r)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveAuditBatch(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	audit.AddAuditBatch(w, r)
 }
 
 // func serveAuditWss(w http.ResponseWriter, r *http.Request) {
-// 	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+// 	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 // 	audit.ServeWss(w, r)
 // }
 
 func serveAuditJson(w http.ResponseWriter, r *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	switch r.Method {
 	case http.MethodGet:
 		audit.GetAuditBodyByJson(w, r)
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
@@ -531,11 +554,11 @@ func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 			body = data
 		}
 	}
-	// klog.Infof("Request body: %s\n", body)
+	// klog.V(3).Infof("Request body: %s\n", body)
 
 	contentType := r.Header.Get("Content-Type")
 	if contentType != "application/json" {
-		klog.Errorf("contentType=%s, expect application/json", contentType)
+		klog.V(1).Infof("contentType=%s, expect application/json", contentType)
 		return
 	}
 
@@ -543,7 +566,7 @@ func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 	responseAdmissionReview := v1beta1.AdmissionReview{}
 
 	if err := json.Unmarshal(body, &requestedAdmissionReview); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		responseAdmissionReview.Response = admission.ToAdmissionResponse(err)
 	} else {
 		responseAdmissionReview.Response = admit(requestedAdmissionReview)
@@ -553,14 +576,14 @@ func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 
 	respBytes, err := json.Marshal(responseAdmissionReview)
 
-	// klog.Infof("Response body: %s\n", respBytes)
+	// klog.V(3).Infof("Response body: %s\n", respBytes)
 
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		responseAdmissionReview.Response = admission.ToAdmissionResponse(err)
 	}
 	if _, err := w.Write(respBytes); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		responseAdmissionReview.Response = admission.ToAdmissionResponse(err)
 	}
 }
@@ -572,12 +595,12 @@ func serveCloudCredential(res http.ResponseWriter, req *http.Request) {
 	case http.MethodPut:
 	case http.MethodOptions:
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveGrafana(res http.ResponseWriter, req *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	vars := gmux.Vars(req)
 	switch req.Method {
 	case http.MethodGet:
@@ -592,16 +615,16 @@ func serveGrafana(res http.ResponseWriter, req *http.Request) {
 		} else if postPath == "annotations" {
 			grafana.Annotations(res, req)
 		} else {
-			klog.Errorf("Http request error: some url params not found")
+			klog.V(1).Infof("Http request error: some url params not found")
 		}
 	case http.MethodOptions:
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
 func serveWebsocket(res http.ResponseWriter, req *http.Request) {
-	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	klog.V(3).Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	vars := gmux.Vars(req)
 	switch req.Method {
 	case http.MethodGet:
@@ -611,10 +634,10 @@ func serveWebsocket(res http.ResponseWriter, req *http.Request) {
 		} else if api == "audit" {
 			audit.Websocket(res, req)
 		} else {
-			klog.Errorf("Http request error: unsupported websocket/{api} path parameter")
+			klog.V(1).Infof("Http request error: unsupported websocket/{api} path parameter")
 		}
 	default:
-		klog.Errorf("method not acceptable")
+		klog.V(1).Infof("method not acceptable")
 	}
 }
 
@@ -643,15 +666,15 @@ func runLeaderElection(lock *resourcelock.LeaseLock, ctx context.Context, id str
 				cronJob_Metering.Start()
 			},
 			OnStoppedLeading: func() {
-				klog.Info("no longer the leader, staying inactive and stop metering service")
+				klog.V(3).Info("no longer the leader, staying inactive and stop metering service")
 				cronJob_Metering.Stop()
 			},
 			OnNewLeader: func(current_id string) {
 				if current_id == id {
-					klog.Info("still the leader!")
+					klog.V(3).Info("still the leader!")
 					return
 				}
-				klog.Info("new leader is ", current_id)
+				klog.V(3).Info("new leader is ", current_id)
 			},
 		},
 	})

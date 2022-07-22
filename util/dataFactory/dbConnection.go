@@ -27,7 +27,7 @@ func CreateConnection() {
 	var err error
 	// content, err := ioutil.ReadFile(DBPassWordPath)
 	// if err != nil {
-	// 	klog.Errorln(err)
+	// 	klog.V(1).Infoln(err)
 	// 	return
 	// }
 	// dbRootPW := string(content)
@@ -39,7 +39,7 @@ func CreateConnection() {
 
 	Dbpool, err = pgxpool.Connect(ctx, connStr)
 	if err != nil {
-		klog.Errorf("Unable to connect to database: %v\n", err)
+		klog.V(1).Infof("Unable to connect to database: %v\n", err)
 		panic(err)
 	}
 }

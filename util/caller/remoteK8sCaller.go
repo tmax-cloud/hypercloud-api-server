@@ -61,11 +61,11 @@ func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject 
 	}
 
 	if _, err := remoteClientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding, metav1.CreateOptions{}); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 	msg := "Create clusterrole [" + remoteRole + "] to remote cluster [" + clusterManager.Name + "] for subject [" + subject + "] "
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	return nil
 }
 
@@ -85,21 +85,21 @@ func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subjec
 
 	if _, err := remoteClientset.RbacV1().ClusterRoleBindings().Get(context.TODO(), clusterRoleBindingName, metav1.GetOptions{}); err != nil {
 		if errors.IsNotFound(err) {
-			klog.Infoln("Rolebinding [" + clusterRoleBindingName + "] is already deleted")
+			klog.V(3).Infoln("Rolebinding [" + clusterRoleBindingName + "] is already deleted")
 			return nil
 		} else {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return err
 		}
 	} else {
 		if err := remoteClientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), clusterRoleBindingName, metav1.DeleteOptions{}); err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return err
 		}
 	}
 
 	msg := "Remove rolebinding [" + clusterRoleBindingName + "] from remote cluster [" + clusterManager.Name + "] for subject [" + subject + "]"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	return nil
 }
 
@@ -108,26 +108,26 @@ func getRemoteK8sClient(clusterManager *clusterv1alpha1.ClusterManager) (*kubern
 		if value, ok := remoteKubeconfig.Data["value"]; ok {
 			remoteClientConfig, err := clientcmd.NewClientConfigFromBytes(value)
 			if err != nil {
-				klog.Errorln(err)
+				klog.V(1).Infoln(err)
 				return nil, err
 			}
 			remoteRestConfig, err = remoteClientConfig.ClientConfig()
 			if err != nil {
-				klog.Errorln(err)
+				klog.V(1).Infoln(err)
 				return nil, err
 			}
 		}
 		remoteClientset, err = kubernetes.NewForConfig(remoteRestConfig)
 		if err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return nil, err
 		}
 		return remoteClientset, nil
 	} else if errors.IsNotFound(err) {
-		klog.Infoln("Cluster [" + clusterManager.Name + "] is not ready yet")
+		klog.V(3).Infoln("Cluster [" + clusterManager.Name + "] is not ready yet")
 		return nil, err
 	} else {
-		klog.Errorln("Error: Get clusterrole [" + clusterManager.Name + "] is failed")
+		klog.V(1).Infoln("Error: Get clusterrole [" + clusterManager.Name + "] is failed")
 		return nil, err
 	}
 }
