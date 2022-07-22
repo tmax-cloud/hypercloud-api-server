@@ -1,6 +1,23 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.29.2 start -------------------->
+
+## Hypercloud-api-server 5.0.29.2 (2022. 07. 22. (금) 18:39:25 KST)
+
+### Added
+  - [feat] 로그 레벨 기능 추가 by Seungwon Lee
+
+### Changed
+  - [mod] 로그레벨을 환경변수가 아닌 log-level 파라미터로 받도록 수정 by Seungwon Lee
+  - [mod] start.sh이 아닌 main.go에서 LOG_LEVEL 파싱하도록 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.29.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.29.1 (2022. 06. 30. (목) 17:48:24 KST)
