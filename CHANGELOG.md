@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.30.0 start -------------------->
+
+## Hypercloud-api-server 5.0.30.0 (2022. 08. 02. (화) 17:08:22 KST)
+
+### Added
+
+### Changed
+  - [mod] cluster manager 생성 로직 삭제 by seung
+  - [mod] 버전 정규식 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.29.2 start -------------------->
 
 ## Hypercloud-api-server 5.0.29.2 (2022. 07. 22. (금) 18:39:25 KST)
