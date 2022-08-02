@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -1185,80 +1184,6 @@ func DeleteNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 	}
 
 	return nil
-}
-
-func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1alpha1.ClusterManager, error) {
-	clm := &clusterv1alpha1.ClusterManager{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      clusterClaim.Spec.ClusterName,
-			Namespace: clusterClaim.Namespace,
-			Labels: map[string]string{
-				clusterv1alpha1.LabelKeyClmClusterType: clusterv1alpha1.ClusterTypeCreated,
-				clusterv1alpha1.LabelKeyClcName:        clusterClaim.Name,
-			},
-			Annotations: map[string]string{
-				"owner":                                clusterClaim.Annotations["creator"],
-				"creator":                              clusterClaim.Annotations["creator"],
-				clusterv1alpha1.AnnotationKeyClmDomain: os.Getenv("HC_DOMAIN"),
-			},
-		},
-		// todo-shkim
-		Spec: clusterv1alpha1.ClusterManagerSpec{
-			Provider: clusterClaim.Spec.Provider,
-			Version:  clusterClaim.Spec.Version,
-			//Region:     clusterClaim.Spec.Region,
-			//SshKey:     clusterClaim.Spec.SshKey,
-			MasterNum: clusterClaim.Spec.MasterNum,
-			//MasterType: clusterClaim.Spec.MasterType,
-			WorkerNum: clusterClaim.Spec.WorkerNum,
-			//WorkerType: clusterClaim.Spec.WorkerType,
-		},
-		AwsSpec: clusterv1alpha1.ProviderAwsSpec{
-			SshKey:     clusterClaim.Spec.ProviderAwsSpec.SshKey,
-			Region:     clusterClaim.Spec.ProviderAwsSpec.Region,
-			MasterType: clusterClaim.Spec.ProviderAwsSpec.MasterType,
-			WorkerType: clusterClaim.Spec.ProviderAwsSpec.WorkerType,
-		},
-		VsphereSpec: clusterv1alpha1.ProviderVsphereSpec{
-			PodCidr:             clusterClaim.Spec.ProviderVsphereSpec.PodCidr,
-			VcenterIp:           clusterClaim.Spec.ProviderVsphereSpec.VcenterIp,
-			VcenterId:           clusterClaim.Spec.ProviderVsphereSpec.VcenterId,
-			VcenterPassword:     clusterClaim.Spec.ProviderVsphereSpec.VcenterPassword,
-			VcenterThumbprint:   clusterClaim.Spec.ProviderVsphereSpec.VcenterThumbprint,
-			VcenterNetwork:      clusterClaim.Spec.ProviderVsphereSpec.VcenterNetwork,
-			VcenterDataCenter:   clusterClaim.Spec.ProviderVsphereSpec.VcenterDataCenter,
-			VcenterDataStore:    clusterClaim.Spec.ProviderVsphereSpec.VcenterDataStore,
-			VcenterFolder:       clusterClaim.Spec.ProviderVsphereSpec.VcenterFolder,
-			VcenterResourcePool: clusterClaim.Spec.ProviderVsphereSpec.VcenterResourcePool,
-			VcenterKcpIp:        clusterClaim.Spec.ProviderVsphereSpec.VcenterKcpIp,
-			VcenterCpuNum:       clusterClaim.Spec.ProviderVsphereSpec.VcenterCpuNum,
-			VcenterMemSize:      clusterClaim.Spec.ProviderVsphereSpec.VcenterMemSize,
-			VcenterDiskSize:     clusterClaim.Spec.ProviderVsphereSpec.VcenterDiskSize,
-			VcenterTemplate:     clusterClaim.Spec.ProviderVsphereSpec.VcenterTemplate,
-		},
-	}
-	clm, err := customClientset.ClusterV1alpha1().ClusterManagers(clusterClaim.Namespace).Create(context.TODO(), clm, metav1.CreateOptions{})
-	if err != nil {
-		klog.V(1).Infoln(err)
-		return nil, err
-	}
-
-	ccJson, err := json.Marshal(clusterClaim)
-	if err != nil {
-		klog.V(3).Info("***** json marshal error")
-		klog.V(1).Infoln(err)
-	}
-	klog.V(3).Info("*****" + string(ccJson))
-
-	clmJson, err := json.Marshal(clm)
-	if err != nil {
-		klog.V(3).Info("##### json marshal error")
-		klog.V(1).Infoln(err)
-	}
-	klog.V(3).Info("#####" + string(clmJson))
-
-	klog.V(3).Info("ClusterManager is created")
-	return clm, nil
 }
 
 func UpdateAuditResourceList() {
