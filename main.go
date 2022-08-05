@@ -258,6 +258,9 @@ func init_logging() {
 		file.Seek(0, io.SeekStart)
 	})
 	cronJob_Logging.Start()
+
+	// k8s event logging
+	caller.WatchK8sEvent()
 }
 
 func init_db_connection() {

@@ -31,16 +31,6 @@ const (
 	//AUDIT_BODY_INSERT_QUERY = "INSERT INTO audit_body (ID, NAMESPACE, BODY ) VALUES ($1, $2, $3)"
 )
 
-func NewNullString(s string) sql.NullString {
-	if s == "null" {
-		return sql.NullString{}
-	}
-	return sql.NullString{
-		String: s,
-		Valid:  true,
-	}
-}
-
 func Insert(items []audit.Event) {
 	defer func() {
 		if v := recover(); v != nil {
@@ -77,9 +67,9 @@ func Insert(items []audit.Event) {
 			event.AuditID,
 			event.User.Username,
 			event.UserAgent,
-			NewNullString(event.ObjectRef.Namespace),
-			NewNullString(event.ObjectRef.APIGroup),
-			NewNullString(event.ObjectRef.APIVersion),
+			db.NewNullString(event.ObjectRef.Namespace),
+			db.NewNullString(event.ObjectRef.APIGroup),
+			db.NewNullString(event.ObjectRef.APIVersion),
 			event.ObjectRef.Resource,
 			event.ObjectRef.Name,
 			event.Stage,
