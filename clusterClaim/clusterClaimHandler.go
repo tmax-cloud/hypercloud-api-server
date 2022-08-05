@@ -98,12 +98,6 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Attribute = "user"
 	clusterMember.Status = "owner"
 
-	if _, err := caller.CreateClusterManager(updatedClusterClaim); err != nil {
-		klog.V(1).Infoln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		return
-	}
-
 	if err := clusterDataFactory.Insert(clusterMember); err != nil {
 		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
