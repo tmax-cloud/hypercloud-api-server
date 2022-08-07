@@ -33,40 +33,27 @@ func Insert(e *eventv1.Event) {
 	// If not, INSERT
 	// else, UPDATE
 	var err error
-	err = SELECT_BEFORE_INSERT(string(e.Regarding.UID), e.Reason, e.DeprecatedFirstTimestamp.Time)
+	err = SelectBeforeInsert(string(e.Regarding.UID), e.Reason, e.DeprecatedFirstTimestamp.Time)
 
 	if err == pgx.ErrNoRows {
-		_, err = db.Dbpool.Exec(context.TODO(), EVENT_INSERT_QUERY,
-			db.NewNullString(e.Regarding.Namespace),
-			db.NewNullString(e.Regarding.Kind),
-			db.NewNullString(e.Regarding.Name),
-			string(e.Regarding.UID), // some event uses node name for uid
-			db.NewNullString(e.Regarding.APIVersion),
-			db.NewNullString(e.Regarding.FieldPath),
-			db.NewNullString(e.Action),
-			db.NewNullString(e.Reason),
-			db.NewNullString(e.Note),
-			db.NewNullString(e.ReportingController),
-			db.NewNullString(e.ReportingInstance),
-			db.NewNullString(e.DeprecatedSource.Host),
-			e.DeprecatedCount,
-			db.NewNullString(e.Type),
-			e.DeprecatedFirstTimestamp.Time,
-			e.DeprecatedLastTimestamp.Time)
+		if err := InsertNewEvent(e); err != nil {
+			klog.V(1).Info("Failed to Insert new Event for [", e.Regarding.Kind, " ", e.Regarding.Name, "]")
+			return
+		}
 	} else if err != nil {
 		klog.V(1).Info("Error occurs during check whether the event is already existed")
 		return
 	} else {
 		if err := UpdateEventRow(e.DeprecatedLastTimestamp.Time, e.DeprecatedCount, string(e.Regarding.UID), e.DeprecatedFirstTimestamp.Time, e.Reason); err != nil {
-			klog.V(1).Info("Failed to Update Event for [", e.Regarding.Kind, " ", e.Regarding.Name, "].")
+			klog.V(1).Info("Failed to Update Event for [", e.Regarding.Kind, " ", e.Regarding.Name, "]")
 			return
 		}
 	}
 
-	klog.V(5).Info("Event for [", e.Regarding.Kind, " ", e.Regarding.Name, "] is successfuly inserted.")
+	klog.V(5).Info("Event for [", e.Regarding.Kind, " ", e.Regarding.Name, "] is successfuly inserted")
 }
 
-func SELECT_BEFORE_INSERT(uid string, reason string, firstTime time.Time) error {
+func SelectBeforeInsert(uid string, reason string, firstTime time.Time) error {
 	defer func() {
 		if v := recover(); v != nil {
 			klog.V(1).Infoln("capture a panic:", v)
@@ -82,6 +69,28 @@ func SELECT_BEFORE_INSERT(uid string, reason string, firstTime time.Time) error 
 	} else if err != nil {
 		klog.V(1).Info(err)
 	}
+	return err
+}
+
+func InsertNewEvent(e *eventv1.Event) error {
+	_, err := db.Dbpool.Exec(context.TODO(), EVENT_INSERT_QUERY,
+		db.NewNullString(e.Regarding.Namespace),
+		db.NewNullString(e.Regarding.Kind),
+		db.NewNullString(e.Regarding.Name),
+		string(e.Regarding.UID), // some event uses node name for uid
+		db.NewNullString(e.Regarding.APIVersion),
+		db.NewNullString(e.Regarding.FieldPath),
+		db.NewNullString(e.Action),
+		db.NewNullString(e.Reason),
+		db.NewNullString(e.Note),
+		db.NewNullString(e.ReportingController),
+		db.NewNullString(e.ReportingInstance),
+		db.NewNullString(e.DeprecatedSource.Host),
+		e.DeprecatedCount,
+		db.NewNullString(e.Type),
+		e.DeprecatedFirstTimestamp.Time,
+		e.DeprecatedLastTimestamp.Time)
+
 	return err
 }
 
