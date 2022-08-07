@@ -70,6 +70,13 @@ func Insert(e *eventv1.Event) {
 		}
 	}()
 
+	// Error handling when time information comes into e.EventTime not e.DeprecatedFirstTimestamp,
+	// i.e., e.DeprecatedFirstTimestamp comes into 0001-01-01 00:00:00, which is before 1969-01-01 01:01:01
+	if e.DeprecatedFirstTimestamp.Time.Before(time.Date(1969, time.Month(1), 1, 1, 1, 1, 1, time.UTC)) {
+		e.DeprecatedFirstTimestamp.Time = e.EventTime.Time
+		e.DeprecatedLastTimestamp.Time = time.Now()
+	}
+
 	// Fisrt, check if there is already same event in DB.
 	// If not, INSERT
 	// else, UPDATE
