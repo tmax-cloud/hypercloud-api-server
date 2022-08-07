@@ -33,7 +33,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		query += " and kind='" + kind + "'"
 	}
 	if typ != "" {
-		query += " and typ='" + typ + "'"
+		query += " and type='" + typ + "'"
 	}
 	if host != "" {
 		query += " and host='" + host + "'"
