@@ -20,6 +20,7 @@ import (
 	grafana "github.com/tmax-cloud/hypercloud-api-server/cloudCredential/grafana"
 	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
 	claim "github.com/tmax-cloud/hypercloud-api-server/clusterClaim"
+	event "github.com/tmax-cloud/hypercloud-api-server/event"
 	metering "github.com/tmax-cloud/hypercloud-api-server/metering"
 	"github.com/tmax-cloud/hypercloud-api-server/namespace"
 	"github.com/tmax-cloud/hypercloud-api-server/namespaceClaim"
@@ -112,6 +113,7 @@ func register_multiplexer() {
 	mux.HandleFunc("/audit/verb", serveAuditVerb)
 	//mux.HandleFunc("/audit/websocket", serveAuditWss)
 	mux.HandleFunc("/audit/json", serveAuditJson)
+	mux.HandleFunc("/event", serveEvent)
 	mux.HandleFunc("/inject/pod", serveSidecarInjectionForPod)
 	mux.HandleFunc("/inject/deployment", serveSidecarInjectionForDeploy)
 	mux.HandleFunc("/inject/replicaset", serveSidecarInjectionForRs)
@@ -545,6 +547,16 @@ func serveAuditJson(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		audit.GetAuditBodyByJson(w, r)
+	default:
+		klog.V(1).Infof("method not acceptable")
+	}
+}
+
+func serveEvent(w http.ResponseWriter, r *http.Request) {
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	switch r.Method {
+	case http.MethodGet:
+		event.Get(w, r)
 	default:
 		klog.V(1).Infof("method not acceptable")
 	}

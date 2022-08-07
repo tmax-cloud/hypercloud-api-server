@@ -7,6 +7,7 @@ import (
 	pgx "github.com/jackc/pgx/v4"
 	db "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory"
 	eventv1 "k8s.io/api/events/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog"
 )
 
@@ -18,8 +19,48 @@ const (
 	EVENT_UPDATE_QUERY = "UPDATE event SET last_timestamp = $1, count = $2 WHERE uid = $3 and first_timestamp = $4 and reason = $5"
 )
 
-func Get() {
-	// TODO : implement get function for client
+func GetEventDataFromDB(query string) ([]eventv1.Event, error) {
+	klog.V(3).Infoln("=== query ===")
+	klog.V(3).Infoln(query)
+	rows, err := db.Dbpool.Query(context.TODO(), query)
+	if err != nil {
+		klog.V(1).Info(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var eventList []eventv1.Event
+	for rows.Next() {
+		var eventData eventv1.Event
+		var first_timestamp, last_timestamp time.Time
+		err := rows.Scan(
+			&eventData.Regarding.Namespace,
+			&eventData.Regarding.Kind,
+			&eventData.Regarding.Name,
+			&eventData.Regarding.UID,
+			&eventData.Regarding.APIVersion,
+			&eventData.Regarding.FieldPath,
+			&eventData.Action,
+			&eventData.Reason,
+			&eventData.Note,
+			&eventData.ReportingController,
+			&eventData.ReportingInstance,
+			&eventData.DeprecatedSource.Host,
+			&eventData.DeprecatedCount,
+			&eventData.Type,
+			&first_timestamp,
+			&last_timestamp)
+		//&eventData.DeprecatedFirstTimestamp,
+		//&eventData.DeprecatedLastTimestamp)
+		if err != nil {
+			klog.V(1).Info(err)
+			return nil, err
+		}
+		eventData.DeprecatedFirstTimestamp = metav1.Time{Time: first_timestamp}
+		eventData.DeprecatedLastTimestamp = metav1.Time{Time: last_timestamp}
+		eventList = append(eventList, eventData)
+	}
+	return eventList, nil
 }
 
 func Insert(e *eventv1.Event) {
@@ -73,6 +114,12 @@ func SelectBeforeInsert(uid string, reason string, firstTime time.Time) error {
 }
 
 func InsertNewEvent(e *eventv1.Event) error {
+	defer func() {
+		if v := recover(); v != nil {
+			klog.V(1).Infoln("capture a panic:", v)
+		}
+	}()
+
 	_, err := db.Dbpool.Exec(context.TODO(), EVENT_INSERT_QUERY,
 		db.NewNullString(e.Regarding.Namespace),
 		db.NewNullString(e.Regarding.Kind),
