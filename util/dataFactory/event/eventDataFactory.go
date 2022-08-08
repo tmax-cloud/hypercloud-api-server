@@ -16,7 +16,8 @@ const (
 	EVENT_INSERT_QUERY               = "INSERT INTO event (namespace, kind, name, uid, apiversion, fieldpath, action, reason, note, reporting_controller, reporting_instance, host, count, type, first_timestamp, last_timestamp)" +
 		" VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)"
 		//" ON CONFLICT (uid, reason, first_timestamp) DO UPDATE SET last_timestamp = $16, count = $13"
-	EVENT_UPDATE_QUERY = "UPDATE event SET last_timestamp = $1, count = $2 WHERE uid = $3 and first_timestamp = $4 and reason = $5"
+	// EVENT_UPDATE_QUERY = "UPDATE event SET last_timestamp = $1, count = $2 WHERE uid = $3 and first_timestamp = $4 and reason = $5"
+	EVENT_DELETE_QUERY = "DELETE FROM event WHERE uid = $1 and first_timestamp = $2 and reason = $3"
 )
 
 func GetEventDataFromDB(query string) ([]eventv1.Event, error) {
@@ -78,24 +79,25 @@ func Insert(e *eventv1.Event) {
 	}
 
 	// Fisrt, check if there is already same event in DB.
-	// If not, INSERT
-	// else, UPDATE
+	// If there already exists, DELETE and INSERT because a timestamp can be only updated
+	// unless the change makes the row move to outside of the chunk.
+	// If not, just INSERT.
 	var err error
 	err = SelectBeforeInsert(string(e.Regarding.UID), e.Reason, e.DeprecatedFirstTimestamp.Time)
 
-	if err == pgx.ErrNoRows {
-		if err := InsertNewEvent(e); err != nil {
-			klog.V(1).Info("Failed to Insert new Event for [", e.Regarding.Kind, " ", e.Regarding.Name, "]")
-			return
-		}
-	} else if err != nil {
+	if err != nil && err != pgx.ErrNoRows {
 		klog.V(1).Info("Error occurs during check whether the event is already existed")
 		return
-	} else {
-		if err := UpdateEventRow(e.DeprecatedLastTimestamp.Time, e.DeprecatedCount, string(e.Regarding.UID), e.DeprecatedFirstTimestamp.Time, e.Reason); err != nil {
-			klog.V(1).Info("Failed to Update Event for [", e.Regarding.Kind, " ", e.Regarding.Name, "]")
+	} else if err == nil {
+		if err := DeleteEvent(e); err != nil {
+			klog.V(1).Info("Failed to Delete existing Event for [", e.Regarding.Kind, " ", e.Regarding.Name, "]")
 			return
 		}
+	}
+
+	if err := InsertNewEvent(e); err != nil {
+		klog.V(1).Info("Failed to Insert new Event for [", e.Regarding.Kind, " ", e.Regarding.Name, "]")
+		return
 	}
 
 	klog.V(5).Info("Event for [", e.Regarding.Kind, " ", e.Regarding.Name, "] is successfuly inserted")
@@ -148,9 +150,13 @@ func InsertNewEvent(e *eventv1.Event) error {
 	return err
 }
 
-func UpdateEventRow(lastTime time.Time, count int32, uid string, firstTime time.Time, reason string) error {
-	_, err := db.Dbpool.Exec(context.TODO(), EVENT_UPDATE_QUERY,
-		lastTime, count, uid, firstTime, reason)
+func DeleteEvent(e *eventv1.Event) error {
+	// _, err := db.Dbpool.Exec(context.TODO(), EVENT_UPDATE_QUERY,
+	// 	lastTime, count, uid, firstTime, reason)
+	_, err := db.Dbpool.Exec(context.TODO(), EVENT_DELETE_QUERY,
+		e.Regarding.UID,
+		e.DeprecatedFirstTimestamp.Format("2006-01-02 15:04:05"),
+		e.Reason)
 	if err != nil {
 		klog.V(1).Info(err)
 	}
