@@ -7,6 +7,8 @@ import (
 
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	eventDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/event"
+	corev1 "k8s.io/api/core/v1"
+	eventv1 "k8s.io/api/events/v1"
 	"k8s.io/klog"
 )
 
@@ -70,7 +72,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	if eventDataList, err := eventDataFactory.GetEventDataFromDB(query); err != nil {
 		util.SetResponse(res, "", err, http.StatusInternalServerError)
 	} else {
-		util.SetResponse(res, "", eventDataList, http.StatusOK)
+		util.SetResponse(res, "", convertEventv1toCorev1(eventDataList), http.StatusOK)
 	}
 }
 
@@ -91,4 +93,31 @@ func makeTimeRange(startTime string, endTime string, query string) string {
 	query += " where ('" + startTime + "' between first_timestamp and last_timestamp) or ('" + startTime + "' <= first_timestamp and '" + endTime + "' >= first_timestamp)"
 
 	return query
+}
+
+func convertEventv1toCorev1(evs []eventv1.Event) []corev1.Event {
+	var cvs []corev1.Event
+
+	for _, ev := range evs {
+		var cv corev1.Event
+		cv.InvolvedObject.Namespace = ev.Regarding.Namespace
+		cv.InvolvedObject.Kind = ev.Regarding.Kind
+		cv.InvolvedObject.Name = ev.Regarding.Name
+		cv.InvolvedObject.UID = ev.Regarding.UID
+		cv.InvolvedObject.APIVersion = ev.Regarding.APIVersion
+		cv.InvolvedObject.FieldPath = ev.Regarding.FieldPath
+		cv.Action = ev.Action
+		cv.Reason = ev.Reason
+		cv.Message = ev.Note
+		cv.ReportingController = ev.ReportingController
+		cv.ReportingInstance = ev.ReportingInstance
+		cv.Source.Host = ev.DeprecatedSource.Host
+		cv.Count = ev.DeprecatedCount
+		cv.Type = ev.Type
+		cv.FirstTimestamp = ev.DeprecatedFirstTimestamp
+		cv.LastTimestamp = ev.DeprecatedLastTimestamp
+		cvs = append(cvs, cv)
+	}
+
+	return cvs
 }
