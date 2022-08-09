@@ -13,7 +13,6 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/jackc/pgx/v4 v4.14.1
-	github.com/oklog/ulid v1.3.1
 	github.com/robfig/cron v1.2.0
 	//github.com/robfig/cron v1.2.0
 	github.com/tmax-cloud/efk-operator v0.0.0-20201207030412-fd9c02a3e1c2
@@ -29,7 +28,6 @@ require (
 	k8s.io/klog/v2 v2.9.0
 	k8s.io/kubectl v0.22.2
 	k8s.io/utils v0.0.0-20210819203725-bdf08cb9a70a
-	sigs.k8s.io/controller-runtime v0.10.1
 )
 
 replace (
