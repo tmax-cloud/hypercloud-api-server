@@ -16,6 +16,7 @@ import (
 	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
 	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
+	tmaxClusterTemplate "github.com/tmax-cloud/template-operator/api/v1"
 	authApi "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacApi "k8s.io/api/rbac/v1"
@@ -75,6 +76,69 @@ func init() {
 		panic(err.Error())
 	}
 
+}
+
+func GetBindableResources() map[string]string {
+
+	type templateObjectMeta struct {
+		ApiVersion string
+		Kind       string
+	}
+
+	var clusterTemplates tmaxClusterTemplate.ClusterTemplateList
+	var temObj templateObjectMeta
+
+	objectList := make(map[string]string)
+
+	data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/clustertemplates/").DoRaw(context.TODO())
+	if err != nil {
+		klog.Error(err)
+	} else {
+		if err := json.Unmarshal(data, &clusterTemplates); err != nil {
+			klog.Errorln(err)
+		} else {
+			for _, templateItem := range clusterTemplates.Items {
+				for _, objectKind := range templateItem.TemplateSpec.Objects {
+					err := json.Unmarshal(objectKind.Raw, &temObj)
+					if err != nil {
+						klog.Error(err)
+					} else {
+						objectList[temObj.Kind] = temObj.ApiVersion
+					}
+				}
+			}
+		}
+	}
+
+	objectList = addK8sBindableResources(objectList)
+
+	return objectList
+}
+
+func addK8sBindableResources(objectList map[string]string) map[string]string {
+
+	podResources := []string{"Pod", "ReplicaSet", "DaemonSet", "Deployment", "Job", "CronJob", "StatefulSet"}
+	nonPodResources := []string{"Secret", "Service", "Ingress",
+		"Role", "RoleBinding", "ClusterRole", "ClusterRoleBinding", "Namespace", "ServiceAccount"}
+
+	for _, resource := range nonPodResources {
+		_, exists := objectList[resource]
+		if exists {
+			delete(objectList, resource)
+		}
+	}
+
+	for _, resource := range podResources {
+		if resource == "Pod" {
+			objectList[resource] = "v1"
+		} else if resource == "Job" || resource == "Cronjob" {
+			objectList[resource] = "batch/v1"
+		} else {
+			objectList[resource] = "apps/v1"
+		}
+	}
+
+	return objectList
 }
 
 func GetNamespace(nsName string) (*corev1.Namespace, error) {

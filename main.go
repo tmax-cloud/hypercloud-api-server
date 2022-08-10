@@ -123,6 +123,9 @@ func register_multiplexer() {
 	mux.HandleFunc("/websocket/{api}", serveWebsocket)
 	mux.HandleFunc("/test", serveTest)
 
+	// get ClusterTemplate CR resources
+	mux.HandleFunc("/bindableResources", serveBindableResources)
+
 	if hcMode != "single" {
 		// for multi mode only
 		// List all clusterclaim
@@ -638,6 +641,17 @@ func serveWebsocket(res http.ResponseWriter, req *http.Request) {
 		}
 	default:
 		klog.V(1).Infof("method not acceptable")
+	}
+}
+
+func serveBindableResources(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+
+	switch req.Method {
+	case http.MethodGet:
+		util.SetResponse(res, "", caller.GetBindableResources(), http.StatusOK)
+	default:
+		klog.Errorf("method not acceptable")
 	}
 }
 
