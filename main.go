@@ -123,6 +123,9 @@ func register_multiplexer() {
 	mux.HandleFunc("/websocket/{api}", serveWebsocket)
 	mux.HandleFunc("/test", serveTest)
 
+	// get ClusterTemplate CR resources
+	mux.HandleFunc("/customResources", serveCustromResourceList)
+
 	if hcMode != "single" {
 		// for multi mode only
 		// List all clusterclaim
@@ -616,6 +619,11 @@ func serveWebsocket(res http.ResponseWriter, req *http.Request) {
 	default:
 		klog.Errorf("method not acceptable")
 	}
+}
+
+func serveCustromResourceList(res http.ResponseWriter, req *http.Request) {
+	klog.Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	util.SetResponse(res, "", caller.GetCustomResourceList(), http.StatusOK)
 }
 
 func getNewLock(lockname, podname, namespace string) *resourcelock.LeaseLock {
