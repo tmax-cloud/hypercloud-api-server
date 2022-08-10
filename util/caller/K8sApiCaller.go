@@ -79,7 +79,7 @@ func init() {
 
 }
 
-func GetCustomResourceList() map[string]string {
+func GetBindableResources() map[string]string {
 
 	type templateObjectMeta struct {
 		ApiVersion string
@@ -111,12 +111,12 @@ func GetCustomResourceList() map[string]string {
 		}
 	}
 
-	objectList = addK8sPodResources(objectList)
+	objectList = addK8sBindableResources(objectList)
 
 	return objectList
 }
 
-func addK8sPodResources(objectList map[string]string) map[string]string {
+func addK8sBindableResources(objectList map[string]string) map[string]string {
 
 	podResources := []string{"Pod", "ReplicaSet", "DaemonSet", "Deployment", "Job", "CronJob", "StatefulSet"}
 	nonPodResources := []string{"Secret", "Service", "Ingress",
