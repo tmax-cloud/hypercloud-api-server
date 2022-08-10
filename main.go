@@ -124,7 +124,7 @@ func register_multiplexer() {
 	mux.HandleFunc("/test", serveTest)
 
 	// get ClusterTemplate CR resources
-	mux.HandleFunc("/customResources", serveBindableResources)
+	mux.HandleFunc("/bindableResources", serveBindableResources)
 
 	if hcMode != "single" {
 		// for multi mode only
