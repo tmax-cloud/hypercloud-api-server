@@ -115,7 +115,7 @@ func SelectBeforeInsert(uid string, reason string, firstTime time.Time) error {
 
 	err = db.Dbpool.QueryRow(context.TODO(), EVENT_SELECT_BEFORE_INSERT_QUERY, uid, reason, firstTime).Scan(&name)
 	if err == pgx.ErrNoRows {
-		klog.V(5).Info("No existing event, Do INSERT")
+		//klog.V(5).Info("No existing event, Do INSERT")
 	} else if err != nil {
 		klog.V(1).Info(err)
 	}
