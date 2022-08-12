@@ -8,22 +8,27 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	configv1alpha1 "github.com/tmax-cloud/efk-operator/api/v1alpha1"
 	client "github.com/tmax-cloud/hypercloud-api-server/client"
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	clusterDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/cluster"
+	eventDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/event"
 	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
 	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
 	tmaxClusterTemplate "github.com/tmax-cloud/template-operator/api/v1"
 	authApi "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
+	eventv1 "k8s.io/api/events/v1"
 	rbacApi "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/scheme"
@@ -1248,6 +1253,34 @@ func DeleteNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 	}
 
 	return nil
+}
+
+func WatchK8sEvent() {
+
+	watchlist := cache.NewListWatchFromClient(Clientset.EventsV1().RESTClient(), "events", "", fields.Everything())
+
+	_, controller := cache.NewInformer(
+		watchlist,
+		&eventv1.Event{},
+		time.Second*0,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				e := obj.(*eventv1.Event)
+				eventDataFactory.Insert(e)
+			},
+			DeleteFunc: func(obj interface{}) {
+				e := obj.(*eventv1.Event)
+				eventDataFactory.Insert(e)
+			},
+			UpdateFunc: func(olde, newe interface{}) {
+				e := newe.(*eventv1.Event)
+				eventDataFactory.Insert(e)
+			},
+		},
+	)
+
+	stop := make(chan struct{})
+	go controller.Run(stop)
 }
 
 func UpdateAuditResourceList() {

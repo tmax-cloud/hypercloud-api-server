@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	DB_USER             = "postgres"
-	DB_PASSWORD         = "tmax"
-	DB_NAME             = "postgres"
-	HOSTNAME            = "postgres-service.hypercloud5-system.svc"
-	PORT                = 5432
+	// DB_USER             = "postgres"
+	// DB_PASSWORD         = "tmax"
+	// DB_NAME             = "postgres"
+	// HOSTNAME            = "postgres-service.hypercloud5-system.svc"
+	// PORT                = 5432
 	INSERT_QUERY        = "INSERT INTO CLUSTER_MEMBER (namespace, cluster, member_id, member_name, attribute, role, status, createdTime, updatedTime) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 	DELETE_QUERY        = "DELETE FROM CLUSTER_MEMBER WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4"
 	DELETE_ALL_QUERY    = "DELETE FROM CLUSTER_MEMBER WHERE namespace = $1 and cluster = $2"
