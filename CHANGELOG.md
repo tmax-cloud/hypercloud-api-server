@@ -1,6 +1,29 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.31.0 start -------------------->
+
+## Hypercloud-api-server 5.0.31.0 (2022. 08. 12. (금) 10:35:30 KST)
+
+### Added
+  - [feat] ServiceBinding - CustomResource List 불러오기 기능 추가 by 2smin
+  - [feat] GET ~/event API 기능 추가 by Seungwon Lee
+  - [feat] k8s event를 watch하여 DB에 저장하는 기능 추가 by Seungwon Lee
+
+### Changed
+  - [mod] GET ~/event 반환 형식을 events.v1 그룹에서 core.v1 그룹으로 변경 by Seungwon Lee
+  - [mod] event UPDATE 시, DELETE 후 INSERT 하도록 로직 변경(hypertable 이슈) by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] bindableResources url 변경 by 2smin
+  - [etc] func 이름 변경, http GET 만 받을 수 있도록 로직 변경 by 2smin
+  - [etc] eventTime 예외처리 by Seungwon Lee
+  - [etc] GET ~/metering 관련 함수 리팩토링 by Seungwon Lee
+
 <!-------------------- v5.0.30.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.30.0 (2022. 08. 02. (화) 17:08:22 KST)
