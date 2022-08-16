@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.31.1 start -------------------->
+
+## Hypercloud-api-server 5.0.31.1 (2022. 08. 16. (화) 17:12:58 KST)
+
+### Added
+
+### Changed
+  - [mod] postgres에서 timescaledb로 DB 변경 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.31.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.31.0 (2022. 08. 12. (금) 10:35:30 KST)
