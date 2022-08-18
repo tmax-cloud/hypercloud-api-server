@@ -39,6 +39,7 @@ var Clientset *kubernetes.Clientset
 var config *restclient.Config
 var customClientset *client.Clientset
 var AuditResourceList []string
+var EventWatchChannel chan struct{}
 
 func init() {
 	// var kubeconfig *string
@@ -81,6 +82,7 @@ func init() {
 		panic(err.Error())
 	}
 
+	EventWatchChannel = make(chan struct{})
 }
 
 func GetBindableResources() map[string]string {
@@ -1279,8 +1281,8 @@ func WatchK8sEvent() {
 		},
 	)
 
-	stop := make(chan struct{})
-	go controller.Run(stop)
+	EventWatchChannel = make(chan struct{})
+	go controller.Run(EventWatchChannel)
 }
 
 func UpdateAuditResourceList() {

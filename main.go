@@ -55,9 +55,8 @@ var (
 
 func init() {
 	init_variable()
-	init_logging()
 	init_db_connection()
-	init_metering()
+	init_logging()
 	if kafka_enabled == "true" || kafka_enabled == "TRUE" {
 		init_kafka()
 	}
@@ -264,8 +263,12 @@ func init_logging() {
 	})
 	cronJob_Logging.Start()
 
-	// k8s event logging
-	caller.WatchK8sEvent()
+	init_metering()
+	// Leader Election for Metring & Event logging
+	ctx, cancel = context.WithCancel(context.Background())
+	podName, _ := os.Hostname()
+	lock := getNewLock("hypercloud5-api-server", podName, "hypercloud5-system")
+	go runLeaderElection(lock, ctx, podName)
 }
 
 func init_db_connection() {
@@ -277,12 +280,6 @@ func init_metering() {
 	cronJob_Metering = cron.New()
 	cronJob_Metering.AddFunc("0 */1 * ? * *", metering.MeteringJob)
 	// cronJob.AddFunc("@hourly", audit.UpdateAuditResource)
-	ctx, cancel = context.WithCancel(context.Background())
-	podName, _ := os.Hostname()
-	lock := getNewLock("hypercloud5-api-server", podName, "hypercloud5-system")
-
-	// Leader Election for Metring
-	go runLeaderElection(lock, ctx, podName)
 }
 
 func init_kafka() {
@@ -692,11 +689,15 @@ func runLeaderElection(lock *resourcelock.LeaseLock, ctx context.Context, id str
 		RetryPeriod:     2 * time.Second,
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(c context.Context) {
+				// metering
 				cronJob_Metering.Start()
+				// k8s event logging
+				caller.WatchK8sEvent()
 			},
 			OnStoppedLeading: func() {
-				klog.V(3).Info("no longer the leader, staying inactive and stop metering service")
+				klog.V(3).Info("no longer the leader, staying inactive and stop metering & event logging")
 				cronJob_Metering.Stop()
+				close(caller.EventWatchChannel)
 			},
 			OnNewLeader: func(current_id string) {
 				if current_id == id {
