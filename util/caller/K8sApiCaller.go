@@ -19,6 +19,7 @@ import (
 	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
 	tmaxClusterTemplate "github.com/tmax-cloud/template-operator/api/v1"
+	appsv1 "k8s.io/api/apps/v1"
 	authApi "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
 	eventv1 "k8s.io/api/events/v1"
@@ -150,15 +151,15 @@ func GetNamespace(nsName string) (*corev1.Namespace, error) {
 	namespace, err := Clientset.CoreV1().Namespaces().Get(context.TODO(), nsName, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
-			klog.V(3).Info(" Namespace [ " + nsName + " ] is Not Exists")
+			klog.V(3).Infoln("Namespace [ " + nsName + " ] is Not Exists")
 			return nil, err
 		} else {
-			klog.V(3).Info("Get Namespace [ " + nsName + " ] Failed")
+			klog.V(3).Infoln("Get Namespace [ " + nsName + " ] Failed")
 			klog.V(1).Infoln(err)
 			return nil, err
 		}
 	} else {
-		klog.V(3).Info("Get Namespace [ " + nsName + " ] Success")
+		klog.V(3).Infoln("Get Namespace [ " + nsName + " ] Success")
 		return namespace, nil
 	}
 }
@@ -166,11 +167,11 @@ func GetNamespace(nsName string) (*corev1.Namespace, error) {
 func UpdateNamespace(namespace *corev1.Namespace) (*corev1.Namespace, error) {
 	namespace, err := Clientset.CoreV1().Namespaces().Update(context.TODO(), namespace, metav1.UpdateOptions{})
 	if err != nil {
-		klog.V(3).Info("Update Namespace [ " + namespace.Name + " ] Failed")
+		klog.V(3).Infoln("Update Namespace [ " + namespace.Name + " ] Failed")
 		klog.V(1).Infoln(err)
 		return nil, err
 	} else {
-		klog.V(3).Info("Update Namespace [ " + namespace.Name + " ] Success")
+		klog.V(3).Infoln("Update Namespace [ " + namespace.Name + " ] Success")
 		return namespace, nil
 	}
 }
@@ -181,7 +182,7 @@ func CreateClusterRoleBinding(ClusterRoleBinding *rbacApi.ClusterRoleBinding) er
 		klog.V(1).Infoln(err)
 		return err
 	}
-	klog.V(3).Info(" Create ClusterRoleBinding " + result.GetObjectMeta().GetName() + " Success ")
+	klog.V(3).Infoln(" Create ClusterRoleBinding " + result.GetObjectMeta().GetName() + " Success ")
 	return nil
 }
 
@@ -193,7 +194,7 @@ func DeleteClusterRoleBinding(name string) error {
 		klog.V(1).Infoln(err)
 		return err
 	} else {
-		klog.V(3).Info(" Delete ClusterRoleBinding " + name + " Success ")
+		klog.V(3).Infoln(" Delete ClusterRoleBinding " + name + " Success ")
 	}
 	return nil
 }
@@ -834,7 +835,7 @@ func ListAccessibleClusterClaims(userId string, userGroups []string, namespace s
 	if clusterClaimListRuleResult.Status.Allowed {
 		clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
-			klog.V(1).Info(err)
+			klog.V(1).Infoln(err)
 		}
 		klog.V(3).Infoln("Success list clusterclaim in namespace [ " + namespace + " ]")
 		if len(clusterClaimList.Items) == 0 {
@@ -1206,7 +1207,7 @@ func CreateNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 	if _, err := Clientset.RbacV1().RoleBindings(clusterManager.Namespace).Create(context.TODO(), roleBinding, metav1.CreateOptions{}); err != nil {
 		if errors.IsAlreadyExists(err) {
 			msg := "User [" + subject + "] already has a namespace get rolebinding in a namespace [" + clusterManager.Namespace + "]"
-			klog.V(3).Info(msg)
+			klog.V(3).Infoln(msg)
 			return nil
 		} else {
 			klog.V(1).Infoln(err)
@@ -1233,7 +1234,7 @@ func DeleteNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 		klog.V(1).Infoln(err)
 		return err
 	} else if res != 0 {
-		klog.V(3).Info("User [" + subject + "] has a remain cluster in a namespace [" + clusterManager.Namespace + "].. do not delete ns-get-rolebinding")
+		klog.V(3).Infoln("User [" + subject + "] has a remain cluster in a namespace [" + clusterManager.Namespace + "].. do not delete ns-get-rolebinding")
 		return nil
 	} else {
 		if _, err := Clientset.RbacV1().RoleBindings(clusterManager.Namespace).Get(context.TODO(), roleBindingName, metav1.GetOptions{}); err != nil {
@@ -1281,6 +1282,89 @@ func WatchK8sEvent() {
 
 	stop := make(chan struct{})
 	go controller.Run(stop)
+}
+
+func WatchCert(certFile, keyFile string) {
+	watchlist := cache.NewListWatchFromClient(Clientset.CoreV1().RESTClient(), "secrets", "hypercloud5-system",
+		fields.OneTermEqualSelector("metadata.name", "hypercloud5-api-server-certs"))
+
+	_, controller := cache.NewInformer(
+		watchlist,
+		&corev1.Secret{},
+		time.Second*0,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				secret := obj.(*corev1.Secret)
+				if !util.IsCertUptoDate(certFile, keyFile, *secret) {
+					ServerRollingUpdate()
+				}
+			},
+			UpdateFunc: func(oldsecret, newsecret interface{}) {
+				secret := newsecret.(*corev1.Secret)
+				if !util.IsCertUptoDate(certFile, keyFile, *secret) {
+					ServerRollingUpdate()
+				}
+			},
+		},
+	)
+
+	stop := make(chan struct{})
+	go controller.Run(stop)
+}
+
+func ServerRollingUpdate() error {
+	hc_deploy, err := GetDeployment("hypercloud5-system", "hypercloud5-api-server")
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return err
+	}
+
+	env_update := false
+	for i, env := range hc_deploy.Spec.Template.Spec.Containers[0].Env {
+		if env.Name == "CERT_UPDATED_TIME" {
+			hc_deploy.Spec.Template.Spec.Containers[0].Env[i].Value = time.Now().Format("2006-01-02 15:04:05")
+			env_update = true
+			break
+		}
+	}
+	if !env_update {
+		hc_deploy.Spec.Template.Spec.Containers[0].Env = append(hc_deploy.Spec.Template.Spec.Containers[0].Env,
+			corev1.EnvVar{Name: "CERT_UPDATED_TIME", Value: time.Now().Format("2006-01-02 15:04:05")})
+	}
+
+	err = UpdateDeployment("hypercloud5-system", hc_deploy)
+	if err != nil {
+		klog.V(1).Infoln("Failed to rollout hypercloud5-api-server")
+		return err
+	}
+	return nil
+}
+
+func GetDeployment(namespace, name string) (*appsv1.Deployment, error) {
+	deploy, err := Clientset.AppsV1().Deployments(namespace).Get(context.TODO(), name, metav1.GetOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			klog.V(3).Infoln("Deployment [ " + name + " ] is Not Exists")
+			return nil, err
+		} else {
+			klog.V(3).Infoln("Get Deployment [ " + name + " ] Failed")
+			klog.V(1).Infoln(err)
+			return nil, err
+		}
+	} else {
+		klog.V(3).Infoln("Get Deployment [ " + name + " ] Success")
+		return deploy, nil
+	}
+}
+
+func UpdateDeployment(namespace string, deploy *appsv1.Deployment) error {
+	_, err := Clientset.AppsV1().Deployments(namespace).Update(context.TODO(), deploy, metav1.UpdateOptions{})
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return err
+	}
+	klog.V(3).Infoln("Update deployment [" + deploy.Name + "] Success")
+	return nil
 }
 
 func UpdateAuditResourceList() {

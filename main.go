@@ -82,6 +82,9 @@ func main() {
 	klog.V(3).Info("Starting Hypercloud5-API server...")
 	klog.Flush()
 
+	// Watch "hypercloud5-api-server-certs" secret to keep certicate up-to-date
+	caller.WatchCert(certFile, keyFile)
+
 	whsvr := &http.Server{
 		Addr:      fmt.Sprintf(":%d", port),
 		Handler:   mux,

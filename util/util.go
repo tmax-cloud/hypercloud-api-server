@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ import (
 	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	gomail "gopkg.in/gomail.v2"
 	"k8s.io/api/admission/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
@@ -407,4 +409,33 @@ func UpgradeWebsocket(res http.ResponseWriter, req *http.Request) (*gsocket.Conn
 		return nil, err
 	}
 	return c, err
+}
+
+// Check if certificate is updated.
+// Return true if certificate secret is updated,
+// return false if not.
+func IsCertUptoDate(certFile, keyFile string, secret corev1.Secret) bool {
+	certBytes, err := os.ReadFile(certFile)
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return true
+	}
+	keyBytes, err := os.ReadFile(keyFile)
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return true
+	}
+
+	cert := string(certBytes)
+	key := string(keyBytes)
+
+	secretCert := string(secret.Data["tls.crt"])
+	secretKey := string(secret.Data["tls.key"])
+
+	if cert != secretCert || key != secretKey {
+		klog.V(3).Infoln("Certificate is not up-to-date.")
+		return false
+	}
+	klog.V(3).Infoln("Certificate is up-to-date")
+	return true
 }
