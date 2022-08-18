@@ -97,16 +97,16 @@ func GetBindableResources() map[string]string {
 
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/clustertemplates/").DoRaw(context.TODO())
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Infoln(err)
 	} else {
 		if err := json.Unmarshal(data, &clusterTemplates); err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 		} else {
 			for _, templateItem := range clusterTemplates.Items {
 				for _, objectKind := range templateItem.TemplateSpec.Objects {
 					err := json.Unmarshal(objectKind.Raw, &temObj)
 					if err != nil {
-						klog.Error(err)
+						klog.V(1).Infoln(err)
 					} else {
 						objectList[temObj.Kind] = temObj.ApiVersion
 					}
