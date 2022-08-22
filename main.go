@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	gmux "github.com/gorilla/mux"
@@ -58,7 +59,7 @@ func init() {
 	init_logging()
 	init_db_connection()
 	init_metering()
-	if kafka_enabled == "true" || kafka_enabled == "TRUE" {
+	if strings.EqualFold(kafka_enabled, "TRUE") {
 		init_kafka()
 	}
 }
@@ -188,17 +189,17 @@ func init_variable() {
 	klog.InitFlags(nil)
 	klog.Infoln("LOG_LEVEL = " + util.LogLevel)
 
-	if util.LogLevel == "TRACE" || util.LogLevel == "trace" {
+	if strings.EqualFold(util.LogLevel, "TRACE") {
 		util.LogLevel = "5"
-	} else if util.LogLevel == "DEBUG" || util.LogLevel == "debug" {
+	} else if strings.EqualFold(util.LogLevel, "DEBUG") {
 		util.LogLevel = "4"
-	} else if util.LogLevel == "INFO" || util.LogLevel == "info" {
+	} else if strings.EqualFold(util.LogLevel, "INFO") {
 		util.LogLevel = "3"
-	} else if util.LogLevel == "WARN" || util.LogLevel == "warn" {
+	} else if strings.EqualFold(util.LogLevel, "WARN") {
 		util.LogLevel = "2"
-	} else if util.LogLevel == "ERROR" || util.LogLevel == "error" {
+	} else if strings.EqualFold(util.LogLevel, "ERROR") {
 		util.LogLevel = "1"
-	} else if util.LogLevel == "FATAL" || util.LogLevel == "fatal" {
+	} else if strings.EqualFold(util.LogLevel, "FATAL") {
 		util.LogLevel = "0"
 	} else {
 		klog.Infoln("Unknown log-level paramater. Set to default level INFO")
