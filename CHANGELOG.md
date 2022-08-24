@@ -1,6 +1,24 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.32.0 start -------------------->
+
+## Hypercloud-api-server 5.0.32.0 (2022. 08. 24. (수) 12:47:54 KST)
+
+### Added
+
+### Changed
+  - [mod] k8s event watch 기능 HA 고려하도록 수정 및 main.go init 과정 리팩토링 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] string 환경 변수 확인 방식을 strings.EqualFold 함수로 변경 by Seungwon Lee
+  - [etc] 로그 레벨 지정 누락된 로그 수정 by Seungwon Lee
+  - [etc] unused package 제거 by SISILIA
+
 <!-------------------- v5.0.31.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.31.1 (2022. 08. 16. (화) 17:12:58 KST)
