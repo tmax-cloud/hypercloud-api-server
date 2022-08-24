@@ -691,8 +691,10 @@ func runLeaderElection(lock *resourcelock.LeaseLock, ctx context.Context, id str
 			OnStartedLeading: func(c context.Context) {
 				// metering
 				cronJob_Metering.Start()
+				klog.V(3).Info("Start metering service")
 				// k8s event logging
 				caller.WatchK8sEvent()
+				klog.V(3).Info("Start event service")
 			},
 			OnStoppedLeading: func() {
 				klog.V(3).Info("no longer the leader, staying inactive and stop metering & event logging")
