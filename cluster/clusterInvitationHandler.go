@@ -35,7 +35,7 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	namespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, remoteRole, cluster, memberId, namespace); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -57,14 +57,14 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	}
 	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	clusterMemberList, err := clusterDataFactory.ListAllClusterUser(clusterMember.Cluster, clusterMember.Namespace)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -82,39 +82,39 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	}
 	if userId != clusterOwner {
 		msg := "Request user is not a cluster owner"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	if util.Contains(existUser, memberId) {
 		msg := "Member is already invited in cluster"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	sarResult, err := caller.CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", namespace, cluster, "update")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
 	if !sarResult.Status.Allowed {
 		msg := " User [ " + userId + " ] is not a owner of cluster or owner role is deleted."
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	// create Token
 	// token, err := util.CreateToken(clusterMember)
-	// klog.Info("token = \n" + token)
+	// klog.V(3).Info("token = \n" + token)
 
 	// insert db
 	if err := clusterDataFactory.Insert(clusterMember); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -154,17 +154,17 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	bodyParameter["@@ROLE@@"] = remoteRole
 
 	if err := util.SendEmail(from, to, subject, bodyParameter); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		if err := clusterDataFactory.Delete(clusterMember); err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		}
 		return
 	}
 
 	msg := "User is invited successfully"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
 }
 
@@ -180,7 +180,7 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 	namespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, remoteRole, cluster, memberId, namespace); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -201,7 +201,7 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 	}
 	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
@@ -209,7 +209,7 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 	// 클러스터에 속한 group들과 소유자(owner)반환
 	clusterMemberList, err := clusterDataFactory.ListClusterOwnerAndGroupMember(clusterMember.Cluster, clusterMember.Namespace)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -228,21 +228,21 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 
 	if userId != clusterOwner {
 		msg := "Request user [ " + userId + " ]is not a cluster owner [ " + clusterOwner + " ]"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	if util.Contains(existGroup, memberId) {
 		msg := "Group [ " + memberId + " ] is already invited in cluster [ " + cluster + " ] "
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	// insert db
 	if err := clusterDataFactory.Insert(clusterMember); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -263,7 +263,7 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 	}
 
 	msg := "Invite group to cluster successfully"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
 }
 
@@ -276,7 +276,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	namespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, cluster, namespace); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -284,7 +284,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	// consoleService, err := caller.GetConsoleService("console-system", "console")
 	// ConsoleLB := consoleService.Status.LoadBalancer.Ingress[0].IP
 	// if err != nil {
-	// 	klog.Infoln(err)
+	// 	klog.V(3).Infoln(err)
 	// }
 
 	ConsoleDomain := os.Getenv("CONSOLE_SUBDOMAIN") + "." + os.Getenv("HC_DOMAIN")
@@ -297,7 +297,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 
 	// token validation
 	// if _, err := util.TokenValid(req, clusterMember); err != nil {
-	// 	klog.Errorln(err)
+	// 	klog.V(1).Infoln(err)
 	// 	util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 	// 	return
 	// }
@@ -308,7 +308,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 
 	pendingUser, err := clusterDataFactory.GetPendingUser(clusterMember)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -320,13 +320,13 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 
 	if pendingUser.Status == "" {
 		msg := "Invitation for user [" + userId + "] to cluster [" + cluster + "] is not exist"
-		klog.Info(msg)
+		klog.V(3).Info(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	} else if pendingUser.Status == "invited" {
 		http.Redirect(res, req, "https://"+ConsoleDomain, http.StatusSeeOther)
 		msg := "User [" + userId + "] is already invtied to cluster [" + cluster + "]"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusOK)
 		return
 	}
@@ -340,14 +340,14 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 
 	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	// db에 status 변경해주고 pending --> invited로..
 	if err := clusterDataFactory.UpdateStatus(pendingUser); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -372,7 +372,7 @@ func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
 	http.Redirect(res, req, "https://"+ConsoleDomain+"/k8s/ns/"+namespace+"/clustermanagers", http.StatusSeeOther)
 
 	msg := "User [" + userId + "] is added to cluster [" + cluster + "]"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
 }
 
@@ -387,7 +387,7 @@ func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
 	namespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, cluster, userId, namespace); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -401,14 +401,14 @@ func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
 
 	// token validation
 	// if _, err := util.TokenValid(req, clusterMember); err != nil {
-	// 	klog.Errorln(err)
+	// 	klog.V(1).Infoln(err)
 	// 	util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 	// 	return
 	// }
 
 	pendingUser, err := clusterDataFactory.GetPendingUser(clusterMember)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -417,28 +417,28 @@ func DeclineInvitation(res http.ResponseWriter, req *http.Request) {
 	// consoleService, err := caller.GetConsoleService("console-system", "console")
 	// ConsoleLB := consoleService.Status.LoadBalancer.Ingress[0].IP
 	// if err != nil {
-	// 	klog.Infoln(err)
+	// 	klog.V(3).Infoln(err)
 	// }
 	if pendingUser.Status == "" {
 		msg := "Invitation for user [" + userId + "] is expired to cluster [" + cluster + "]"
-		klog.Info(msg)
+		klog.V(3).Info(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	} else if pendingUser.Status == "invited" {
 		http.Redirect(res, req, "https://"+ConsoleDomain, http.StatusSeeOther)
 		msg := "User [" + userId + "] is already invtied to cluster [" + cluster + "]"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusOK)
 		return
 	}
 
 	if err := clusterDataFactory.Delete(clusterMember); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 	msg := "Invitation for User [" + userId + "] is rejected in a cluster [" + cluster + "]"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
 }
 
@@ -451,7 +451,7 @@ func ListInvitation(res http.ResponseWriter, req *http.Request) {
 	namespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, cluster, namespace); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -464,14 +464,14 @@ func ListInvitation(res http.ResponseWriter, req *http.Request) {
 	}
 	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	clusterMemberList, err := clusterDataFactory.ListAllClusterUser(cluster, namespace)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -488,12 +488,12 @@ func ListInvitation(res http.ResponseWriter, req *http.Request) {
 
 	if userId != clusterOwner {
 		msg := "Request user [ " + userId + " ]is not a cluster owner [ " + clusterOwner + " ]"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	msg := "List cluster success"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, pendingUser, http.StatusOK)
 }

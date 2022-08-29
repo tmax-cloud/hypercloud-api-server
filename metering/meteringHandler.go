@@ -14,7 +14,7 @@ import (
 )
 
 func Get(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** GET /metering")
+	klog.V(3).Infoln("**** GET /metering")
 	queryParams := req.URL.Query()
 	offset := queryParams.Get(util.QUERY_PARAMETER_OFFSET)
 	limit := queryParams.Get(util.QUERY_PARAMETER_LIMIT)
@@ -62,19 +62,21 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		query += " offset 0"
 	}
 
-	meteringDataList := getMeteringDataFromDB(query)
-	util.SetResponse(res, "", meteringDataList, http.StatusOK)
+	if meteringDataList, err := getMeteringDataFromDB(query); err != nil {
+		util.SetResponse(res, "", err, http.StatusInternalServerError)
+	} else {
+		util.SetResponse(res, "", meteringDataList, http.StatusOK)
+	}
 }
 
-func getMeteringDataFromDB(query string) []meteringModel.Metering {
-	klog.Infoln("=== query ===")
-	klog.Infoln(query)
+func getMeteringDataFromDB(query string) ([]meteringModel.Metering, error) {
+	klog.V(3).Infoln("=== query ===")
+	klog.V(3).Infoln(query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
-		return nil
+		klog.V(1).Info(err)
+		return nil, err
 	}
-
 	defer rows.Close()
 
 	var meteringList []meteringModel.Metering
@@ -95,16 +97,17 @@ func getMeteringDataFromDB(query string) []meteringModel.Metering {
 			&meteringData.MeteringTime,
 			&status)
 		if err != nil {
-			klog.Error(err)
-			return nil
+			klog.V(1).Info(err)
+			return nil, err
 		}
 		meteringList = append(meteringList, meteringData)
 	}
-	return meteringList
+	return meteringList, nil
 }
 
 func makeTimeRange(timeUnit string, startTime string, endTime string, query string) string {
 	var start int64
+	start = 0
 	end := time.Now().Unix()
 
 	if startTime != "" {
@@ -113,6 +116,8 @@ func makeTimeRange(timeUnit string, startTime string, endTime string, query stri
 	if endTime != "" {
 		end, _ = strconv.ParseInt(endTime, 10, 64)
 	}
+	startTime = time.Unix(start, 0).Format("2006-01-02 15:04:05")
+	endTime = time.Unix(end, 0).Format("2006-01-02 15:04:05")
 
 	switch timeUnit {
 	case "hour":
@@ -124,12 +129,12 @@ func makeTimeRange(timeUnit string, startTime string, endTime string, query stri
 	case "year":
 		query += "select * from metering_year"
 	}
-	query += " where metering_time between '" + time.Unix(start, 0).Format("2006-01-02 15:04:05") + "' and '" + time.Unix(end, 0).Format("2006-01-02 15:04:05") + "'"
+	query += " where metering_time between '" + startTime + "' and '" + endTime + "'"
 	return query
 }
 
 func Options(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** OPTIONS/metering")
+	klog.V(3).Infoln("**** OPTIONS/metering")
 	out := "**** OPTIONS/metering"
 	util.SetResponse(res, out, nil, http.StatusOK)
 }

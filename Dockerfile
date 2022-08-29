@@ -20,5 +20,5 @@ WORKDIR /go/src
 COPY --from=builder /go/src .
 
 RUN chmod 777 main
-RUN chmod 777 start.sh
-ENTRYPOINT ["/go/src/start.sh"]
+# RUN chmod 777 start.sh
+ENTRYPOINT ["./main"]

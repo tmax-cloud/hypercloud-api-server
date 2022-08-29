@@ -12,7 +12,7 @@ import (
 )
 
 func Get(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** GET/namespaceClaim")
+	klog.V(3).Infoln("**** GET/namespaceClaim")
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(util.QUERY_PARAMETER_USER_ID)
 	limit := queryParams.Get(util.QUERY_PARAMETER_LIMIT)
@@ -20,7 +20,7 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 
 	var status int
-	klog.Infoln("userId : ", userId)
+	klog.V(3).Infoln("userId : ", userId)
 	if userId == "" {
 		out := "userId is missing"
 		status = http.StatusBadRequest
@@ -28,12 +28,12 @@ func Get(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	klog.Infoln("limit : ", limit)
-	klog.Infoln("labelSelector : ", labelSelector)
+	klog.V(3).Infoln("limit : ", limit)
+	klog.V(3).Infoln("labelSelector : ", labelSelector)
 
 	nscList, err := k8sApiCaller.GetAccessibleNSC(userId, userGroups, labelSelector)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -51,18 +51,18 @@ func Get(res http.ResponseWriter, req *http.Request) {
 			}
 		}
 	} else {
-		klog.Infoln(" User [ " + userId + " ] has No Permission to Any NamespaceClaim")
+		klog.V(3).Infoln(" User [ " + userId + " ] has No Permission to Any NamespaceClaim")
 		status = http.StatusForbidden
 	}
 	util.SetResponse(res, "", nscList, status)
 }
 
 func Put(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** PUT/namespaceClaim")
-	klog.Infoln(" Namespace Name Duplication Verify Service Start ")
+	klog.V(3).Infoln("**** PUT/namespaceClaim")
+	klog.V(3).Infoln(" Namespace Name Duplication Verify Service Start ")
 	queryParams := req.URL.Query()
 	nsName := queryParams.Get(util.QUERY_PARAMETER_NAMESPACE)
-	klog.Infoln(" Namespace Name : " + nsName)
+	klog.V(3).Infoln(" Namespace Name : " + nsName)
 	var status int
 	var out string
 	if nsName == "" {
@@ -74,7 +74,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 
 	namespace, err := k8sApiCaller.GetNamespace(nsName)
 	if err != nil && !errors.IsNotFound(err) {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -90,7 +90,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 }
 
 func Options(res http.ResponseWriter, req *http.Request) {
-	klog.Infoln("**** OPTIONS/namespaceClaim")
+	klog.V(3).Infoln("**** OPTIONS/namespaceClaim")
 	out := "**** OPTIONS/namespaceClaim"
 	util.SetResponse(res, out, nil, http.StatusOK)
 }

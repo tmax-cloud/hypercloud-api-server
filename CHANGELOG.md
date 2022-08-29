@@ -1,6 +1,95 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.32.0 start -------------------->
+
+## Hypercloud-api-server 5.0.32.0 (2022. 08. 24. (수) 12:47:54 KST)
+
+### Added
+
+### Changed
+  - [mod] k8s event watch 기능 HA 고려하도록 수정 및 main.go init 과정 리팩토링 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] string 환경 변수 확인 방식을 strings.EqualFold 함수로 변경 by Seungwon Lee
+  - [etc] 로그 레벨 지정 누락된 로그 수정 by Seungwon Lee
+  - [etc] unused package 제거 by SISILIA
+
+<!-------------------- v5.0.31.1 start -------------------->
+
+## Hypercloud-api-server 5.0.31.1 (2022. 08. 16. (화) 17:12:58 KST)
+
+### Added
+
+### Changed
+  - [mod] postgres에서 timescaledb로 DB 변경 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.31.0 start -------------------->
+
+## Hypercloud-api-server 5.0.31.0 (2022. 08. 12. (금) 10:35:30 KST)
+
+### Added
+  - [feat] ServiceBinding - CustomResource List 불러오기 기능 추가 by 2smin
+  - [feat] GET ~/event API 기능 추가 by Seungwon Lee
+  - [feat] k8s event를 watch하여 DB에 저장하는 기능 추가 by Seungwon Lee
+
+### Changed
+  - [mod] GET ~/event 반환 형식을 events.v1 그룹에서 core.v1 그룹으로 변경 by Seungwon Lee
+  - [mod] event UPDATE 시, DELETE 후 INSERT 하도록 로직 변경(hypertable 이슈) by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] bindableResources url 변경 by 2smin
+  - [etc] func 이름 변경, http GET 만 받을 수 있도록 로직 변경 by 2smin
+  - [etc] eventTime 예외처리 by Seungwon Lee
+  - [etc] GET ~/metering 관련 함수 리팩토링 by Seungwon Lee
+
+<!-------------------- v5.0.30.0 start -------------------->
+
+## Hypercloud-api-server 5.0.30.0 (2022. 08. 02. (화) 17:08:22 KST)
+
+### Added
+
+### Changed
+  - [mod] cluster manager 생성 로직 삭제 by seung
+  - [mod] 버전 정규식 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.29.2 start -------------------->
+
+## Hypercloud-api-server 5.0.29.2 (2022. 07. 22. (금) 18:39:25 KST)
+
+### Added
+  - [feat] 로그 레벨 기능 추가 by Seungwon Lee
+
+### Changed
+  - [mod] 로그레벨을 환경변수가 아닌 log-level 파라미터로 받도록 수정 by Seungwon Lee
+  - [mod] start.sh이 아닌 main.go에서 LOG_LEVEL 파싱하도록 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.29.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.29.1 (2022. 06. 30. (목) 17:48:24 KST)

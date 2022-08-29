@@ -34,13 +34,13 @@ func AddResourceMeta(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 		return ToAdmissionResponse(err) //msg: error
 	}
 
-	// klog.Infoln("")
-	// klog.Infoln("This reqeuset is derived from " + userName)
-	// klog.Infoln("Kind: " + ms.Kind)
-	// klog.Infoln("Name: " + ms.Name)
-	// klog.Infoln("Namespace: " + ms.Namespace)
-	// klog.Infoln("Operation: " + operation)
-	// klog.Infoln("")
+	// klog.V(3).Infoln("")
+	// klog.V(3).Infoln("This reqeuset is derived from " + userName)
+	// klog.V(3).Infoln("Kind: " + ms.Kind)
+	// klog.V(3).Infoln("Name: " + ms.Name)
+	// klog.V(3).Infoln("Namespace: " + ms.Namespace)
+	// klog.V(3).Infoln("Operation: " + operation)
+	// klog.V(3).Infoln("")
 
 	// unmarshal old manifests and diff between ori and old manifests, if exists
 	if len(ar.Request.OldObject.Raw) > 0 {
@@ -89,7 +89,7 @@ func AddResourceMeta(ar v1beta1.AdmissionReview) *v1beta1.AdmissionResponse {
 	if patchData, err := json.Marshal(patch); err != nil {
 		return ToAdmissionResponse(err) //msg: error
 	} else {
-		// klog.Infof("JsonPatch=%s", string(patchData))
+		// klog.V(3).Infof("JsonPatch=%s", string(patchData))
 		reviewResponse.Patch = patchData
 	}
 

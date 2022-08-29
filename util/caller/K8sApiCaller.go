@@ -5,25 +5,30 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"os"
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	configv1alpha1 "github.com/tmax-cloud/efk-operator/api/v1alpha1"
 	client "github.com/tmax-cloud/hypercloud-api-server/client"
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	clusterDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/cluster"
+	eventDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/event"
 	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
 	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	claim "github.com/tmax-cloud/hypercloud-single-operator/api/v1alpha1"
+	tmaxClusterTemplate "github.com/tmax-cloud/template-operator/api/v1"
 	authApi "k8s.io/api/authorization/v1"
 	corev1 "k8s.io/api/core/v1"
+	eventv1 "k8s.io/api/events/v1"
 	rbacApi "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/klog"
 	"k8s.io/kubectl/pkg/scheme"
@@ -34,6 +39,7 @@ var Clientset *kubernetes.Clientset
 var config *restclient.Config
 var customClientset *client.Clientset
 var AuditResourceList []string
+var EventWatchChannel chan struct{}
 
 func init() {
 	// var kubeconfig *string
@@ -47,14 +53,14 @@ func init() {
 	// var err error
 	// config, err = clientcmd.BuildConfigFromFlags("", *kubeconfig)
 	// if err != nil {
-	// 	klog.Errorln(err)
+	// 	klog.V(1).Infoln(err)
 	// 	panic(err)
 	// }
 	// config.Burst = 100
 	// config.QPS = 100
 	// Clientset, err = kubernetes.NewForConfig(config)
 	// if err != nil {
-	// 	klog.Errorln(err)
+	// 	klog.V(1).Infoln(err)
 	// 	panic(err)
 	// }
 	// If api-server on POD, activate below code and delete above
@@ -76,21 +82,85 @@ func init() {
 		panic(err.Error())
 	}
 
+	EventWatchChannel = make(chan struct{})
+}
+
+func GetBindableResources() map[string]string {
+
+	type templateObjectMeta struct {
+		ApiVersion string
+		Kind       string
+	}
+
+	var clusterTemplates tmaxClusterTemplate.ClusterTemplateList
+	var temObj templateObjectMeta
+
+	objectList := make(map[string]string)
+
+	data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/clustertemplates/").DoRaw(context.TODO())
+	if err != nil {
+		klog.V(1).Infoln(err)
+	} else {
+		if err := json.Unmarshal(data, &clusterTemplates); err != nil {
+			klog.V(1).Infoln(err)
+		} else {
+			for _, templateItem := range clusterTemplates.Items {
+				for _, objectKind := range templateItem.TemplateSpec.Objects {
+					err := json.Unmarshal(objectKind.Raw, &temObj)
+					if err != nil {
+						klog.V(1).Infoln(err)
+					} else {
+						objectList[temObj.Kind] = temObj.ApiVersion
+					}
+				}
+			}
+		}
+	}
+
+	objectList = addK8sBindableResources(objectList)
+
+	return objectList
+}
+
+func addK8sBindableResources(objectList map[string]string) map[string]string {
+
+	podResources := []string{"Pod", "ReplicaSet", "DaemonSet", "Deployment", "Job", "CronJob", "StatefulSet"}
+	nonPodResources := []string{"Secret", "Service", "Ingress",
+		"Role", "RoleBinding", "ClusterRole", "ClusterRoleBinding", "Namespace", "ServiceAccount"}
+
+	for _, resource := range nonPodResources {
+		_, exists := objectList[resource]
+		if exists {
+			delete(objectList, resource)
+		}
+	}
+
+	for _, resource := range podResources {
+		if resource == "Pod" {
+			objectList[resource] = "v1"
+		} else if resource == "Job" || resource == "Cronjob" {
+			objectList[resource] = "batch/v1"
+		} else {
+			objectList[resource] = "apps/v1"
+		}
+	}
+
+	return objectList
 }
 
 func GetNamespace(nsName string) (*corev1.Namespace, error) {
 	namespace, err := Clientset.CoreV1().Namespaces().Get(context.TODO(), nsName, metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
-			klog.Info(" Namespace [ " + nsName + " ] is Not Exists")
+			klog.V(3).Info(" Namespace [ " + nsName + " ] is Not Exists")
 			return nil, err
 		} else {
-			klog.Info("Get Namespace [ " + nsName + " ] Failed")
-			klog.Errorln(err)
+			klog.V(3).Info("Get Namespace [ " + nsName + " ] Failed")
+			klog.V(1).Infoln(err)
 			return nil, err
 		}
 	} else {
-		klog.Info("Get Namespace [ " + nsName + " ] Success")
+		klog.V(3).Info("Get Namespace [ " + nsName + " ] Success")
 		return namespace, nil
 	}
 }
@@ -98,11 +168,11 @@ func GetNamespace(nsName string) (*corev1.Namespace, error) {
 func UpdateNamespace(namespace *corev1.Namespace) (*corev1.Namespace, error) {
 	namespace, err := Clientset.CoreV1().Namespaces().Update(context.TODO(), namespace, metav1.UpdateOptions{})
 	if err != nil {
-		klog.Info("Update Namespace [ " + namespace.Name + " ] Failed")
-		klog.Errorln(err)
+		klog.V(3).Info("Update Namespace [ " + namespace.Name + " ] Failed")
+		klog.V(1).Infoln(err)
 		return nil, err
 	} else {
-		klog.Info("Update Namespace [ " + namespace.Name + " ] Success")
+		klog.V(3).Info("Update Namespace [ " + namespace.Name + " ] Success")
 		return namespace, nil
 	}
 }
@@ -110,10 +180,10 @@ func UpdateNamespace(namespace *corev1.Namespace) (*corev1.Namespace, error) {
 func CreateClusterRoleBinding(ClusterRoleBinding *rbacApi.ClusterRoleBinding) error {
 	result, err := Clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), ClusterRoleBinding, metav1.CreateOptions{})
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
-	klog.Info(" Create ClusterRoleBinding " + result.GetObjectMeta().GetName() + " Success ")
+	klog.V(3).Info(" Create ClusterRoleBinding " + result.GetObjectMeta().GetName() + " Success ")
 	return nil
 }
 
@@ -122,18 +192,18 @@ func DeleteClusterRoleBinding(name string) error {
 	if err := Clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), name, metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	}); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	} else {
-		klog.Info(" Delete ClusterRoleBinding " + name + " Success ")
+		klog.V(3).Info(" Delete ClusterRoleBinding " + name + " Success ")
 	}
 	return nil
 }
 
 func IsAccessibleNS(ns string, userId string, labelSelector string, userGroups []string) (bool, error) {
-	klog.Infoln("userId : ", userId)
+	klog.V(3).Infoln("userId : ", userId)
 	for _, userGroup := range userGroups {
-		klog.Infoln("userGroupName : ", userGroup)
+		klog.V(3).Infoln("userGroupName : ", userGroup)
 	}
 
 	// 1. Check If User has NS List Role
@@ -150,16 +220,16 @@ func IsAccessibleNS(ns string, userId string, labelSelector string, userGroups [
 	}
 	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsListRuleReview, metav1.CreateOptions{})
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return false, err
 	}
 	if sarResult.Status.Allowed {
-		klog.Infoln(" User [ " + userId + " ] has Namespace List Role, Can Access All Namespace")
+		klog.V(3).Infoln(" User [ " + userId + " ] has Namespace List Role, Can Access All Namespace")
 		return true, nil
 	}
 
 	// 2. Check If User has NS Get Role
-	klog.Infoln(" User [ " + userId + " ] has No Namespace List Role, Check If user has Namespace Get Role to Certain Namespace")
+	klog.V(3).Infoln(" User [ " + userId + " ] has No Namespace List Role, Check If user has Namespace Get Role to Certain Namespace")
 	nsGetRuleReview := authApi.SubjectAccessReview{
 		Spec: authApi.SubjectAccessReviewSpec{
 			ResourceAttributes: &authApi.ResourceAttributes{
@@ -174,11 +244,11 @@ func IsAccessibleNS(ns string, userId string, labelSelector string, userGroups [
 	}
 	sarResult, err = Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsGetRuleReview, metav1.CreateOptions{})
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return false, err
 	}
 	if sarResult.Status.Allowed {
-		klog.Infoln(" User [ " + userId + " ] has Namespace Get Role in Namspace [ " + ns + " ]")
+		klog.V(3).Infoln(" User [ " + userId + " ] has Namespace Get Role in Namspace [ " + ns + " ]")
 		return true, nil
 	}
 	return false, nil
@@ -186,7 +256,7 @@ func IsAccessibleNS(ns string, userId string, labelSelector string, userGroups [
 
 func GetAccessibleNS(userId string, labelSelector string, userGroups []string) (corev1.NamespaceList, error) {
 	var nsList = &corev1.NamespaceList{}
-	klog.Infoln("userId : ", userId)
+	klog.V(3).Infoln("userId : ", userId)
 
 	// // 1. Get UserGroup List if Exists
 	// userDetail := getUserDetailWithoutToken(userId)
@@ -198,7 +268,7 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) (
 	// }
 
 	for _, userGroup := range userGroups {
-		klog.Infoln("userGroupName : ", userGroup)
+		klog.V(3).Infoln("userGroupName : ", userGroup)
 	}
 
 	// 2. Check If User has NS List Role
@@ -215,11 +285,11 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) (
 	}
 	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsListRuleReview, metav1.CreateOptions{})
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return *nsList, err
 	}
 	if sarResult.Status.Allowed {
-		klog.Infoln(" User [ " + userId + " ] has Namespace List Role, Can Access All Namespace")
+		klog.V(3).Infoln(" User [ " + userId + " ] has Namespace List Role, Can Access All Namespace")
 		nsList, err = Clientset.CoreV1().Namespaces().List(
 			context.TODO(),
 			metav1.ListOptions{
@@ -227,11 +297,11 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) (
 			},
 		)
 		if err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return *nsList, err
 		}
 	} else {
-		klog.Infoln(" User [ " + userId + " ] has No Namespace List Role, Check If user has Namespace Get Role to Certain Namespace")
+		klog.V(3).Infoln(" User [ " + userId + " ] has No Namespace List Role, Check If user has Namespace Get Role to Certain Namespace")
 		potentialNsList, err := Clientset.CoreV1().Namespaces().List(
 			context.TODO(),
 			metav1.ListOptions{
@@ -239,7 +309,7 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) (
 			},
 		)
 		if err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return *nsList, err
 		}
 		var wg sync.WaitGroup
@@ -261,11 +331,11 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) (
 				}
 				sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsGetRuleReview, metav1.CreateOptions{})
 				if err != nil {
-					klog.Errorln(err)
+					klog.V(1).Infoln(err)
 					panic(err)
 				}
 				if sarResult.Status.Allowed {
-					klog.Infoln(" User [ " + userId + " ] has Namespace Get Role in Namspace [ " + potentialNs.GetName() + " ]")
+					klog.V(3).Infoln(" User [ " + userId + " ] has Namespace Get Role in Namspace [ " + potentialNs.GetName() + " ]")
 					nsList.Items = append(nsList.Items, potentialNs)
 				}
 			}(potentialNs, userId, userGroups, nsList)
@@ -278,13 +348,13 @@ func GetAccessibleNS(userId string, labelSelector string, userGroups []string) (
 		nsList.ResourceVersion = potentialNsList.ResourceVersion
 		nsList.TypeMeta = potentialNsList.TypeMeta
 		// } else {
-		// 	klog.Infoln(" User [ " + userId + " ] has No Namespace Get Role in Any Namspace")
+		// 	klog.V(3).Infoln(" User [ " + userId + " ] has No Namespace Get Role in Any Namspace")
 		// }
 	}
 	// if len(nsList.Items) > 0 {
-	// 	klog.Infoln("=== [ " + userId + " ] Accessible Namespace ===")
+	// 	klog.V(3).Infoln("=== [ " + userId + " ] Accessible Namespace ===")
 	// 	for _, ns := range nsList.Items {
-	// 		klog.Infoln("  " + ns.Name)
+	// 		klog.V(3).Infoln("  " + ns.Name)
 	// 	}
 	// }
 	return *nsList, nil
@@ -309,28 +379,28 @@ func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) 
 
 	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nsListRuleReview, metav1.CreateOptions{})
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return *nscList, err
 	}
-	// klog.Infoln("sarResult : " + sarResult.String())
+	// klog.V(3).Infoln("sarResult : " + sarResult.String())
 
 	// /apis/claim.tmax.io/v1alpha1/namespaceclaims?labelselector
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/namespaceclaims").Param(util.QUERY_PARAMETER_LABEL_SELECTOR, labelSelector).DoRaw(context.TODO())
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return *nscList, err
 	}
 
 	if sarResult.Status.Allowed {
-		klog.Infoln(" User [ " + userId + " ] has NamespaceClaim List Role, Can Access All NamespaceClaim")
+		klog.V(3).Infoln(" User [ " + userId + " ] has NamespaceClaim List Role, Can Access All NamespaceClaim")
 
 		if err := json.Unmarshal(data, &nscList); err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return *nscList, err
 		}
 
 	} else {
-		klog.Infoln(" User [ " + userId + " ] has No NamespaceClaim List Role, Check If user has NamespaceClaim Get Role & has Owner Annotation on certain NamespaceClaim")
+		klog.V(3).Infoln(" User [ " + userId + " ] has No NamespaceClaim List Role, Check If user has NamespaceClaim Get Role & has Owner Annotation on certain NamespaceClaim")
 		// 2. Check If User has NSC Get Role
 		nscGetRuleReview := authApi.SubjectAccessReview{
 			Spec: authApi.SubjectAccessReviewSpec{
@@ -346,14 +416,14 @@ func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) 
 
 		sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), &nscGetRuleReview, metav1.CreateOptions{})
 		if err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return *nscList, err
 		}
 		if sarResult.Status.Allowed {
-			klog.Infoln(" User [ " + userId + " ] has NamespaceClaim Get Role")
+			klog.V(3).Infoln(" User [ " + userId + " ] has NamespaceClaim Get Role")
 			var potentialNscList = &claim.NamespaceClaimList{}
 			if err := json.Unmarshal(data, &potentialNscList); err != nil {
-				klog.Errorln(err)
+				klog.V(1).Infoln(err)
 				return *nscList, err
 			}
 
@@ -363,7 +433,7 @@ func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) 
 				go func(potentialNsc claim.NamespaceClaim, userId string, nscList *claim.NamespaceClaimList) {
 					defer wg.Done()
 					if potentialNsc.Annotations["owner"] == userId {
-						klog.Infoln(" User [ " + userId + " ] has owner annotation in NamspaceClaim [ " + potentialNsc.Name + " ]")
+						klog.V(3).Infoln(" User [ " + userId + " ] has owner annotation in NamspaceClaim [ " + potentialNsc.Name + " ]")
 						nscList.Items = append(nscList.Items, potentialNsc)
 					}
 				}(potentialNsc, userId, nscList)
@@ -376,18 +446,18 @@ func GetAccessibleNSC(userId string, userGroups []string, labelSelector string) 
 			nscList.ResourceVersion = potentialNscList.ResourceVersion
 			nscList.TypeMeta = potentialNscList.TypeMeta
 			// } else {
-			// 	klog.Infoln(" User [ " + userId + " ] has No owner annotation in Any NamspaceClaim")
+			// 	klog.V(3).Infoln(" User [ " + userId + " ] has No owner annotation in Any NamspaceClaim")
 			// }
 		} else {
-			klog.Infoln(" User [ " + userId + " ] has no NamespaceClaim Get Role, User Cannot Access any NamespaceClaim")
+			klog.V(3).Infoln(" User [ " + userId + " ] has no NamespaceClaim Get Role, User Cannot Access any NamespaceClaim")
 		}
 
 	}
 
 	if len(nscList.Items) > 0 {
-		klog.Infoln("=== [ " + userId + " ] Accessible NamespaceClaim ===")
+		klog.V(3).Infoln("=== [ " + userId + " ] Accessible NamespaceClaim ===")
 		// for _, nsc := range nscList.Items {
-		// 	klog.Infoln("  ", nsc.Name)
+		// 	klog.V(3).Infoln("  ", nsc.Name)
 		// }
 	}
 	return *nscList, nil
@@ -398,12 +468,12 @@ func DeleteRQCWithUser(userId string) error {
 	//data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/").Namespace("").Resource("resourcequotaclaims").DoRaw(context.TODO()) // for hypercloud4 version
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/").Namespace("").Resource("resourcequotaclaims").DoRaw(context.TODO()) // for hypercloud5 version
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 
 	if err = json.Unmarshal(data, &rqcList); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 
@@ -411,11 +481,11 @@ func DeleteRQCWithUser(userId string) error {
 		if rqc.Annotations["creator"] == userId {
 			_, err := Clientset.RESTClient().Delete().AbsPath(rqc.SelfLink).DoRaw(context.TODO())
 			if err != nil {
-				klog.Errorln(err)
-				klog.Infoln("Faile to delete ResourceQuotaClaim ", rqc.Name)
+				klog.V(1).Infoln(err)
+				klog.V(3).Infoln("Faile to delete ResourceQuotaClaim ", rqc.Name)
 				continue
 			}
-			klog.Infoln("ResourceQuotaClaim ", rqc.Name, " is deleted")
+			klog.V(3).Infoln("ResourceQuotaClaim ", rqc.Name, " is deleted")
 		}
 	}
 	return nil
@@ -426,12 +496,12 @@ func DeleteNSCWithUser(userId string) error {
 	//data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/namespaceclaims").DoRaw(context.TODO()) // for hypercloud4 version
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/namespaceclaims").DoRaw(context.TODO()) // for hypercloud5 version
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 
 	if err = json.Unmarshal(data, &nscList); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 
@@ -439,11 +509,11 @@ func DeleteNSCWithUser(userId string) error {
 		if nsc.Annotations["owner"] == userId {
 			_, err := Clientset.RESTClient().Delete().AbsPath(nsc.SelfLink).DoRaw(context.TODO())
 			if err != nil {
-				klog.Errorln(err)
-				klog.Infoln("Faile to delete NamespaceClaim ", nsc.Name)
+				klog.V(1).Infoln(err)
+				klog.V(3).Infoln("Faile to delete NamespaceClaim ", nsc.Name)
 				continue
 			}
-			klog.Infoln("NamespaceClaim ", nsc.Name, " is deleted")
+			klog.V(3).Infoln("NamespaceClaim ", nsc.Name, " is deleted")
 		}
 	}
 	return nil
@@ -454,12 +524,12 @@ func DeleteRBCWithUser(userId string) error {
 	//data, err := Clientset.RESTClient().Get().AbsPath("/apis/tmax.io/v1/").Namespace("").Resource("rolebindingclaims").DoRaw(context.TODO()) // for hypercloud4 version
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/claim.tmax.io/v1alpha1/").Namespace("").Resource("rolebindingclaims").DoRaw(context.TODO()) // for hypercloud5 version
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 
 	if err = json.Unmarshal(data, &rbcList); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 
@@ -467,11 +537,11 @@ func DeleteRBCWithUser(userId string) error {
 		if rbc.Annotations["creator"] == userId {
 			_, err := Clientset.RESTClient().Delete().AbsPath(rbc.SelfLink).DoRaw(context.TODO())
 			if err != nil {
-				klog.Errorln(err)
-				klog.Infoln("Faile to delete RoleBindingClaim ", rbc.Name)
+				klog.V(1).Infoln(err)
+				klog.V(3).Infoln("Faile to delete RoleBindingClaim ", rbc.Name)
 				continue
 			}
-			klog.Infoln("RoleBindingClaim ", rbc.Name, " is deleted")
+			klog.V(3).Infoln("RoleBindingClaim ", rbc.Name, " is deleted")
 		}
 	}
 	return nil
@@ -483,7 +553,7 @@ func DeleteCRBWithUser(userId string) error {
 		metav1.ListOptions{},
 	)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 
@@ -492,10 +562,10 @@ func DeleteCRBWithUser(userId string) error {
 			if subject.Name == userId {
 				err := Clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), crb.ObjectMeta.Name, metav1.DeleteOptions{})
 				if err != nil {
-					klog.Errorln(err)
-					klog.Infoln("Faile to delete ClusterRoleBinding ", crb.ObjectMeta.Name)
+					klog.V(1).Infoln(err)
+					klog.V(3).Infoln("Faile to delete ClusterRoleBinding ", crb.ObjectMeta.Name)
 				} else {
-					klog.Infoln("ClusterRoleBinding ", crb.ObjectMeta.Name, " is deleted")
+					klog.V(3).Infoln("ClusterRoleBinding ", crb.ObjectMeta.Name, " is deleted")
 				}
 			}
 		}
@@ -509,13 +579,13 @@ func GetCRBAdmin() string {
 		metav1.ListOptions{},
 	)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 	}
 	var adminemail string
 	for _, crb := range crbList.Items {
 		if crb.Name == "admin" {
 			adminemail = crb.Subjects[0].Name
-			klog.Infof("admin is " + adminemail)
+			klog.V(3).Infof("admin is " + adminemail)
 		}
 	}
 	return adminemail
@@ -527,7 +597,7 @@ func DeleteRBWithUser(userId string) error {
 		metav1.ListOptions{},
 	)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 
@@ -536,10 +606,10 @@ func DeleteRBWithUser(userId string) error {
 			if subject.Name == userId {
 				err := Clientset.RbacV1().RoleBindings(rb.ObjectMeta.Namespace).Delete(context.TODO(), rb.ObjectMeta.Name, metav1.DeleteOptions{})
 				if err != nil {
-					klog.Errorln(err)
-					klog.Infoln("Faile to delete RoleBinding ", rb.ObjectMeta.Name)
+					klog.V(1).Infoln(err)
+					klog.V(3).Infoln("Faile to delete RoleBinding ", rb.ObjectMeta.Name)
 				} else {
-					klog.Infoln("RoleBinding", rb.ObjectMeta.Name, "is deleted")
+					klog.V(3).Infoln("RoleBinding", rb.ObjectMeta.Name, "is deleted")
 				}
 			}
 		}
@@ -610,15 +680,15 @@ func GetPodListByLabel(label string, namespace string) (corev1.PodList, bool) {
 	)
 
 	if err != nil {
-		klog.Errorln("Error occurred by " + label)
-		klog.Errorln("Error content : " + err.Error())
+		klog.V(1).Infoln("Error occurred by " + label)
+		klog.V(1).Infoln("Error content : " + err.Error())
 		return *podList, false
 	}
 
 	// check if podList is empty
 	nilTest := []corev1.Pod{}
 	if reflect.DeepEqual(podList.Items, nilTest) {
-		klog.Errorln(label, " cannot be found")
+		klog.V(1).Infoln(label, " cannot be found")
 		return *podList, false
 	}
 
@@ -642,7 +712,7 @@ func CreateSubjectAccessReview(userId string, userGroups []string, group string,
 
 	sarResult, err := Clientset.AuthorizationV1().SubjectAccessReviews().Create(context.TODO(), sar, metav1.CreateOptions{})
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
@@ -653,12 +723,12 @@ func AdmitClusterClaim(userId string, userGroups []string, clusterClaim *claimsv
 
 	clusterClaimStatusUpdateRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims/status", clusterClaim.Namespace, clusterClaim.Name, "update")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
 	if clusterClaimStatusUpdateRuleResult.Status.Allowed {
-		klog.Infoln(" User [ " + userId + " ] has ClusterClaims/status Update Role, Can Update ClusterClaims")
+		klog.V(3).Infoln(" User [ " + userId + " ] has ClusterClaims/status Update Role, Can Update ClusterClaims")
 
 		if admit {
 			clusterClaim.Status.Phase = "Approved"
@@ -679,16 +749,16 @@ func AdmitClusterClaim(userId string, userGroups []string, clusterClaim *claimsv
 		result, err := customClientset.ClaimsV1alpha1().ClusterClaims(clusterClaim.Namespace).
 			UpdateStatus(context.TODO(), clusterClaim, metav1.UpdateOptions{})
 		if err != nil {
-			klog.Errorln("Update ClusterClaim [ " + clusterClaim.Name + " ] Failed")
+			klog.V(1).Infoln("Update ClusterClaim [ " + clusterClaim.Name + " ] Failed")
 			return nil, err
 		} else {
 			msg := "Update ClusterClaim [ " + clusterClaim.Name + " ] Success"
-			klog.Infoln(msg)
+			klog.V(3).Infoln(msg)
 			return result, nil
 		}
 	} else {
 		newErr := errors.NewBadRequest("User [ " + userId + " ] has No ClusterClaims/status Update Role, Check If user has ClusterClaims/status Update Role")
-		klog.Errorln(newErr)
+		klog.V(1).Infoln(newErr)
 		return nil, newErr
 	}
 }
@@ -699,19 +769,19 @@ func GetClusterClaim(userId string, userGroups []string, clusterClaimName string
 
 	clusterClaimGetRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", clusterClaimNamespace, clusterClaimName, "get")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
 	if clusterClaimGetRuleResult.Status.Allowed {
 		clusterClaim, err = customClientset.ClaimsV1alpha1().ClusterClaims(clusterClaimNamespace).Get(context.TODO(), clusterClaimName, metav1.GetOptions{})
 		if err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return nil, err
 		}
 	} else {
 		newErr := errors.NewBadRequest("User [" + userId + "] authorization is denied for clusterclaims [" + clusterClaimName + "]")
-		klog.Errorln(newErr)
+		klog.V(1).Infoln(newErr)
 		return nil, newErr
 	}
 
@@ -723,13 +793,13 @@ func ListAllClusterClaims(userId string, userGroups []string) (*claimsv1alpha1.C
 
 	clusterClaimListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", "", "", "list")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
 	clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 	clusterClaimList.Kind = "ClusterClaimList"
@@ -737,16 +807,16 @@ func ListAllClusterClaims(userId string, userGroups []string) (*claimsv1alpha1.C
 
 	if clusterClaimListRuleResult.Status.Allowed {
 		msg := "User [ " + userId + " ] has ClusterClaim List Role, Can Access All ClusterClaim"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		if len(clusterClaimList.Items) == 0 {
 			msg := "No ClusterClaim was Found."
-			klog.Infoln(msg)
+			klog.V(3).Infoln(msg)
 			return clusterClaimList, nil
 		}
 		return clusterClaimList, nil
 	} else {
 		msg := "User [ " + userId + " ] has No permission to list clusterclaims on all namespaces"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		clusterClaimList.Items = []claimsv1alpha1.ClusterClaim{}
 		return clusterClaimList, nil
 	}
@@ -760,21 +830,21 @@ func ListAccessibleClusterClaims(userId string, userGroups []string, namespace s
 
 	clusterClaimListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", namespace, "", "list")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 	if clusterClaimListRuleResult.Status.Allowed {
 		clusterClaimList, err = customClientset.ClaimsV1alpha1().ClusterClaims(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
-			klog.Error(err)
+			klog.V(1).Info(err)
 		}
-		klog.Infoln("Success list clusterclaim in namespace [ " + namespace + " ]")
+		klog.V(3).Infoln("Success list clusterclaim in namespace [ " + namespace + " ]")
 		if len(clusterClaimList.Items) == 0 {
-			klog.Infoln(" User [ " + userId + " ] has No ClusterClaim")
+			klog.V(3).Infoln(" User [ " + userId + " ] has No ClusterClaim")
 		}
 		return clusterClaimList, nil
 	} else {
-		klog.Infoln("User [ " + userId + " ] has No permission in namespace  [ " + namespace + " ]")
+		klog.V(3).Infoln("User [ " + userId + " ] has No permission in namespace  [ " + namespace + " ]")
 		clusterClaimList.Items = []claimsv1alpha1.ClusterClaim{}
 		return clusterClaimList, nil
 	}
@@ -786,13 +856,13 @@ func ListAllCluster(userId string, userGroups []string) (*clusterv1alpha1.Cluste
 
 	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", "", "", "list")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
 	clmList, err = customClientset.ClusterV1alpha1().ClusterManagers("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 	clmList.Kind = "ClusterManagerList"
@@ -800,16 +870,16 @@ func ListAllCluster(userId string, userGroups []string) (*clusterv1alpha1.Cluste
 
 	if clmListRuleResult.Status.Allowed {
 		msg := "User [ " + userId + " ] has ClusterManager List Role, Can Access All ClusterManager"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		if len(clmList.Items) == 0 {
 			msg := "No cluster was Found."
-			klog.Infoln(msg)
+			klog.V(3).Infoln(msg)
 		}
 		return clmList, nil
 	} else {
 		return ListAccessibleCluster(userId, userGroups)
 		// msg := "User [ " + userId + " ] has No permission to list ClusterManager on all namespaces"
-		// klog.Infoln(msg)
+		// klog.V(3).Infoln(msg)
 		// clmList.Items = []clusterv1alpha1.ClusterManager{}
 		// return clmList, nil
 	}
@@ -824,13 +894,13 @@ func ListAccessibleCluster(userId string, userGroups []string) (*clusterv1alpha1
 
 	clmList, err := customClientset.ClusterV1alpha1().ClusterManagers("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
 	NamespacedNameList, err := clusterDataFactory.ListClusterAllNamespace(userId, userGroups)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
@@ -838,11 +908,11 @@ func ListAccessibleCluster(userId string, userGroups []string) (*clusterv1alpha1
 
 	if len(_clmList.Items) == 0 {
 		msg := " User [ " + userId + " ] has No Clusters"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		return _clmList, nil
 	}
 	msg := " User [ " + userId + " ] has Clusters"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	return _clmList, nil
 }
 
@@ -855,31 +925,31 @@ func ListClusterInNamespace(userId string, userGroups []string, namespace string
 
 	clmListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", namespace, "", "list")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
 	clmList, err = customClientset.ClusterV1alpha1().ClusterManagers(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
 	if clmListRuleResult.Status.Allowed {
 		if len(clmList.Items) == 0 {
 			msg := " User [ " + userId + " ] has No clusterManager"
-			klog.Infoln(msg)
+			klog.V(3).Infoln(msg)
 			return clmList, nil
 		}
 		msg := "Success list cluster in a namespace [ " + namespace + " ]"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		return clmList, nil
 	} else {
 		// ns에 list 권한 없으면 db에서 속한것만 찾아서 반환!
 		// db에서 읽어온다.
 		clusterNameList, err := clusterDataFactory.ListClusterInNamespace(userId, userGroups, namespace)
 		if err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return nil, err
 		}
 		_clmList := []clusterv1alpha1.ClusterManager{}
@@ -892,11 +962,11 @@ func ListClusterInNamespace(userId string, userGroups []string, namespace string
 		clmList.Items = _clmList
 		if len(clmList.Items) == 0 {
 			msg := " User [ " + userId + " ] has No Clusters"
-			klog.Infoln(msg)
+			klog.V(3).Infoln(msg)
 			return clmList, nil
 		}
 		msg := " User [ " + userId + " ] has Clusters"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		return clmList, nil
 	}
 
@@ -906,19 +976,19 @@ func GetCluster(userId string, userGroups []string, clusterName string, namespac
 	var clm = &clusterv1alpha1.ClusterManager{}
 	clusterGetRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", namespace, clusterName, "get")
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
 	if clusterGetRuleResult.Status.Allowed {
 		clm, err = customClientset.ClusterV1alpha1().ClusterManagers(namespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
 		if err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return nil, err
 		}
 	} else {
 		newErr := errors.NewBadRequest("User [" + userId + "] authorization is denied for cluster [" + clusterName + "]")
-		klog.Errorln(newErr.Error())
+		klog.V(1).Infoln(newErr.Error())
 		return nil, newErr
 	}
 
@@ -928,7 +998,7 @@ func GetCluster(userId string, userGroups []string, clusterName string, namespac
 func GetClusterWithoutSAR(userId string, userGroups []string, clusterName string, namespace string) (*clusterv1alpha1.ClusterManager, error) {
 	clm, err := customClientset.ClusterV1alpha1().ClusterManagers(namespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return nil, err
 	}
 	return clm, nil
@@ -997,7 +1067,7 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 	}
 
 	if _, err := Clientset.RbacV1().Roles(clusterManager.Namespace).Create(context.TODO(), role, metav1.CreateOptions{}); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 
@@ -1022,11 +1092,11 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 	}
 
 	if _, err := Clientset.RbacV1().RoleBindings(clusterManager.Namespace).Create(context.TODO(), roleBinding, metav1.CreateOptions{}); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	}
 	msg := "ClusterManager role [" + roleName + "] and rolebinding [ " + roleBindingName + "]  is created"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 
 	return nil
 }
@@ -1045,30 +1115,30 @@ func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 
 	if _, err := Clientset.RbacV1().Roles(clusterManager.Namespace).Get(context.TODO(), roleName, metav1.GetOptions{}); err != nil {
 		if errors.IsNotFound(err) {
-			klog.Infoln("Role [" + roleName + "] is already deleted. pass")
+			klog.V(3).Infoln("Role [" + roleName + "] is already deleted. pass")
 			return nil
 		} else {
-			klog.Errorln("Error: Get clusterrole [" + roleName + "] is failed")
+			klog.V(1).Infoln("Error: Get clusterrole [" + roleName + "] is failed")
 			return err
 		}
 	} else {
 		if err := Clientset.RbacV1().Roles(clusterManager.Namespace).Delete(context.TODO(), roleName, metav1.DeleteOptions{}); err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return err
 		}
 	}
 
 	if _, err := Clientset.RbacV1().RoleBindings(clusterManager.Namespace).Get(context.TODO(), roleBindingName, metav1.GetOptions{}); err != nil {
 		if errors.IsNotFound(err) {
-			klog.Infoln("Rolebinding [" + roleBindingName + "] is already deleted. pass")
+			klog.V(3).Infoln("Rolebinding [" + roleBindingName + "] is already deleted. pass")
 			return nil
 		} else {
-			klog.Errorln("Error: Get clusterrole [" + roleName + "] is failed")
+			klog.V(1).Infoln("Error: Get clusterrole [" + roleName + "] is failed")
 			return err
 		}
 	} else {
 		if err := Clientset.RbacV1().RoleBindings(clusterManager.Namespace).Delete(context.TODO(), roleBindingName, metav1.DeleteOptions{}); err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return err
 		}
 	}
@@ -1138,16 +1208,16 @@ func CreateNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 	if _, err := Clientset.RbacV1().RoleBindings(clusterManager.Namespace).Create(context.TODO(), roleBinding, metav1.CreateOptions{}); err != nil {
 		if errors.IsAlreadyExists(err) {
 			msg := "User [" + subject + "] already has a namespace get rolebinding in a namespace [" + clusterManager.Namespace + "]"
-			klog.Info(msg)
+			klog.V(3).Info(msg)
 			return nil
 		} else {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			return err
 		}
 	}
 
 	msg := "Namespace Get Rolebinding [ " + roleBindingName + "]  is created"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 
 	return nil
 }
@@ -1162,23 +1232,23 @@ func DeleteNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 
 	// Subject가 해당 ns에 사용중인 클러스터가 남았다면 ns get rolebinding 삭제 안하고.. 없으면 삭제한다. (이전에 db에서 현재 요청에대한 클러스터는 삭제함)
 	if res, err := clusterDataFactory.GetRemainClusterForSubject(clusterManager.Namespace, subject, attribute); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		return err
 	} else if res != 0 {
-		klog.Info("User [" + subject + "] has a remain cluster in a namespace [" + clusterManager.Namespace + "].. do not delete ns-get-rolebinding")
+		klog.V(3).Info("User [" + subject + "] has a remain cluster in a namespace [" + clusterManager.Namespace + "].. do not delete ns-get-rolebinding")
 		return nil
 	} else {
 		if _, err := Clientset.RbacV1().RoleBindings(clusterManager.Namespace).Get(context.TODO(), roleBindingName, metav1.GetOptions{}); err != nil {
 			if errors.IsNotFound(err) {
-				klog.Infoln("Rolebinding [" + roleBindingName + "] is already deleted. pass")
+				klog.V(3).Infoln("Rolebinding [" + roleBindingName + "] is already deleted. pass")
 				return nil
 			} else {
-				klog.Errorln("Error: Get clusterrole [" + roleBindingName + "] is failed")
+				klog.V(1).Infoln("Error: Get clusterrole [" + roleBindingName + "] is failed")
 				return err
 			}
 		} else {
 			if err := Clientset.RbacV1().RoleBindings(clusterManager.Namespace).Delete(context.TODO(), roleBindingName, metav1.DeleteOptions{}); err != nil {
-				klog.Errorln(err)
+				klog.V(1).Infoln(err)
 				return err
 			}
 		}
@@ -1187,78 +1257,32 @@ func DeleteNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 	return nil
 }
 
-func CreateClusterManager(clusterClaim *claimsv1alpha1.ClusterClaim) (*clusterv1alpha1.ClusterManager, error) {
-	clm := &clusterv1alpha1.ClusterManager{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      clusterClaim.Spec.ClusterName,
-			Namespace: clusterClaim.Namespace,
-			Labels: map[string]string{
-				clusterv1alpha1.LabelKeyClmClusterType: clusterv1alpha1.ClusterTypeCreated,
-				clusterv1alpha1.LabelKeyClcName:        clusterClaim.Name,
+func WatchK8sEvent() {
+
+	watchlist := cache.NewListWatchFromClient(Clientset.EventsV1().RESTClient(), "events", "", fields.Everything())
+
+	_, controller := cache.NewInformer(
+		watchlist,
+		&eventv1.Event{},
+		time.Second*0,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				e := obj.(*eventv1.Event)
+				eventDataFactory.Insert(e)
 			},
-			Annotations: map[string]string{
-				"owner":                                clusterClaim.Annotations["creator"],
-				"creator":                              clusterClaim.Annotations["creator"],
-				clusterv1alpha1.AnnotationKeyClmDomain: os.Getenv("HC_DOMAIN"),
+			DeleteFunc: func(obj interface{}) {
+				e := obj.(*eventv1.Event)
+				eventDataFactory.Insert(e)
+			},
+			UpdateFunc: func(olde, newe interface{}) {
+				e := newe.(*eventv1.Event)
+				eventDataFactory.Insert(e)
 			},
 		},
-		// todo-shkim
-		Spec: clusterv1alpha1.ClusterManagerSpec{
-			Provider: clusterClaim.Spec.Provider,
-			Version:  clusterClaim.Spec.Version,
-			//Region:     clusterClaim.Spec.Region,
-			//SshKey:     clusterClaim.Spec.SshKey,
-			MasterNum: clusterClaim.Spec.MasterNum,
-			//MasterType: clusterClaim.Spec.MasterType,
-			WorkerNum: clusterClaim.Spec.WorkerNum,
-			//WorkerType: clusterClaim.Spec.WorkerType,
-		},
-		AwsSpec: clusterv1alpha1.ProviderAwsSpec{
-			SshKey:     clusterClaim.Spec.ProviderAwsSpec.SshKey,
-			Region:     clusterClaim.Spec.ProviderAwsSpec.Region,
-			MasterType: clusterClaim.Spec.ProviderAwsSpec.MasterType,
-			WorkerType: clusterClaim.Spec.ProviderAwsSpec.WorkerType,
-		},
-		VsphereSpec: clusterv1alpha1.ProviderVsphereSpec{
-			PodCidr:             clusterClaim.Spec.ProviderVsphereSpec.PodCidr,
-			VcenterIp:           clusterClaim.Spec.ProviderVsphereSpec.VcenterIp,
-			VcenterId:           clusterClaim.Spec.ProviderVsphereSpec.VcenterId,
-			VcenterPassword:     clusterClaim.Spec.ProviderVsphereSpec.VcenterPassword,
-			VcenterThumbprint:   clusterClaim.Spec.ProviderVsphereSpec.VcenterThumbprint,
-			VcenterNetwork:      clusterClaim.Spec.ProviderVsphereSpec.VcenterNetwork,
-			VcenterDataCenter:   clusterClaim.Spec.ProviderVsphereSpec.VcenterDataCenter,
-			VcenterDataStore:    clusterClaim.Spec.ProviderVsphereSpec.VcenterDataStore,
-			VcenterFolder:       clusterClaim.Spec.ProviderVsphereSpec.VcenterFolder,
-			VcenterResourcePool: clusterClaim.Spec.ProviderVsphereSpec.VcenterResourcePool,
-			VcenterKcpIp:        clusterClaim.Spec.ProviderVsphereSpec.VcenterKcpIp,
-			VcenterCpuNum:       clusterClaim.Spec.ProviderVsphereSpec.VcenterCpuNum,
-			VcenterMemSize:      clusterClaim.Spec.ProviderVsphereSpec.VcenterMemSize,
-			VcenterDiskSize:     clusterClaim.Spec.ProviderVsphereSpec.VcenterDiskSize,
-			VcenterTemplate:     clusterClaim.Spec.ProviderVsphereSpec.VcenterTemplate,
-		},
-	}
-	clm, err := customClientset.ClusterV1alpha1().ClusterManagers(clusterClaim.Namespace).Create(context.TODO(), clm, metav1.CreateOptions{})
-	if err != nil {
-		klog.Errorln(err)
-		return nil, err
-	}
+	)
 
-	ccJson, err := json.Marshal(clusterClaim)
-	if err != nil {
-		klog.Info("***** json marshal error")
-		klog.Errorln(err)
-	}
-	klog.Info("*****" + string(ccJson))
-
-	clmJson, err := json.Marshal(clm)
-	if err != nil {
-		klog.Info("##### json marshal error")
-		klog.Errorln(err)
-	}
-	klog.Info("#####" + string(clmJson))
-
-	klog.Info("ClusterManager is created")
-	return clm, nil
+	EventWatchChannel = make(chan struct{})
+	go controller.Run(EventWatchChannel)
 }
 
 func UpdateAuditResourceList() {
@@ -1268,10 +1292,10 @@ func UpdateAuditResourceList() {
 	apiGroupList := &metav1.APIGroupList{}
 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/").DoRaw(context.TODO())
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 	}
 	if err := json.Unmarshal(data, apiGroupList); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 	}
 
 	for _, apiGroup := range apiGroupList.Groups {
@@ -1280,10 +1304,10 @@ func UpdateAuditResourceList() {
 			path := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", version.GroupVersion, -1)
 			data, err := Clientset.RESTClient().Get().AbsPath(path).DoRaw(context.TODO())
 			if err != nil {
-				klog.Errorln(err)
+				klog.V(1).Infoln(err)
 			}
 			if err := json.Unmarshal(data, apiResourceList); err != nil {
-				klog.Errorln(err)
+				klog.V(1).Infoln(err)
 			}
 
 			for _, apiResource := range apiResourceList.APIResources {
@@ -1301,10 +1325,10 @@ func UpdateAuditResourceList() {
 	apiResourceList := &metav1.APIResourceList{}
 	data, err = Clientset.RESTClient().Get().AbsPath("/api/v1").DoRaw(context.TODO())
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 	}
 	if err := json.Unmarshal(data, apiResourceList); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 	}
 	for _, apiResource := range apiResourceList.APIResources {
 		fullName[apiResource.Name] = struct{}{}
@@ -1326,11 +1350,11 @@ func UpdateAuditResourceList() {
 // 	apiGroupList := &metav1.APIGroupList{}
 // 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/").DoRaw(context.TODO())
 // 	if err != nil {
-// 		klog.Errorln(err)
+// 		klog.V(1).Infoln(err)
 // 		panic(err)
 // 	}
 // 	if err := json.Unmarshal(data, apiGroupList); err != nil {
-// 		klog.Errorln(err)
+// 		klog.V(1).Infoln(err)
 // 		panic(err)
 // 	}
 
@@ -1341,11 +1365,11 @@ func UpdateAuditResourceList() {
 // 	apiResourceList := &metav1.APIResourceList{}
 // 	data, err = Clientset.RESTClient().Get().AbsPath("/api/v1").DoRaw(context.TODO())
 // 	if err != nil {
-// 		klog.Errorln(err)
+// 		klog.V(1).Infoln(err)
 // 		panic(err)
 // 	}
 // 	if err := json.Unmarshal(data, apiResourceList); err != nil {
-// 		klog.Errorln(err)
+// 		klog.V(1).Infoln(err)
 // 		panic(err)
 // 	}
 // 	for _, apiResource := range apiResourceList.APIResources {
@@ -1366,11 +1390,11 @@ func UpdateAuditResourceList() {
 // 	preferredVersionPath := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", apiGroup.PreferredVersion.GroupVersion, -1)
 // 	data, err := Clientset.RESTClient().Get().AbsPath(preferredVersionPath).DoRaw(context.TODO())
 // 	if err != nil {
-// 		klog.Errorln(err)
+// 		klog.V(1).Infoln(err)
 // 		panic(err)
 // 	}
 // 	if err := json.Unmarshal(data, apiResourceList); err != nil {
-// 		klog.Errorln(err)
+// 		klog.V(1).Infoln(err)
 // 		panic(err)
 // 	}
 
@@ -1389,11 +1413,11 @@ func UpdateAuditResourceList() {
 // 		path := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", version.GroupVersion, -1)
 // 		data, err := Clientset.RESTClient().Get().AbsPath(path).DoRaw(context.TODO())
 // 		if err != nil {
-// 			klog.Errorln(err)
+// 			klog.V(1).Infoln(err)
 // 			panic(err)
 // 		}
 // 		if err := json.Unmarshal(data, apiResourceList); err != nil {
-// 			klog.Errorln(err)
+// 			klog.V(1).Infoln(err)
 // 			panic(err)
 // 		}
 
@@ -1416,23 +1440,23 @@ func UpdateAuditResourceList() {
 // func UpdateClusterManager(userId string, userGroups []string, clm *clusterv1alpha1.ClusterManager) (*clusterv1alpha1.ClusterManager, error) {
 // 	clmUpdateRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", "", clm.Name, "update")
 // 	if err != nil {
-// 		klog.Errorln(err)
+// 		klog.V(1).Infoln(err)
 // 		return nil, err
 // 	}
 
 // 	if clmUpdateRuleResult.Status.Allowed {
 // 		result, err := customClientset.ClusterV1alpha1().ClusterManagers(clm.Namespace).UpdateStatus(context.TODO(), clm, metav1.UpdateOptions{})
 // 		if err != nil {
-// 			klog.Errorln("Update member list in cluster [ " + clm.Name + " ] Failed")
+// 			klog.V(1).Infoln("Update member list in cluster [ " + clm.Name + " ] Failed")
 // 			return nil, err
 // 		} else {
 // 			msg := "Update member list in cluster [ " + clm.Name + " ] Success"
-// 			klog.Infoln(msg)
+// 			klog.V(3).Infoln(msg)
 // 			return result, nil
 // 		}
 // 	} else {
 // 		newErr := errors.NewBadRequest(" User [ " + userId + " ] is not a cluster admin, Cannot invite members")
-// 		klog.Errorln(newErr)
+// 		klog.V(1).Infoln(newErr)
 // 		return nil, newErr
 // 	}
 // }

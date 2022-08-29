@@ -14,11 +14,11 @@ import (
 )
 
 const (
-	DB_USER             = "postgres"
-	DB_PASSWORD         = "tmax"
-	DB_NAME             = "postgres"
-	HOSTNAME            = "postgres-service.hypercloud5-system.svc"
-	PORT                = 5432
+	// DB_USER             = "postgres"
+	// DB_PASSWORD         = "tmax"
+	// DB_NAME             = "postgres"
+	// HOSTNAME            = "postgres-service.hypercloud5-system.svc"
+	// PORT                = 5432
 	INSERT_QUERY        = "INSERT INTO CLUSTER_MEMBER (namespace, cluster, member_id, member_name, attribute, role, status, createdTime, updatedTime) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 	DELETE_QUERY        = "DELETE FROM CLUSTER_MEMBER WHERE namespace = $1 and cluster = $2 and member_id = $3 and attribute = $4"
 	DELETE_ALL_QUERY    = "DELETE FROM CLUSTER_MEMBER WHERE namespace = $1 and cluster = $2"
@@ -31,7 +31,7 @@ var pg_con_info string
 func Insert(item util.ClusterMemberInfo) error {
 	_, err := db.Dbpool.Exec(context.TODO(), INSERT_QUERY, item.Namespace, item.Cluster, item.MemberId, item.MemberName, item.Attribute, item.Role, item.Status, time.Now(), time.Now())
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return err
 	}
 
@@ -55,10 +55,10 @@ func ListClusterMemberWithOutPending(cluster string, namespace string) ([]util.C
 	b.WriteString("and status not in ('pending') ")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -97,10 +97,10 @@ func ListClusterMember(cluster string, namespace string) ([]util.ClusterMemberIn
 	b.WriteString("' ")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -141,10 +141,10 @@ func ListAllClusterUser(cluster string, namespace string) ([]util.ClusterMemberI
 	b.WriteString("' ")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -186,10 +186,10 @@ func ListClusterOwnerAndGroupMember(cluster string, namespace string) ([]util.Cl
 	b.WriteString("or status = 'owner')")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -231,10 +231,10 @@ func ListClusterInvitedMember(cluster string, namespace string) ([]util.ClusterM
 	b.WriteString("and status = 'invited')")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -275,10 +275,10 @@ func ListClusterGroup(cluster string, namespace string) ([]util.ClusterMemberInf
 	b.WriteString("and (attribute = 'group')")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -327,10 +327,10 @@ func ListClusterInNamespace(userId string, userGroups []string, namespace string
 	b.WriteString("group by cluster")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -367,15 +367,15 @@ func ListClusterAllNamespace(userId string, userGroups []string) ([]types.Namesp
 	b.WriteString("group by namespace, cluster")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return nil, err
 	}
 	defer rows.Close()
 
-	//klog.Infoln(unsafe.Sizeof(rows))
+	//klog.V(3).Infoln(unsafe.Sizeof(rows))
 	for rows.Next() {
 		var clusterManagerNamespacedName types.NamespacedName
 		rows.Scan(
@@ -384,7 +384,7 @@ func ListClusterAllNamespace(userId string, userGroups []string) ([]types.Namesp
 		)
 		clusterManagerNamespacedNameList = append(clusterManagerNamespacedNameList, clusterManagerNamespacedName)
 	}
-	//klog.Infoln("NS: " + clusterManagerNamespacedNameList[0].Namespace + " / Name: " + clusterManagerNamespacedNameList[0].Name)
+	//klog.V(3).Infoln("NS: " + clusterManagerNamespacedNameList[0].Namespace + " / Name: " + clusterManagerNamespacedNameList[0].Name)
 	return clusterManagerNamespacedNameList, nil
 }
 
@@ -411,10 +411,10 @@ func GetPendingUser(clusterMember util.ClusterMemberInfo) (*util.ClusterMemberIn
 	b.WriteString("and status = 'pending' ")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -454,10 +454,10 @@ func ListPendingUser(cluster string, namespace string) ([]util.ClusterMemberInfo
 	b.WriteString("and status = 'pending' ")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -504,10 +504,10 @@ func GetInvitedGroup(clusterMember util.ClusterMemberInfo) (int, error) {
 	b.WriteString("' ")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return 0, err
 	}
 	defer rows.Close()
@@ -522,12 +522,12 @@ func GetInvitedGroup(clusterMember util.ClusterMemberInfo) (int, error) {
 
 func UpdateStatus(item *util.ClusterMemberInfo) error {
 
-	klog.Infoln("Query: " + UPDATE_STATUS_QUERY)
-	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
+	klog.V(3).Infoln("Query: " + UPDATE_STATUS_QUERY)
+	klog.V(3).Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
 	_, err := db.Dbpool.Exec(context.TODO(), UPDATE_STATUS_QUERY, time.Now(), item.Namespace, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return err
 	}
 
@@ -537,12 +537,12 @@ func UpdateStatus(item *util.ClusterMemberInfo) error {
 func UpdateRole(item util.ClusterMemberInfo) error {
 
 	query := strings.Replace(UPDATE_ROLE_QUERY, "@@ROLE@@", item.Role, -1)
-	klog.Infoln("Query: " + query)
-	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
+	klog.V(3).Infoln("Query: " + query)
+	klog.V(3).Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
 	_, err := db.Dbpool.Exec(context.TODO(), query, time.Now(), item.Namespace, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return err
 	}
 
@@ -551,12 +551,12 @@ func UpdateRole(item util.ClusterMemberInfo) error {
 
 func Delete(item util.ClusterMemberInfo) error {
 
-	klog.Infoln("Query: " + DELETE_QUERY)
-	klog.Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
+	klog.V(3).Infoln("Query: " + DELETE_QUERY)
+	klog.V(3).Infoln("Paremeters: " + item.Namespace + ", " + item.Cluster + ", " + item.MemberId + ", " + item.Attribute)
 
 	_, err := db.Dbpool.Exec(context.TODO(), DELETE_QUERY, item.Namespace, item.Cluster, item.MemberId, item.Attribute)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return err
 	}
 
@@ -564,12 +564,12 @@ func Delete(item util.ClusterMemberInfo) error {
 }
 func DeleteALL(namespace, cluster string) error {
 
-	klog.Infoln("Query: " + DELETE_ALL_QUERY)
-	klog.Infoln("Paremeters: " + namespace + ", " + cluster)
+	klog.V(3).Infoln("Query: " + DELETE_ALL_QUERY)
+	klog.V(3).Infoln("Paremeters: " + namespace + ", " + cluster)
 
 	_, err := db.Dbpool.Exec(context.TODO(), DELETE_ALL_QUERY, namespace, cluster)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return err
 	}
 
@@ -597,11 +597,11 @@ func GetRemainClusterForSubject(namespace, subject, attribute string) (int, erro
 	b.WriteString("and status not in ('pending') ")
 
 	query := b.String()
-	klog.Infoln("Query: " + query)
+	klog.V(3).Infoln("Query: " + query)
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 		return 0, err
 	}
 	defer rows.Close()

@@ -58,22 +58,22 @@ func filter(eventList audit.EventList, cond urlParam) audit.EventList {
 	out.APIVersion = "audit.k8s.io/v1"
 	code64, _ := strconv.ParseInt(cond.Code, 10, 32)
 
-	klog.Info("NS cond:", cond.Namespace)
-	klog.Info("RS cond:", cond.Resource)
-	klog.Info("Code cond:", cond.Code)
+	klog.V(3).Info("NS cond:", cond.Namespace)
+	klog.V(3).Info("RS cond:", cond.Resource)
+	klog.V(3).Info("Code cond:", cond.Code)
 
 	for _, data := range eventList.Items {
 		ns := cond.Namespace == "" || (data.ObjectRef.Namespace == cond.Namespace)
 		rs := cond.Resource == "" || (data.ObjectRef.Resource == cond.Resource)
 		code := cond.Code == "" || ((data.ResponseStatus.Code/100)*100 == int32(code64))
 
-		klog.Info("data.ObjectRef.Namespace:", data.ObjectRef.Namespace)
-		klog.Info("data.ObjectRef.Resource:", data.ObjectRef.Resource)
-		klog.Info("data.ResponseStatus.Code:", data.ResponseStatus.Code)
+		klog.V(3).Info("data.ObjectRef.Namespace:", data.ObjectRef.Namespace)
+		klog.V(3).Info("data.ObjectRef.Resource:", data.ObjectRef.Resource)
+		klog.V(3).Info("data.ResponseStatus.Code:", data.ResponseStatus.Code)
 
-		klog.Info("NS:", ns)
-		klog.Info("RS:", rs)
-		klog.Info("Code:", code)
+		klog.V(3).Info("NS:", ns)
+		klog.V(3).Info("RS:", rs)
+		klog.V(3).Info("Code:", code)
 
 		if ns && rs && code {
 			out.Items = append(out.Items, data)

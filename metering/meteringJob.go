@@ -94,7 +94,7 @@ func MeteringJob() {
 	)
 	defer file.Close()
 	if err != nil {
-		klog.Errorln("Cannot open metering log file error : ", err)
+		klog.V(1).Infoln("Cannot open metering log file error : ", err)
 		return
 	}
 
@@ -311,7 +311,7 @@ func getMeteringData(query string) meteringModel.MetricDataList {
 	bytes, _ := ioutil.ReadAll(resp.Body)
 
 	if err := json.Unmarshal(bytes, &metricResponse); err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 	}
 	return metricResponse.Data
 }
@@ -386,14 +386,14 @@ func insertMeteringYear() {
 	}
 	fmt.Fprintf(file, "Update METERING_MONTH Past data to 'Merged' Success!!\n")
 	/*
-		klog.Infoln("--------------------------------------")
-		klog.Infoln("Delete METERING for past 1 year Start!!")
+		klog.V(3).Infoln("--------------------------------------")
+		klog.V(3).Infoln("Delete METERING for past 1 year Start!!")
 		_, err = db.Exec(METERING_MONTH_DELETE_QUERY)
 		if err != nil {
 			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
-		klog.Infoln("Delete METERING for past 1 year Success!!")
+		klog.V(3).Infoln("Delete METERING for past 1 year Success!!")
 	*/
 }
 
@@ -468,14 +468,14 @@ func insertMeteringMonth() {
 	}
 	fmt.Fprintf(file, "Update METERING_DAY Past data to 'Merged' Success!!\n")
 	/*
-		klog.Infoln("--------------------------------------")
-		klog.Infoln("Delete METERING for past 1 month Start!!")
+		klog.V(3).Infoln("--------------------------------------")
+		klog.V(3).Infoln("Delete METERING for past 1 month Start!!")
 		_, err = db.Exec(METERING_DAY_DELETE_QUERY)
 		if err != nil {
 			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
-		klog.Infoln("Delete METERING for past 1 month Success!!")
+		klog.V(3).Infoln("Delete METERING for past 1 month Success!!")
 	*/
 }
 
@@ -548,14 +548,14 @@ func insertMeteringDay() {
 	}
 	fmt.Fprintf(file, "Update METERING_HOUR Past data to 'Merged' Success!!\n")
 	/*
-		klog.Infoln("--------------------------------------")
-		klog.Infoln("Delete METERING for past 1 day Start!!")
+		klog.V(3).Infoln("--------------------------------------")
+		klog.V(3).Infoln("Delete METERING for past 1 day Start!!")
 		_, err = db.Exec(METERING_HOUR_DELETE_QUERY)
 		if err != nil {
 			fmt.Fprintf(file, "%v\n", err)
 			return
 		}
-		klog.Infoln("Delete METERING for past 1 day Success!!")
+		klog.V(3).Infoln("Delete METERING for past 1 day Success!!")
 	*/
 }
 

@@ -31,20 +31,10 @@ const (
 	//AUDIT_BODY_INSERT_QUERY = "INSERT INTO audit_body (ID, NAMESPACE, BODY ) VALUES ($1, $2, $3)"
 )
 
-func NewNullString(s string) sql.NullString {
-	if s == "null" {
-		return sql.NullString{}
-	}
-	return sql.NullString{
-		String: s,
-		Valid:  true,
-	}
-}
-
 func Insert(items []audit.Event) {
 	defer func() {
 		if v := recover(); v != nil {
-			klog.Errorln("capture a panic:", v)
+			klog.V(1).Infoln("capture a panic:", v)
 		}
 	}()
 
@@ -77,9 +67,9 @@ func Insert(items []audit.Event) {
 			event.AuditID,
 			event.User.Username,
 			event.UserAgent,
-			NewNullString(event.ObjectRef.Namespace),
-			NewNullString(event.ObjectRef.APIGroup),
-			NewNullString(event.ObjectRef.APIVersion),
+			db.NewNullString(event.ObjectRef.Namespace),
+			db.NewNullString(event.ObjectRef.APIGroup),
+			db.NewNullString(event.ObjectRef.APIVersion),
 			event.ObjectRef.Resource,
 			event.ObjectRef.Name,
 			event.Stage,
@@ -91,7 +81,7 @@ func Insert(items []audit.Event) {
 			event.ResponseStatus.Message)
 
 		if err != nil {
-			klog.Error(err)
+			klog.V(1).Info(err)
 		}
 	}
 
@@ -104,7 +94,7 @@ func Insert(items []audit.Event) {
 				event.RequestObject.Raw)
 
 			if err != nil {
-				klog.Error(err)
+				klog.V(1).Info(err)
 			}
 		}
 	*/
@@ -115,37 +105,37 @@ func Insert(items []audit.Event) {
 	// for i := 0; i < numInserts; i++ {
 	// 	_, err := br.Exec()
 	// 	if err != nil {
-	// 		klog.Errorln(err)
+	// 		klog.V(1).Infoln(err)
 	// 		// os.Exit(1)
 	// 	}
 	// }
-	// // klog.Infoln("Successfully batch inserted data n")
+	// // klog.V(3).Infoln("Successfully batch inserted data n")
 
 	// //Compare length of results slice to size of table
-	// klog.Infof("size of results: %d\n", numInserts)
+	// klog.V(3).Infof("size of results: %d\n", numInserts)
 	// //check size of table for number of rows inserted
 	// // result of last SELECT statement
 	// var rowsInserted int
 	// err := br.QueryRow().Scan(&rowsInserted)
-	// klog.Infof("size of table: %d\n", rowsInserted)
+	// klog.V(3).Infof("size of table: %d\n", rowsInserted)
 
 	// err = br.Close()
 	// if err != nil {
-	// 	klog.Errorf("Unable to closer batch %v\n", err)
+	// 	klog.V(1).Infof("Unable to closer batch %v\n", err)
 	// }
-	klog.Info("Affected rows: ", len(items))
+	klog.V(3).Info("Affected rows: ", len(items))
 }
 
 func Get(query string) (audit.EventList, int64) {
 	defer func() {
 		if v := recover(); v != nil {
-			klog.Errorln("capture a panic:", v)
+			klog.V(1).Infoln("capture a panic:", v)
 		}
 	}()
 
 	rows, err := db.Dbpool.Query(context.TODO(), query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 	}
 	defer rows.Close()
 
@@ -176,7 +166,7 @@ func Get(query string) (audit.EventList, int64) {
 			&row_count)
 		if err != nil {
 			rows.Close()
-			klog.Error(err)
+			klog.V(1).Info(err)
 		}
 		if temp_namespace.Valid {
 			event.ObjectRef.Namespace = temp_namespace.String
@@ -206,15 +196,15 @@ func Get(query string) (audit.EventList, int64) {
 func GetByJson(jquery string) ClaimListResponse {
 	defer func() {
 		if v := recover(); v != nil {
-			klog.Errorln("capture a panic:", v)
+			klog.V(1).Infoln("capture a panic:", v)
 		}
 	}()
 
-	klog.Infoln("query =", jquery)
+	klog.V(3).Infoln("query =", jquery)
 
 	rows, err := db.Dbpool.Query(context.TODO(), jquery)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 	}
 	defer rows.Close()
 
@@ -229,7 +219,7 @@ func GetByJson(jquery string) ClaimListResponse {
 			&claim.Body)
 		if err != nil {
 			rows.Close()
-			klog.Error(err)
+			klog.V(1).Info(err)
 		}
 		if namespace.Valid {
 			claim.Namespace = namespace.String
@@ -246,19 +236,19 @@ func GetByJson(jquery string) ClaimListResponse {
 func GetMemberList(query string) ([]string, int64) {
 	defer func() {
 		if v := recover(); v != nil {
-			klog.Errorln("capture a panic:", v)
+			klog.V(1).Infoln("capture a panic:", v)
 		}
 	}()
 
 	db, err := sql.Open("postgres", pg_con_info)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 	}
 	defer db.Close()
 
 	rows, err := db.Query(query)
 	if err != nil {
-		klog.Error(err)
+		klog.V(1).Info(err)
 	}
 	defer rows.Close()
 
@@ -273,7 +263,7 @@ func GetMemberList(query string) ([]string, int64) {
 			&row_count)
 		if err != nil {
 			rows.Close()
-			klog.Error(err)
+			klog.V(1).Info(err)
 		}
 		memberList = append(memberList, member)
 	}

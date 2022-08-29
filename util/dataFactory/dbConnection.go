@@ -2,6 +2,7 @@ package dataFactory
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"k8s.io/klog/v2"
@@ -19,7 +20,7 @@ const (
 	DB_USER     = "postgres"
 	DB_PASSWORD = "tmax"
 	DB_NAME     = "postgres"
-	HOSTNAME    = "postgres-service.hypercloud5-system.svc"
+	HOSTNAME    = "timescaledb-service.hypercloud5-system.svc"
 	PORT        = "5432"
 )
 
@@ -27,19 +28,29 @@ func CreateConnection() {
 	var err error
 	// content, err := ioutil.ReadFile(DBPassWordPath)
 	// if err != nil {
-	// 	klog.Errorln(err)
+	// 	klog.V(1).Infoln(err)
 	// 	return
 	// }
 	// dbRootPW := string(content)
 
-	connStr = DB_DRIVER + "://" + DB_USER + ":" + DB_PASSWORD + "@postgres-service.hypercloud5-system.svc.cluster.local:" + PORT + "/" + DB_NAME
+	connStr = DB_DRIVER + "://" + DB_USER + ":" + DB_PASSWORD + "@" + HOSTNAME + ":" + PORT + "/" + DB_NAME
 	// 치환
 	//connStr = strings.Replace(connStr, "{DB_ROOT_PW}", dbRootPW, -1)
 	ctx = context.Background()
 
 	Dbpool, err = pgxpool.Connect(ctx, connStr)
 	if err != nil {
-		klog.Errorf("Unable to connect to database: %v\n", err)
+		klog.V(1).Infof("Unable to connect to database: %v\n", err)
 		panic(err)
+	}
+}
+
+func NewNullString(s string) sql.NullString {
+	if s == "null" {
+		return sql.NullString{}
+	}
+	return sql.NullString{
+		String: s,
+		Valid:  true,
 	}
 }

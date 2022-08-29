@@ -13,12 +13,12 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/jackc/pgx/v4 v4.14.1
-	github.com/oklog/ulid v1.3.1
 	github.com/robfig/cron v1.2.0
 	//github.com/robfig/cron v1.2.0
 	github.com/tmax-cloud/efk-operator v0.0.0-20201207030412-fd9c02a3e1c2
-	github.com/tmax-cloud/hypercloud-multi-operator v0.5.0-b26f5
+	github.com/tmax-cloud/hypercloud-multi-operator v0.5.0-b32f1
 	github.com/tmax-cloud/hypercloud-single-operator v0.0.0-20210222045913-0ace319d7c34
+	github.com/tmax-cloud/template-operator v0.0.1
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.22.2
@@ -29,7 +29,6 @@ require (
 	k8s.io/klog/v2 v2.9.0
 	k8s.io/kubectl v0.22.2
 	k8s.io/utils v0.0.0-20210819203725-bdf08cb9a70a
-	sigs.k8s.io/controller-runtime v0.10.1
 )
 
 replace (

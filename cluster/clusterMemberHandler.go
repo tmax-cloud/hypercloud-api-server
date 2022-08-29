@@ -21,7 +21,7 @@ func ListClusterMember(res http.ResponseWriter, req *http.Request) {
 	namespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, cluster, namespace); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -36,7 +36,7 @@ func ListClusterMember(res http.ResponseWriter, req *http.Request) {
 
 	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster: cluster is deleting or not ready"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
@@ -44,23 +44,23 @@ func ListClusterMember(res http.ResponseWriter, req *http.Request) {
 	if userId == clm.Annotations["owner"] {
 		clusterMemberList, err := clusterDataFactory.ListClusterMember(cluster, namespace)
 		if err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 			return
 		}
 		msg := "List cluster success"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
 		return
 	} else {
 		clusterMemberList, err := clusterDataFactory.ListClusterMemberWithOutPending(cluster, namespace)
 		if err != nil {
-			klog.Errorln(err)
+			klog.V(1).Infoln(err)
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 			return
 		}
 		msg := "List cluster success"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
 		return
 	}
@@ -70,17 +70,17 @@ func ListClusterMemberWithOutPending(res http.ResponseWriter, req *http.Request)
 	vars := gmux.Vars(req)
 	cluster := vars["clustermanager"]
 	namespace := vars["namespace"]
-	klog.Infoln("in func ListClusterMemberWithOutPending")
-	klog.Infoln("cluster = " + cluster + ", namespace = " + namespace)
+	klog.V(3).Infoln("in func ListClusterMemberWithOutPending")
+	klog.V(3).Infoln("cluster = " + cluster + ", namespace = " + namespace)
 
 	clusterMemberList, err := clusterDataFactory.ListClusterMemberWithOutPending(cluster, namespace)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 	msg := "List cluster success"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
 }
 
@@ -93,7 +93,7 @@ func ListClusterInvitedMember(res http.ResponseWriter, req *http.Request) {
 	namespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, cluster, namespace); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -106,19 +106,19 @@ func ListClusterInvitedMember(res http.ResponseWriter, req *http.Request) {
 
 	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot list invited member in cluster: cluster is deleting or not ready"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	clusterMemberList, err := clusterDataFactory.ListClusterInvitedMember(cluster, namespace)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 	msg := "List cluster invited member success"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
 }
 
@@ -138,19 +138,19 @@ func ListClusterGroup(res http.ResponseWriter, req *http.Request) {
 
 	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot list invited member in cluster: cluster is deleting or not ready"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	clusterMemberList, err := clusterDataFactory.ListClusterGroup(cluster, namespace)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 	msg := "List cluster group success"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
 }
 
@@ -166,7 +166,7 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	namespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, cluster, attribute, memberId, namespace); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -178,7 +178,7 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	}
 	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot remove member in cluster: cluster is deleting phase or not ready"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
@@ -192,7 +192,7 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 
 	clusterMemberList, err := clusterDataFactory.ListClusterMember(clusterMember.Cluster, clusterMember.Namespace)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -209,21 +209,21 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 
 	if userId != clusterOwner {
 		msg := "Request user [ " + userId + " ]is not a cluster owner [ " + clusterOwner + " ]"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	if !util.Contains(existMember, memberId) {
 		msg := attribute + " [ " + memberId + " ] is already removed in cluster [ " + cluster + " ] "
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	// db에서 삭제
 	if err := clusterDataFactory.Delete(clusterMember); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -242,7 +242,7 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	msg := "User [" + memberId + "] is removed from cluster [" + clm.Name + "]"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
 }
 
@@ -259,7 +259,7 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	namespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId, cluster, attribute, memberId, remoteRole, namespace); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -271,7 +271,7 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 	}
 	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
 		msg := "Cannot invite member to cluster in deleting phase or not ready status"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
@@ -286,7 +286,7 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 
 	clusterMemberList, err := clusterDataFactory.ListClusterMember(clusterMember.Cluster, clusterMember.Namespace)
 	if err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -303,21 +303,21 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 
 	if userId != clusterOwner {
 		msg := "Request user [ " + userId + " ]is not a cluster owner [ " + clusterOwner + " ]"
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	if !util.Contains(existMember, memberId) {
 		msg := attribute + " [ " + memberId + " ] is not in cluster [ " + cluster + " ] "
-		klog.Infoln(msg)
+		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	// db에서 role update
 	if err := clusterDataFactory.UpdateRole(clusterMember); err != nil {
-		klog.Errorln(err)
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
@@ -333,6 +333,6 @@ func UpdateMemberRole(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	msg := attribute + " [" + memberId + "] role is updated to [" + remoteRole + "] in cluster [" + clm.Name + "]"
-	klog.Infoln(msg)
+	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
 }
