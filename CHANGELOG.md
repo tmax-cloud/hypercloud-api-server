@@ -9,7 +9,6 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
   - [mod] leader election이 종료가 돼도  다시 실행되도록 수정 by Seungwon Lee
-  - [mod] hypercloud multi-operator package 최신화 by SISILIA
 
 ### Fixed
 
@@ -26,6 +25,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
   - [mod] k8s event watch 기능 HA 고려하도록 수정 및 main.go init 과정 리팩토링 by Seungwon Lee
+  - [mod] hypercloud multi-operator package 최신화 by SISILIA
 
 ### Fixed
 
