@@ -1,6 +1,23 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.33.0 start -------------------->
+
+## Hypercloud-api-server 5.0.33.0 (2022. 09. 02. (금) 14:18:17 KST)
+
+### Added
+
+### Changed
+  - [mod] leader election이 종료가 돼도  다시 실행되도록 수정 by Seungwon Lee
+  - [mod] hypercloud multi-operator package 최신화 by SISILIA
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] GetBindableResources 로직 수정 by 2smin
+
 <!-------------------- v5.0.32.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.32.0 (2022. 08. 24. (수) 12:47:54 KST)
