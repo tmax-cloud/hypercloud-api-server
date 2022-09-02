@@ -682,11 +682,26 @@ func getNewLock(lockname, podname, namespace string) *resourcelock.LeaseLock {
 }
 
 func runLeaderElection(lock *resourcelock.LeaseLock, ctx context.Context, id string) {
+
+	defer func() {
+		if r := recover(); r != nil {
+			if err, ok := r.(error); ok {
+				klog.V(1).Infoln("Panic =  " + err.Error())
+			} else {
+				klog.V(1).Infof("Panic happened with %v", r)
+				klog.V(1).Infoln()
+			}
+		} else {
+			klog.V(1).Infoln("leader election just downed...")
+		}
+		go runLeaderElection(lock, ctx, id)
+	}()
+
 	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
 		Lock:            lock,
 		ReleaseOnCancel: true,
-		LeaseDuration:   10 * time.Second,
-		RenewDeadline:   5 * time.Second,
+		LeaseDuration:   15 * time.Second,
+		RenewDeadline:   10 * time.Second,
 		RetryPeriod:     2 * time.Second,
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(c context.Context) {
