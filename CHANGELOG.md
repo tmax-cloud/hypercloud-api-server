@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.33.1 start -------------------->
+
+## Hypercloud-api-server 5.0.33.1 (2022. 09. 08. (목) 18:20:48 KST)
+
+### Added
+
+### Changed
+  - [mod] GET ~/event 버그 수정 및 kind 파라미터 복수개로 받을 수 있도록 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.33.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.33.0 (2022. 09. 02. (금) 14:18:17 KST)
