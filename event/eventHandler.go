@@ -21,7 +21,8 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	startTime := queryParams.Get(util.QUERY_PARAMETER_STARTTIME)
 	endTime := queryParams.Get(util.QUERY_PARAMETER_ENDTIME)
 	sorts := queryParams[util.QUERY_PARAMETER_SORT]
-	kind := queryParams.Get(util.QUERY_PARAMETER_KIND)
+	kinds := queryParams[util.QUERY_PARAMETER_KIND]
+	// kind := queryParams.Get(util.QUERY_PARAMETER_KIND)
 	typ := queryParams.Get(util.QUERY_PARAMETER_TYPE)
 	host := queryParams.Get(util.QUERY_PARAMETER_HOST)
 
@@ -31,14 +32,26 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	if namespace != "" {
 		query += " and namespace='" + namespace + "'"
 	}
-	if kind != "" {
-		query += " and kind='" + kind + "'"
-	}
+	// if kind != "" {
+	// 	query += " and kind='" + kind + "'"
+	// }
 	if typ != "" {
 		query += " and type='" + typ + "'"
 	}
 	if host != "" {
 		query += " and host='" + host + "'"
+	}
+
+	if len(kinds) > 0 {
+		query += " and ("
+		for i, kind := range kinds {
+			query += " kind='" + kind + "'"
+			if i < len(kinds)-1 {
+				query += " or"
+			} else {
+				query += ")"
+			}
+		}
 	}
 
 	if len(sorts) > 0 {
@@ -90,7 +103,7 @@ func makeTimeRange(startTime string, endTime string, query string) string {
 	startTime = time.Unix(start, 0).Format("2006-01-02 15:04:05")
 	endTime = time.Unix(end, 0).Format("2006-01-02 15:04:05")
 
-	query += " where ('" + startTime + "' between first_timestamp and last_timestamp) or ('" + startTime + "' <= first_timestamp and '" + endTime + "' >= first_timestamp)"
+	query += " where (('" + startTime + "' between first_timestamp and last_timestamp) or ('" + startTime + "' <= first_timestamp and '" + endTime + "' >= first_timestamp))"
 
 	return query
 }
