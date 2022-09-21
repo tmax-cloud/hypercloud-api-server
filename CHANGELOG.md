@@ -1,6 +1,51 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.34.0 start -------------------->
+
+## Hypercloud-api-server 5.0.34.0 (2022. 09. 21. (수) 16:05:25 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.33.1 start -------------------->
+
+## Hypercloud-api-server 5.0.33.1 (2022. 09. 08. (목) 18:20:48 KST)
+
+### Added
+
+### Changed
+  - [mod] GET ~/event 버그 수정 및 kind 파라미터 복수개로 받을 수 있도록 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
+<!-------------------- v5.0.33.0 start -------------------->
+
+## Hypercloud-api-server 5.0.33.0 (2022. 09. 02. (금) 14:18:17 KST)
+
+### Added
+
+### Changed
+  - [mod] leader election이 종료가 돼도  다시 실행되도록 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] GetBindableResources 로직 수정 by 2smin
+
 <!-------------------- v5.0.32.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.32.0 (2022. 08. 24. (수) 12:47:54 KST)
@@ -9,6 +54,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
   - [mod] k8s event watch 기능 HA 고려하도록 수정 및 main.go init 과정 리팩토링 by Seungwon Lee
+  - [mod] hypercloud multi-operator package 최신화 by SISILIA
 
 ### Fixed
 
