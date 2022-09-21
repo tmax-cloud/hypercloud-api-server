@@ -121,6 +121,10 @@ func GetBindableResources() map[string]string {
 	}
 
 	objectList = addK8sBindableResources(objectList)
+	
+	objectList["Kafka"] = "kafka.strimzi.io/v1beta2"
+	objectList["Redis"] = "redis.redis.opstreelabs.in/v1beta1"
+	objectList["RedisCluster"] = "redis.redis.opstreelabs.in/v1beta1"
 
 	return objectList
 }
