@@ -3,25 +3,12 @@ All notable changes to this project will be documented in this file.
 
 <!-------------------- v5.0.34.0 start -------------------->
 
-## Hypercloud-api-server 5.0.34.0 (2022. 09. 21. (수) 16:41:30 KST)
-
-### Added
-
-### Changed
-
-### Fixed
-
-### CRD yaml
-
-### Etc
-
-<!-------------------- v5.0.34.0 start -------------------->
-
 ## Hypercloud-api-server 5.0.34.0 (2022. 09. 21. (수) 16:05:25 KST)
 
 ### Added
 
 ### Changed
+  - [mod] GET ~/bindableResources 에 redis, kafka 추가 변경 by 2smin
 
 ### Fixed
 
