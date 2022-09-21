@@ -122,6 +122,10 @@ func GetBindableResources() map[string]string {
 
 	objectList = addK8sBindableResources(objectList)
 
+	objectList["Kafka"] = "kafka.strimzi.io/v1beta2"
+	objectList["Redis"] = "redis.redis.opstreelabs.in/v1beta1"
+	objectList["RedisCluster"] = "redis.redis.opstreelabs.in/v1beta1"
+	
 	return objectList
 }
 
@@ -130,6 +134,7 @@ func addK8sBindableResources(objectList map[string]string) map[string]string {
 	podResources := []string{"Pod", "ReplicaSet", "DaemonSet", "Deployment", "Job", "CronJob", "StatefulSet"}
 	nonPodResources := []string{"Secret", "Service", "Ingress",
 		"Role", "RoleBinding", "ClusterRole", "ClusterRoleBinding", "Namespace", "ServiceAccount"}
+	
 
 	for _, resource := range nonPodResources {
 		_, exists := objectList[resource]
