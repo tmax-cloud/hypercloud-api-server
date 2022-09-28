@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 ### Changed
+  - [mod] GET ~/bindableResources 에 redis, kafka 추가 변경 by 2smin
 
 ### Fixed
 
