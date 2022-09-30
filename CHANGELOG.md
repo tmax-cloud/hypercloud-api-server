@@ -1,6 +1,23 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.34.1 start -------------------->
+
+## Hypercloud-api-server 5.0.34.1 (2022. 09. 30. (금) 14:34:20 KST)
+
+### Added
+
+### Changed
+  - [mod] add Secret to bindableResources by 2smin
+  - [mod] bindableResource에 secret 추가 by 2smin
+  - [mod] add redis kafka to GetBindableResources by 2smin
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.34.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.34.0 (2022. 09. 21. (수) 16:05:25 KST)
