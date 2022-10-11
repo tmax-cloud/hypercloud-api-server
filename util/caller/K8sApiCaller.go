@@ -128,7 +128,7 @@ func GetBindableResources() map[string]string {
 func addBindableResources(objectList map[string]string) map[string]string {
 
 	includeResources := []string{"Secret", "Pod", "ReplicaSet", "DaemonSet", "Deployment", "Job", "CronJob", "StatefulSet"}
-	excludeResources := []string{"Service", "Ingress",
+	excludeResources := []string{"Service", "Ingress", "ConfigMap",
 		"Role", "RoleBinding", "ClusterRole", "ClusterRoleBinding", "Namespace", "ServiceAccount"}
 
 	for _, resource := range excludeResources {
