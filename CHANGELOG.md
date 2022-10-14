@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.34.2 start -------------------->
+
+## Hypercloud-api-server 5.0.34.2 (2022. 10. 14. (금) 09:24:35 KST)
+
+### Added
+
+### Changed
+  - [mod] delete configmap from BindableResources by 2smin
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.34.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.34.1 (2022. 09. 30. (금) 14:34:20 KST)
