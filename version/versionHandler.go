@@ -22,11 +22,13 @@ import (
 	"k8s.io/klog"
 )
 
-// Get handles ~/version get method
-func Get(res http.ResponseWriter, req *http.Request) {
-	klog.V(3).Infoln("**** GET /version")
-	var conf versionModel.Config
+var (
+	result     []versionModel.Module
+	conf       versionModel.Config
+	configSize int
+)
 
+func init() {
 	// 1. READ CONFIG FILE
 	// File path should be same with what declared on volume mount in yaml file.
 	yamlFile, err := ioutil.ReadFile("/go/src/version/version.config")
@@ -38,10 +40,13 @@ func Get(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		klog.V(1).Infoln(err)
 	}
-	configSize := len(conf.Modules)
-	result := make([]versionModel.Module, configSize)
+	configSize = len(conf.Modules)
+	result = make([]versionModel.Module, configSize)
+}
 
-	// Main algorithm
+// Get handles ~/version get method
+func Get(res http.ResponseWriter, req *http.Request) {
+	klog.V(3).Infoln("**** GET /version")
 	var wg sync.WaitGroup
 	wg.Add(configSize)
 
