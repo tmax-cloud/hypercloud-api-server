@@ -219,6 +219,9 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 			// Delete RoleBinding
 			k8sApiCaller.DeleteRBWithUser(topicEvent.UserName)
 
+			// Delete kubectl pod related resources
+			k8sApiCaller.DeleteKubectlResourceByUserName(topicEvent.UserName)
+
 			// 사용자에 대해서..
 			// cluster의 주인인 경우.. 클러스터와 관련된 모든걸 지운다.
 			// 1. master에서 clm 지우면 됨 (+db)
