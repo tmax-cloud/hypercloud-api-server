@@ -1,6 +1,23 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.35.0 start -------------------->
+
+## Hypercloud-api-server 5.0.35.0 (2022. 11. 04. (금) 13:20:17 KST)
+
+### Added
+  - [feat] 콘솔에서 kubectl CLI 기능 제공을 위한 백엔드 기능 추가 by Seungwon Lee
+
+### Changed
+  - [mod] kubectl pod가 이미 있는 경우에도 200 OK 응답하도록 수정 by GitHub
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] version.config를 최초 기동 시 한 번만 read 하도록 리팩토링 by Seungwon Lee
+
 <!-------------------- v5.0.34.2 start -------------------->
 
 ## Hypercloud-api-server 5.0.34.2 (2022. 10. 14. (금) 09:24:35 KST)
