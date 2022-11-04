@@ -58,6 +58,7 @@ func init() {
 	init_variable()
 	init_db_connection()
 	init_logging()
+	init_etc()
 	if strings.EqualFold(kafka_enabled, "TRUE") {
 		init_kafka()
 	}
@@ -123,6 +124,7 @@ func register_multiplexer() {
 	mux.HandleFunc("/inject/job", serveSidecarInjectionForJob)
 	mux.HandleFunc("/inject/test", serveSidecarInjectionForTest)
 	mux.HandleFunc("/websocket/{api}", serveWebsocket)
+	mux.HandleFunc("/kubectl", serveKubectl)
 	mux.HandleFunc("/test", serveTest)
 
 	// get ClusterTemplate CR resources
@@ -270,6 +272,12 @@ func init_logging() {
 	podName, _ := os.Hostname()
 	lock := getNewLock("hypercloud5-api-server", podName, "hypercloud5-system")
 	go runLeaderElection(lock, ctx, podName)
+}
+
+func init_etc() {
+	cronJob_Kubectl_GC := cron.New()
+	cronJob_Kubectl_GC.AddFunc("@midnight", caller.DeleteKubectlAllResource)
+	cronJob_Kubectl_GC.Start()
 }
 
 func init_db_connection() {
@@ -558,6 +566,29 @@ func serveEvent(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		event.Get(w, r)
+	default:
+		klog.V(1).Infof("method not acceptable")
+	}
+}
+
+func serveKubectl(w http.ResponseWriter, r *http.Request) {
+	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
+	userName := r.URL.Query().Get("userName")
+	if len(userName) < 1 {
+		util.SetResponse(w, "userName must be given", nil, http.StatusBadRequest)
+		return
+	}
+	switch r.Method {
+	case http.MethodPost:
+		if err := caller.DeployKubectlPod(userName); err != nil {
+			util.SetResponse(w, "", err, http.StatusBadRequest)
+		} else {
+			util.SetResponse(w, "Create Kubectl Pod Success", nil, http.StatusOK)
+		}
+	case http.MethodDelete:
+		if err := caller.DeleteKubectlResourceByUserName(userName); err != nil {
+			util.SetResponse(w, "", err, http.StatusInternalServerError)
+		}
 	default:
 		klog.V(1).Infof("method not acceptable")
 	}

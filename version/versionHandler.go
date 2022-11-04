@@ -42,6 +42,15 @@ func init() {
 	}
 	configSize = len(conf.Modules)
 	result = make([]versionModel.Module, configSize)
+
+	for _, mod := range conf.Modules {
+		if mod.Name == "HyperAuth" {
+			idx := strings.Index(mod.ReadinessProbe.HTTPGet.Path, "/auth/realms")
+			k8sApiCaller.HYPERAUTH_URL = mod.ReadinessProbe.HTTPGet.Path[:idx]
+			k8sApiCaller.HYPERAUTH_REALM_PREFIX = mod.ReadinessProbe.HTTPGet.Path[idx:]
+			break
+		}
+	}
 }
 
 // Get handles ~/version get method

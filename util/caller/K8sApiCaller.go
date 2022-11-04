@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
@@ -1350,6 +1351,506 @@ func UpdateAuditResourceList() {
 	for k := range tmp {
 		AuditResourceList = append(AuditResourceList, k)
 	}
+}
+
+func GetHyperAuthAdminAccount() (string, string, error) {
+	secret := &corev1.Secret{}
+	var err error
+
+	if secret, err = Clientset.CoreV1().Secrets("hyperauth").Get(context.TODO(), "passwords", metav1.GetOptions{}); errors.IsNotFound(err) {
+		klog.V(1).Infoln("Hyperauth password secret is not found")
+		return "", "", err
+	} else if err != nil {
+		klog.V(1).Infoln(err, "Failed to get hyperauth password secret")
+		return "", "", err
+	}
+
+	id := string(secret.Data["HYPERAUTH_ADMIN"])
+	password := string(secret.Data["HYPERAUTH_PASSWORD"])
+
+	return id, password, nil
+}
+
+// kubectlInit create 'hypercloud-kubectl' namespace
+// and role/rolebinding for command 'exec' to the pod
+func kubectlInit(userName string) error {
+
+	if _, err := Clientset.CoreV1().Namespaces().Get(context.TODO(), util.HYPERCLOUD_KUBECTL_NAMESPACE, metav1.GetOptions{}); errors.IsNotFound(err) {
+		var ns corev1.Namespace
+		ns = corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: util.HYPERCLOUD_KUBECTL_NAMESPACE,
+				Labels: map[string]string{
+					"hypercloud": "system", // for avoding hypercloud-mutator webhook configuration
+				},
+			},
+		}
+		if _, err := Clientset.CoreV1().Namespaces().Create(context.TODO(), &ns, metav1.CreateOptions{}); err != nil {
+			klog.V(1).Infoln(err)
+			return err
+		}
+	} else if err != nil {
+		klog.V(1).Infoln(err)
+		return err
+	}
+
+	RoleNameForPod := ParseUserName(userName) + "-exec"
+
+	if _, err := Clientset.RbacV1().Roles(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), RoleNameForPod+"-role", metav1.GetOptions{}); errors.IsNotFound(err) {
+		var role rbacApi.Role
+		role = rbacApi.Role{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      RoleNameForPod + "-role",
+				Namespace: util.HYPERCLOUD_KUBECTL_NAMESPACE,
+				Labels: map[string]string{
+					util.HYPERCLOUD_KUBECTL_LABEL_KEY: util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+				},
+			},
+			Rules: []rbacApi.PolicyRule{
+				{
+					APIGroups: []string{
+						"", // corev1
+					},
+					Resources: []string{
+						"pods/exec",
+					},
+					ResourceNames: []string{
+						util.HYPERCLOUD_KUBECTL_PREFIX + ParseUserName(userName),
+					},
+					Verbs: []string{
+						"get",
+					},
+				},
+			},
+		}
+		if _, err := Clientset.RbacV1().Roles(util.HYPERCLOUD_KUBECTL_NAMESPACE).Create(context.TODO(), &role, metav1.CreateOptions{}); err != nil {
+			klog.V(1).Infoln(err)
+			return err
+		}
+	} else if err != nil {
+		klog.V(1).Infoln(err)
+		return err
+	}
+
+	if _, err := Clientset.RbacV1().RoleBindings(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), RoleNameForPod+"-rolebinding", metav1.GetOptions{}); errors.IsNotFound(err) {
+		var rolebinding rbacApi.RoleBinding
+		rolebinding = rbacApi.RoleBinding{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      RoleNameForPod + "-rolebinding",
+				Namespace: util.HYPERCLOUD_KUBECTL_NAMESPACE,
+				Labels: map[string]string{
+					util.HYPERCLOUD_KUBECTL_LABEL_KEY: util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+				},
+			},
+			RoleRef: rbacApi.RoleRef{
+				Kind:     "Role",
+				APIGroup: "rbac.authorization.k8s.io",
+				Name:     RoleNameForPod + "-role",
+			},
+			Subjects: []rbacApi.Subject{
+				{
+					Kind: "User",
+					Name: userName,
+					// Namespace: util.HYPERCLOUD_KUBECTL_NAMESPACE,
+				},
+			},
+		}
+		if _, err := Clientset.RbacV1().RoleBindings(util.HYPERCLOUD_KUBECTL_NAMESPACE).Create(context.TODO(), &rolebinding, metav1.CreateOptions{}); err != nil {
+			klog.V(1).Infoln(err)
+			return err
+		}
+	} else if err != nil {
+		klog.V(1).Infoln(err)
+		return err
+	}
+
+	return nil
+}
+
+// DeployKubectlPod makes serviceaccount which has same authorization compared to given userName(email),
+// then deploy pod with kubectl image
+func DeployKubectlPod(userName string) error {
+	if err := kubectlInit(userName); err != nil {
+		klog.V(1).Infoln(err)
+		return err
+	}
+	kubectlName := util.HYPERCLOUD_KUBECTL_PREFIX + ParseUserName(userName)
+
+	// If pod already exists,
+	// Delete it if the status of pod is completed(Succeeded)
+	// Do nothing if the status of pod is not completed(Running)
+	if pod, err := Clientset.CoreV1().Pods(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), kubectlName, metav1.GetOptions{}); err == nil {
+		if pod.Status.Phase == "Succeeded" {
+			if err := Clientset.CoreV1().Pods(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), kubectlName, metav1.DeleteOptions{}); err != nil {
+				return err
+			}
+		} else {
+			return errors.NewBadRequest("Pod [" + kubectlName + "] already exists")
+		}
+	}
+
+	// Create ServiceAccount if not exists
+	if _, err := Clientset.CoreV1().ServiceAccounts(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), kubectlName, metav1.GetOptions{}); errors.IsNotFound(err) {
+		var sa corev1.ServiceAccount
+		sa = corev1.ServiceAccount{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: util.HYPERCLOUD_KUBECTL_NAMESPACE,
+				Name:      kubectlName,
+				Labels: map[string]string{
+					util.HYPERCLOUD_KUBECTL_LABEL_KEY: util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+				},
+			},
+		}
+		if _, err := Clientset.CoreV1().ServiceAccounts(util.HYPERCLOUD_KUBECTL_NAMESPACE).Create(context.TODO(), &sa, metav1.CreateOptions{}); err != nil {
+			return err
+		}
+	}
+
+	// Make New Rolebinding and ClusterRoleBinding for ServiceAccount
+	type rolebindingSubject struct {
+		Kind string
+		Name []string
+	}
+	group, err := GetHyperAuthGroupByUser(userName)
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return err
+	}
+	subjectGroup := rolebindingSubject{"Group", group}
+	subjectUser := rolebindingSubject{"User", []string{userName}}
+
+	if err := CreateRBForKubectlSA(kubectlName, subjectGroup, subjectUser); err != nil {
+		klog.V(1).Infoln(err)
+		return err
+	}
+
+	if err := CreateCRBForKubectlSA(kubectlName, subjectGroup, subjectUser); err != nil {
+		klog.V(1).Infoln(err)
+		return err
+	}
+
+	// Deploy kubectl Pod using generated ServiceAccount
+	sleepTime := os.Getenv("KUBECTL_TIMEOUT")
+	if len(sleepTime) == 0 || sleepTime == "{KUBECTL_TIMEOUT}" {
+		sleepTime = "21600" // 6 hours
+	}
+	var kubectlPod corev1.Pod
+	kubectlPod = corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      kubectlName,
+			Namespace: util.HYPERCLOUD_KUBECTL_NAMESPACE,
+			Labels: map[string]string{
+				util.HYPERCLOUD_KUBECTL_LABEL_KEY: util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+			},
+		},
+		Spec: corev1.PodSpec{
+			ServiceAccountName: kubectlName,
+			DNSPolicy:          "ClusterFirst",
+			RestartPolicy:      "Never",
+			Containers: []corev1.Container{
+				{
+					Image: util.HYPERCLOUD_KUBECTL_IMAGE,
+					Name:  "kubectl",
+					Command: []string{
+						"/bin/sh", "-c",
+					},
+					Args: []string{
+						"sleep " + sleepTime,
+						//"tail -f /dev/null;",
+					},
+				},
+			},
+		},
+	}
+	if _, err := Clientset.CoreV1().Pods(util.HYPERCLOUD_KUBECTL_NAMESPACE).Create(context.TODO(), &kubectlPod, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func ParseUserName(userName string) string {
+	return strings.Replace(userName, "@", ".", -1)
+}
+
+func CreateRBForKubectlSA(saName string, S ...struct {
+	Kind string
+	Name []string
+}) error {
+
+	rbList, err := Clientset.RbacV1().RoleBindings("").List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	var newRB rbacApi.RoleBinding
+	for _, rb := range rbList.Items {
+		for _, sub := range rb.Subjects {
+			for _, s := range S {
+				if sub.Kind == s.Kind {
+					for _, n := range s.Name {
+						if sub.Name == n {
+							// if already exists, delete original one and create
+							if _, err := Clientset.RbacV1().RoleBindings(rb.ObjectMeta.Namespace).Get(context.TODO(), util.HYPERCLOUD_KUBECTL_PREFIX+rb.ObjectMeta.Name, metav1.GetOptions{}); err == nil {
+								if err := Clientset.RbacV1().RoleBindings(rb.ObjectMeta.Namespace).Delete(context.TODO(), util.HYPERCLOUD_KUBECTL_PREFIX+rb.ObjectMeta.Name, metav1.DeleteOptions{}); err != nil {
+									klog.V(1).Infoln(err)
+								}
+							}
+							newRB = rbacApi.RoleBinding{
+								TypeMeta: rb.TypeMeta,
+								ObjectMeta: metav1.ObjectMeta{
+									Name: saName + "-" + rb.ObjectMeta.Name,
+									//Namespace:       rb.ObjectMeta.Namespace,
+									Labels: map[string]string{
+										util.HYPERCLOUD_KUBECTL_LABEL_KEY: util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+									},
+									Annotations:     rb.ObjectMeta.Annotations,
+									OwnerReferences: rb.ObjectMeta.OwnerReferences,
+								},
+								Subjects: []rbacApi.Subject{
+									{
+										Namespace: util.HYPERCLOUD_KUBECTL_NAMESPACE,
+										Kind:      "ServiceAccount",
+										Name:      saName,
+									},
+								},
+								RoleRef: rb.RoleRef,
+							}
+							if _, err := Clientset.RbacV1().RoleBindings(rb.ObjectMeta.Namespace).Create(context.TODO(), &newRB, metav1.CreateOptions{}); err != nil {
+								klog.V(1).Infoln(err)
+							} else {
+								klog.V(3).Infoln("Create RoleBinding [" + saName + "-" + rb.ObjectMeta.Name + "] Success")
+							}
+						}
+					}
+
+				}
+			}
+		}
+	}
+	return nil
+}
+func CreateCRBForKubectlSA(saName string, S ...struct {
+	Kind string
+	Name []string
+}) error {
+	crbList, err := Clientset.RbacV1().ClusterRoleBindings().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	var newCRB rbacApi.ClusterRoleBinding
+	for _, crb := range crbList.Items {
+		for _, sub := range crb.Subjects {
+			for _, s := range S {
+				if sub.Kind == s.Kind {
+					for _, n := range s.Name {
+						if sub.Name == n {
+							// if already exists, delete original one and create
+							if _, err := Clientset.RbacV1().ClusterRoleBindings().Get(context.TODO(), util.HYPERCLOUD_KUBECTL_PREFIX+crb.ObjectMeta.Name, metav1.GetOptions{}); err == nil {
+								if err := Clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), util.HYPERCLOUD_KUBECTL_PREFIX+crb.ObjectMeta.Name, metav1.DeleteOptions{}); err != nil {
+									klog.V(1).Infoln(err)
+								}
+							}
+							newCRB = rbacApi.ClusterRoleBinding{
+								TypeMeta: crb.TypeMeta,
+								ObjectMeta: metav1.ObjectMeta{
+									Name:      saName + "-" + crb.ObjectMeta.Name,
+									Namespace: crb.ObjectMeta.Namespace,
+									Labels: map[string]string{
+										util.HYPERCLOUD_KUBECTL_LABEL_KEY: util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+									},
+									Annotations:     crb.ObjectMeta.Annotations,
+									OwnerReferences: crb.ObjectMeta.OwnerReferences,
+								},
+								Subjects: []rbacApi.Subject{
+									{
+										Namespace: util.HYPERCLOUD_KUBECTL_NAMESPACE,
+										Kind:      "ServiceAccount",
+										Name:      saName,
+									},
+								},
+								RoleRef: crb.RoleRef,
+							}
+							if _, err := Clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), &newCRB, metav1.CreateOptions{}); err != nil {
+								klog.V(1).Infoln(err)
+							} else {
+								klog.V(3).Infoln("Create ClusterRoleBinding [" + saName + "-" + crb.ObjectMeta.Name + "] Success")
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// DeleteKubectlResource deletes all kubectl pod related resources for give userName,
+// which contains Pod, RoleBinding, ClusterRoleBinding and ServiceAccount
+func DeleteKubectlResourceByUserName(userName string) error {
+	kubectlName := util.HYPERCLOUD_KUBECTL_PREFIX + ParseUserName(userName)
+
+	if _, err := Clientset.CoreV1().Pods(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), kubectlName, metav1.GetOptions{}); err == nil {
+		if err := Clientset.CoreV1().Pods(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), kubectlName, metav1.DeleteOptions{}); err != nil {
+			klog.V(1).Infoln(err)
+		}
+		klog.V(3).Infoln("Delete Pod [" + kubectlName + "] Success")
+	}
+
+	if _, err := Clientset.CoreV1().ServiceAccounts(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), kubectlName, metav1.GetOptions{}); err == nil {
+		if err := Clientset.CoreV1().ServiceAccounts(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), kubectlName, metav1.DeleteOptions{}); err != nil {
+			klog.V(1).Infoln(err)
+		}
+		klog.V(3).Infoln("Delete ServiceAccount [" + kubectlName + "] Success")
+	}
+
+	rbList, err := Clientset.RbacV1().RoleBindings("").List(context.TODO(), metav1.ListOptions{
+		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+	})
+	if err != nil {
+		return err
+	}
+	for _, rb := range rbList.Items {
+		for _, sub := range rb.Subjects {
+			if (sub.Name == kubectlName && sub.Kind == "ServiceAccount") || rb.Name == ParseUserName(userName)+"-exec"+"-rolebinding" {
+				if err := Clientset.RbacV1().RoleBindings(rb.Namespace).Delete(context.TODO(), rb.Name, metav1.DeleteOptions{}); err != nil {
+					klog.V(1).Infoln(err)
+				}
+				klog.V(3).Infoln("Delete RoleBinding [" + rb.Name + "] Success")
+				break
+			}
+		}
+	}
+	crbList, err := Clientset.RbacV1().ClusterRoleBindings().List(context.TODO(), metav1.ListOptions{
+		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+	})
+	if err != nil {
+		return err
+	}
+	for _, crb := range crbList.Items {
+		for _, sub := range crb.Subjects {
+			if sub.Name == kubectlName && sub.Kind == "ServiceAccount" {
+				if err := Clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), crb.Name, metav1.DeleteOptions{}); err != nil {
+					klog.V(1).Infoln(err)
+				}
+				klog.V(3).Infoln("Delete ClusterRoleBinding [" + crb.Name + "] Success")
+				break
+			}
+		}
+	}
+
+	if err := Clientset.RbacV1().Roles(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), ParseUserName(userName)+"-exec"+"-role", metav1.DeleteOptions{}); err != nil {
+		klog.V(1).Infoln(err)
+	} else {
+		klog.V(3).Infoln("Delete Role [" + ParseUserName(userName) + "-exec" + "-role" + "] Success")
+	}
+
+	return nil
+}
+
+// DeleteKubectlResource deletes all kubectl pod related resources for all user,
+// which contains Pod, RoleBinding, ClusterRoleBinding and ServiceAccount.
+// It only runs by cronJob, not by calling API.
+func DeleteKubectlAllResource() {
+	klog.V(4).Infoln("Start Garbage Collect Kubectl Related Resources")
+	var DeletedUserName []string
+	if podList, err := Clientset.CoreV1().Pods("").List(context.TODO(), metav1.ListOptions{
+		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+	}); err != nil {
+		klog.V(1).Infoln(err)
+		return
+	} else {
+		for _, pod := range podList.Items {
+			if pod.Status.Phase != "Running" {
+				split := strings.Index(pod.Name, "-kubectl-")
+				userName := pod.Name[split+9:]
+				DeletedUserName = append(DeletedUserName, userName)
+				if err := Clientset.CoreV1().Pods(pod.Namespace).Delete(context.TODO(), pod.Name, metav1.DeleteOptions{}); err != nil {
+					klog.V(1).Infoln(err)
+				}
+				klog.V(3).Infoln("Delete Pod [" + pod.Name + "] Success")
+			}
+		}
+	}
+
+	if len(DeletedUserName) < 1 {
+		klog.V(4).Infoln("Complete Garbage Collect Kubectl Related Resources")
+		return
+	}
+
+	if saList, err := Clientset.CoreV1().ServiceAccounts(util.HYPERCLOUD_KUBECTL_NAMESPACE).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+	}); err != nil {
+		klog.V(1).Infoln(err)
+		return
+	} else {
+		for _, sa := range saList.Items {
+			for _, userName := range DeletedUserName {
+				if strings.Contains(sa.Name, userName) {
+					if err := Clientset.CoreV1().ServiceAccounts(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), sa.Name, metav1.DeleteOptions{}); err != nil {
+						klog.V(1).Infoln(err)
+					}
+					klog.V(3).Infoln("Delete ServiceAccount [" + sa.Name + "] Success")
+				}
+			}
+		}
+	}
+
+	if rolebindingList, err := Clientset.RbacV1().RoleBindings("").List(context.TODO(), metav1.ListOptions{
+		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+	}); err != nil {
+		klog.V(1).Infoln(err)
+		return
+	} else {
+		for _, rolebinding := range rolebindingList.Items {
+			for _, userName := range DeletedUserName {
+				if strings.Contains(rolebinding.Name, userName) {
+					if err := Clientset.RbacV1().RoleBindings(rolebinding.Namespace).Delete(context.TODO(), rolebinding.Name, metav1.DeleteOptions{}); err != nil {
+						klog.V(1).Infoln(err)
+					}
+					klog.V(3).Infoln("Delete RoleBinding [" + rolebinding.Name + "] Success")
+				}
+			}
+		}
+	}
+
+	if clusterRolebindingList, err := Clientset.RbacV1().ClusterRoleBindings().List(context.TODO(), metav1.ListOptions{
+		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+	}); err != nil {
+		klog.V(1).Infoln(err)
+		return
+	} else {
+		for _, clusterRolebinding := range clusterRolebindingList.Items {
+			for _, userName := range DeletedUserName {
+				if strings.Contains(clusterRolebinding.Name, userName) {
+					if err := Clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), clusterRolebinding.Name, metav1.DeleteOptions{}); err != nil {
+						klog.V(1).Infoln(err)
+					}
+					klog.V(3).Infoln("Delete ClusterRoleBinding [" + clusterRolebinding.Name + "] Success")
+				}
+			}
+		}
+	}
+
+	if roleList, err := Clientset.RbacV1().Roles("").List(context.TODO(), metav1.ListOptions{
+		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+	}); err != nil {
+		klog.V(1).Infoln(err)
+		return
+	} else {
+		for _, role := range roleList.Items {
+			for _, userName := range DeletedUserName {
+				if strings.Contains(role.Name, userName) {
+					if err := Clientset.RbacV1().Roles(role.Namespace).Delete(context.TODO(), role.Name, metav1.DeleteOptions{}); err != nil {
+						klog.V(1).Infoln(err)
+					}
+					klog.V(3).Infoln("Delete Role [" + role.Name + "] Success")
+				}
+			}
+		}
+	}
+	klog.V(4).Infoln("Complete Garbage Collect Kubectl Related Resources")
 }
 
 // func UpdateAuditResourceList() {

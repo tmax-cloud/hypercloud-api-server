@@ -29,10 +29,14 @@ const (
 	QUERY_PARAMETER_HOST           = "host"
 
 	//HyperAuth
-	//HYPERAUTH_URL = "http://hyperauth.hyperauth"
-	HYPERAUTH_URL                                    = "http://192.168.6.151"
-	HYPERAUTH_SERVICE_NAME_LOGIN_AS_ADMIN            = "auth/realms/master/protocol/openid-connect/token"
-	HYPERAUTH_SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN = "auth/realms/tmax/user/"
+	HYPERAUTH_SERVICE_NAME_LOGIN_AS_ADMIN = "/auth/realms/master/protocol/openid-connect/token"
+	HYPERAUTH_SERVICE_NAME_USER_DETAIL    = "/auth/realms/tmax/user/"
+
+	HYPERCLOUD_KUBECTL_NAMESPACE   = "hypercloud-kubectl"
+	HYPERCLOUD_KUBECTL_PREFIX      = "hypercloud-kubectl-"
+	HYPERCLOUD_KUBECTL_IMAGE       = "bitnami/kubectl:1.25.3"
+	HYPERCLOUD_KUBECTL_LABEL_KEY   = "hypercloud"
+	HYPERCLOUD_KUBECTL_LABEL_VALUE = "kubectl"
 
 	HYPERCLOUD4_NAMESPACE       = "hypercloud4-system"
 	HYPERCLOUD4_CLAIM_API_GROUP = "claim.tmax.io"

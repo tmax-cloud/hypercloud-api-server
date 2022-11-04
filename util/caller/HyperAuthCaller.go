@@ -1,11 +1,11 @@
 package caller
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/tmax-cloud/hypercloud-api-server/util"
@@ -13,27 +13,33 @@ import (
 	"k8s.io/klog"
 )
 
+var (
+	HYPERAUTH_URL          string
+	HYPERAUTH_REALM_PREFIX string
+)
+
+func init() {
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true} // ignore certificate
+}
+
 func setHyperAuthURL(serviceName string) string {
-	hyperauthHttpPort := "8080"
-	if os.Getenv("HYPERAUTH_HTTP_PORT") != "" {
-		hyperauthHttpPort = os.Getenv("HYPERAUTH_HTTP_PORT")
-	}
-	return util.HYPERAUTH_URL + ":" + hyperauthHttpPort + "/" + serviceName
+	return HYPERAUTH_URL + serviceName
 }
 
 func LoginAsAdmin() string {
 	klog.V(3).Infoln(" [HyperAuth] Login as Admin Service")
 	// Make Body for Content-Type (application/x-www-form-urlencoded)
+	id, password, err := GetHyperAuthAdminAccount()
 	data := url.Values{}
 	data.Set("grant_type", "password")
-	data.Set("username", "admin")
-	data.Set("password", "admin")
+	data.Set("username", id)
+	data.Set("password", password)
 	data.Set("client_id", "admin-cli")
 
 	// Make Request Object
 	req, err := http.NewRequest("POST", setHyperAuthURL(util.HYPERAUTH_SERVICE_NAME_LOGIN_AS_ADMIN), strings.NewReader(data.Encode()))
 	if err != nil {
-		klog.V(1).Info(err)
+		klog.V(1).Infoln(err)
 		panic(err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -42,7 +48,7 @@ func LoginAsAdmin() string {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		klog.V(1).Info(err)
+		klog.V(1).Infoln(err)
 		panic(err)
 	}
 	defer resp.Body.Close()
@@ -50,45 +56,58 @@ func LoginAsAdmin() string {
 	// Result
 	bytes, _ := ioutil.ReadAll(resp.Body)
 	str := string(bytes) // byte to string
-	klog.V(3).Infoln("Result string  : ", str)
+	// klog.V(3).Infoln("Result string  : ", str)
 
 	var resultJson map[string]interface{}
 	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
-		klog.V(1).Info(err)
+		klog.V(1).Infoln(err)
 	}
 	accessToken := resultJson["access_token"].(string)
 	return accessToken
 }
 
-// defunct
-// func getUserDetailWithoutToken(userId string) map[string]interface{} {
-// 	klog.V(3).Infoln(" [HyperAuth] HyperAuth Get User Detail Without Token Service")
+func GetHyperAuthUserDetail(userId string) (map[string]interface{}, error) {
+	adminToken := LoginAsAdmin()
 
-// 	// Make Request Object
-// 	req, err := http.NewRequest("GET", setHyperAuthURL(util.HYPERAUTH_SERVICE_NAME_USER_DETAIL_WITHOUT_TOKEN)+userId, nil)
-// 	if err != nil {
-// 		klog.V(1).Info(err)
-// 		panic(err)
-// 	}
+	req, err := http.NewRequest("GET", setHyperAuthURL(util.HYPERAUTH_SERVICE_NAME_USER_DETAIL)+userId, nil)
+	q := req.URL.Query()
+	q.Add("token", adminToken)
+	req.URL.RawQuery = q.Encode()
 
-// 	// Request with Client Object
-// 	client := &http.Client{}
-// 	resp, err := client.Do(req)
-// 	if err != nil {
-// 		klog.V(1).Info(err)
-// 		panic(err)
-// 	}
-// 	defer resp.Body.Close()
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return nil, err
+	}
+	defer resp.Body.Close()
 
-// 	// Result
-// 	bytes, _ := ioutil.ReadAll(resp.Body)
-// 	str := string(bytes) // byte to string
-// 	klog.V(3).Infoln("Result string  : ", str)
+	bytes, _ := ioutil.ReadAll(resp.Body)
+	str := string(bytes) // byte to string
+	// klog.V(3).Infoln("Result string  : ", str)
+	var resultJson map[string]interface{}
+	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
+		klog.V(1).Infoln(err)
+		return nil, err
+	}
 
-// 	var resultJson map[string]interface{}
-// 	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
-// 		klog.V(1).Info(err)
-// 		panic(err)
-// 	}
-// 	return resultJson
-// }
+	return resultJson, nil
+}
+
+func GetHyperAuthGroupByUser(userId string) ([]string, error) {
+	userInfo, err := GetHyperAuthUserDetail(userId)
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return []string{}, err
+	}
+
+	groups := userInfo["groups"].([]interface{})
+
+	var result []string
+	for _, group := range groups {
+		result = append(result, group.(string))
+	}
+	// klog.V(3).Infoln(result)
+
+	return result, nil
+}
