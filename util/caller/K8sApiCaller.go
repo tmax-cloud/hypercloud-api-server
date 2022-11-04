@@ -1485,7 +1485,7 @@ func DeployKubectlPod(userName string) error {
 				return err
 			}
 		} else {
-			return errors.NewBadRequest("Pod [" + kubectlName + "] already exists")
+			return nil // errors.NewBadRequest("Pod [" + kubectlName + "] already exists")
 		}
 	}
 
