@@ -34,7 +34,7 @@ const (
 
 	HYPERCLOUD_KUBECTL_NAMESPACE   = "hypercloud-kubectl"
 	HYPERCLOUD_KUBECTL_PREFIX      = "hypercloud-kubectl-"
-	HYPERCLOUD_KUBECTL_IMAGE       = "bitnami/kubectl:1.25.3"
+	HYPERCLOUD_KUBECTL_IMAGE       = "bitnami/kubectl:1.19.16"
 	HYPERCLOUD_KUBECTL_LABEL_KEY   = "hypercloud"
 	HYPERCLOUD_KUBECTL_LABEL_VALUE = "kubectl"
 
