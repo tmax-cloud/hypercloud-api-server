@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.35.1 start -------------------->
+
+## Hypercloud-api-server 5.0.35.1 (2022. 11. 09. (수) 18:54:48 KST)
+
+### Added
+
+### Changed
+  - [mod] kubectl 이미지 bitnami/kubectl:1.19.16로 변경 by GitHub
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.35.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.35.0 (2022. 11. 04. (금) 13:20:17 KST)
