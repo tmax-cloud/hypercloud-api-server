@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.35.2 start -------------------->
+
+## Hypercloud-api-server 5.0.35.2 (2022. 11. 11. (금) 11:07:38 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][293625] clusterclaim rejected 상태일 떄 approved로 변경가능하도록 수정 by sjoh0704
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.35.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.35.1 (2022. 11. 09. (수) 18:54:48 KST)
