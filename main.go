@@ -588,6 +588,8 @@ func serveKubectl(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		if err := caller.DeleteKubectlResourceByUserName(userName); err != nil {
 			util.SetResponse(w, "", err, http.StatusInternalServerError)
+		} else {
+			util.SetResponse(w, "Delete ["+userName+"] Kubectl Related Resource Success!", nil, http.StatusOK)
 		}
 	default:
 		klog.V(1).Infof("method not acceptable")
