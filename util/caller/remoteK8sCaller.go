@@ -84,7 +84,7 @@ func CreateSASecretInRemote(clusterManager *clusterv1alpha1.ClusterManager, subj
 	return nil
 }
 
-// remote cluster에 serviceaccount를 subject로 하는 clusterrolebinding 생성
+// remote cluster에 jwt-decode-auth용, oidc용 clusterrolebinding 생성
 func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, remoteRole string, attribute string) error {
 
 	remoteClientset, err := getRemoteK8sClient(clusterManager)
@@ -97,8 +97,14 @@ func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject 
 		return err
 	}
 
+	// admin인 경우 cluster-admin cluster role을 사용하므로 따로 처리
+	if remoteRole == "admin" {
+		remoteRole = "cluster-admin"
+	}
+
+	// jwt-decode-auth용 cluster role binding 생성
 	clusterRoleBinding := &rbacv1.ClusterRoleBinding{}
-	clusterRoleBindingName := subject + "-rolebinding"
+	clusterRoleBindingName := "cluster-invited-sa-crb-" + subject
 	clusterRoleBinding.Subjects = []rbacv1.Subject{
 		{
 			APIGroup:  "",
@@ -112,9 +118,42 @@ func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject 
 		Name: clusterRoleBindingName,
 	}
 
-	// admin인 경우 cluster-admin cluster role을 사용하므로 따로 처리
-	if remoteRole == "admin" {
-		remoteRole = "cluster-admin"
+	clusterRoleBinding.RoleRef = rbacv1.RoleRef{
+		APIGroup: "rbac.authorization.k8s.io",
+		Kind:     "ClusterRole",
+		Name:     remoteRole,
+	}
+
+	if _, err := remoteClientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding, metav1.CreateOptions{}); err != nil {
+		return err
+	}
+	msg := "Create clusterrolebinding(for jwt-decode-auth) [" + remoteRole + "] to remote cluster [" + clusterManager.Name + "] for subject [" + subject + "] "
+	klog.V(3).Infoln(msg)
+
+	// oidc용 cluster role binding 생성
+	clusterRoleBinding = &rbacv1.ClusterRoleBinding{}
+	if attribute == "user" {
+		clusterRoleBindingName = "cluster-invited-user-crb-" + subject
+		clusterRoleBinding.Subjects = []rbacv1.Subject{
+			{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "User",
+				Name:     subject,
+			},
+		}
+	} else {
+		clusterRoleBindingName = "cluster-invited-group-crb-" + subject
+		clusterRoleBinding.Subjects = []rbacv1.Subject{
+			{
+				APIGroup: "rbac.authorization.k8s.io",
+				Kind:     "Group",
+				Name:     subject,
+			},
+		}
+	}
+
+	clusterRoleBinding.ObjectMeta = metav1.ObjectMeta{
+		Name: clusterRoleBindingName,
 	}
 
 	clusterRoleBinding.RoleRef = rbacv1.RoleRef{
@@ -126,8 +165,9 @@ func CreateRoleInRemote(clusterManager *clusterv1alpha1.ClusterManager, subject 
 	if _, err := remoteClientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), clusterRoleBinding, metav1.CreateOptions{}); err != nil {
 		return err
 	}
-	msg := "Create clusterrole [" + remoteRole + "] to remote cluster [" + clusterManager.Name + "] for subject [" + subject + "] "
+	msg = "Create clusterrolebinding(for oidc) [" + remoteRole + "] to remote cluster [" + clusterManager.Name + "] for subject [" + subject + "] "
 	klog.V(3).Infoln(msg)
+
 	return nil
 }
 
@@ -199,14 +239,15 @@ func CreateRemoteSecretInLocal(clusterManager *clusterv1alpha1.ClusterManager, s
 	return nil
 }
 
-// remote cluster에 생성한 clusterrolebinding 삭제
+// remote cluster에 있는 jwt-decode-auth용, oidc용 clusterrolebinding 삭제
 func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) error {
 	remoteClientset, err := getRemoteK8sClient(clusterManager)
 	if err != nil {
 		return err
 	}
 
-	clusterRoleBindingName := subject + "-rolebinding"
+	// jwt-decode-auth용 clusterrolebinding 삭제
+	clusterRoleBindingName := "cluster-invited-sa-crb-" + subject
 
 	if _, err := remoteClientset.RbacV1().ClusterRoleBindings().Get(context.TODO(), clusterRoleBindingName, metav1.GetOptions{}); err != nil {
 		if errors.IsNotFound(err) {
@@ -221,8 +262,32 @@ func RemoveRoleFromRemote(clusterManager *clusterv1alpha1.ClusterManager, subjec
 		}
 	}
 
-	msg := "Remove rolebinding [" + clusterRoleBindingName + "] from remote cluster [" + clusterManager.Name + "] for subject [" + subject + "]"
+	msg := "Remove clusterrolebinding(for jwt-decode-auth) [" + clusterRoleBindingName + "] from remote cluster [" + clusterManager.Name + "] for subject [" + subject + "]"
 	klog.V(3).Infoln(msg)
+
+	// oidc용 cluster role binding 삭제
+	if attribute == "user" {
+		clusterRoleBindingName = "cluster-invited-user-crb-" + subject
+	} else {
+		clusterRoleBindingName = "cluster-invited-group-crb-" + subject
+	}
+
+	if _, err := remoteClientset.RbacV1().ClusterRoleBindings().Get(context.TODO(), clusterRoleBindingName, metav1.GetOptions{}); err != nil {
+		if errors.IsNotFound(err) {
+			klog.V(3).Infoln("Rolebinding [" + clusterRoleBindingName + "] is already deleted")
+			return nil
+		} else {
+			return err
+		}
+	} else {
+		if err := remoteClientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), clusterRoleBindingName, metav1.DeleteOptions{}); err != nil {
+			return err
+		}
+	}
+
+	msg = "Remove clusterrolebinding(for oidc) [" + clusterRoleBindingName + "] from remote cluster [" + clusterManager.Name + "] for subject [" + subject + "]"
+	klog.V(3).Infoln(msg)
+
 	return nil
 }
 
