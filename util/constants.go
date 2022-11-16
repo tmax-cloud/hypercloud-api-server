@@ -49,6 +49,8 @@ const (
 	CLUSTER_API_GROUP_VERSION   = "cluster.tmax.io/v1alpha1"
 	HYPERCLOUD_SYSTEM_NAMESPACE = "hypercloud5-system"
 
+	KubeNamespace = "kube-system"
+
 	TEST = "<!DOCTYPE html>\r\n" +
 		"<html lang=\"en\">\r\n" +
 		"<head>\r\n" +
