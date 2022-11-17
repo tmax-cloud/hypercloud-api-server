@@ -154,7 +154,7 @@ func ListClusterGroup(res http.ResponseWriter, req *http.Request) {
 	util.SetResponse(res, msg, clusterMemberList, http.StatusOK)
 }
 
-// cluster에서 초대 받은 member 제거시 호출
+// cluster에서 초대 받은 member(User/Group) 제거시 호출
 func RemoveMember(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
@@ -258,8 +258,14 @@ func RemoveMember(res http.ResponseWriter, req *http.Request) {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	
-	msg := "User [" + memberId + "] is removed from cluster [" + clm.Name + "]"
+
+	msg := ""
+	if attribute == "user" {
+		msg = "User [" + memberId + "] is removed from cluster [" + clm.Name + "]"
+	} else {
+		msg = "Group [" + memberId + "] is removed from cluster [" + clm.Name + "]"
+	}
+
 	klog.V(3).Infoln(msg)
 	util.SetResponse(res, msg, nil, http.StatusOK)
 }

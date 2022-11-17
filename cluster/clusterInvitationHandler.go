@@ -247,17 +247,36 @@ func InviteGroup(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	// create role
 	if err := caller.CreateNSGetRole(clm, clusterMember.MemberId, clusterMember.Attribute); err != nil {
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
 	if err := caller.CreateCLMRole(clm, clusterMember.MemberId, clusterMember.Attribute); err != nil {
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
+	// remote cluster에 service account 및 secret 미리 생성
+	if err := caller.CreateSASecretInRemote(clm, clusterMember.MemberId, remoteRole, clusterMember.Attribute); err != nil {
+		klog.V(1).Infoln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
+
+	// remote service account를 subject로 하는 cluster role binding 생성
 	if err := caller.CreateRoleInRemote(clm, clusterMember.MemberId, remoteRole, clusterMember.Attribute); err != nil {
+		klog.V(1).Infoln(err)
+		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+		return
+	}
+
+	// remote service account secret을 가져와 master cluster에 service account 및 secret 생성
+	if err := caller.CreateRemoteSecretInLocal(clm, clusterMember.MemberId, remoteRole, clusterMember.Attribute); err != nil {
+		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}

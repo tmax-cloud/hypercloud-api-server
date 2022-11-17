@@ -81,6 +81,9 @@ func CreateSASecretInRemote(clusterManager *clusterv1alpha1.ClusterManager, subj
 		return err
 	}
 
+	msg := "Create serviceaccount, secret for [" + serviceAccount.Name + "] to remote cluster [" + clusterManager.Name + "]"
+	klog.V(3).Infoln(msg)
+
 	return nil
 }
 
@@ -235,6 +238,9 @@ func CreateRemoteSecretInLocal(clusterManager *clusterv1alpha1.ClusterManager, s
 	} else if err != nil {
 		return err
 	}
+
+	msg := "Create secret token for [" + remoteSATokenName + "] to local cluster"
+	klog.V(3).Infoln(msg)
 
 	return nil
 }
