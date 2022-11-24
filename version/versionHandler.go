@@ -46,6 +46,10 @@ func init() {
 	for _, mod := range conf.Modules {
 		if mod.Name == "HyperAuth" {
 			idx := strings.Index(mod.ReadinessProbe.HTTPGet.Path, "/auth/realms")
+			if idx < 0 {
+				klog.V(1).Infoln("Failed to get HyperAuth URL. Please check Configmap [version-config].")
+				break
+			}
 			k8sApiCaller.HYPERAUTH_URL = mod.ReadinessProbe.HTTPGet.Path[:idx]
 			k8sApiCaller.HYPERAUTH_REALM_PREFIX = mod.ReadinessProbe.HTTPGet.Path[idx:]
 			break
