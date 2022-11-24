@@ -1,6 +1,28 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.37.0 start -------------------->
+
+## Hypercloud-api-server 5.0.37.0 (2022. 11. 24. (목) 15:37:55 KST)
+
+### Added
+  - [feat] multi-operator package version upgrade 32=>36 by sjoh0704
+  - [feat] cluster group 초대시 jwt-decode-auth용 service account 생성(임시 작업) by sjoh0704
+  - [feat] cluster 초대 기능 사용시, jwt-decode-auth가 secret을 읽을 수 있도록 토큰 생성 방식 변경 by sjoh0704
+
+### Changed
+  - [mod] disable group invite by sjoh0704
+  - [mod] clusterclaim, clusterregistration member Name cho => default by sjoh0704
+  - [mod] cluster 초대시 oidc용 clusterrolebinding 복구 by sjoh0704
+  - [mod] DELETE ~/kubectl 성공 시 response 보내도록 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] version-config에 hyperauth url 비정상 기입시 로깅 by Seungwon Lee
+
 <!-------------------- v5.0.36.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.36.0 (2022. 11. 11. (금) 12:58:07 KST)
