@@ -168,122 +168,126 @@ func InviteUser(res http.ResponseWriter, req *http.Request) {
 	util.SetResponse(res, msg, nil, http.StatusOK)
 }
 
+// deprecated
 func InviteGroup(res http.ResponseWriter, req *http.Request) {
-	queryParams := req.URL.Query()
-	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
-	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
-	remoteRole := queryParams.Get(QUERY_PARAMETER_REMOTE_ROLE)
+	err := "group inviting not supported"
+	util.SetResponse(res, fmt.Errorf(err).Error(), nil, http.StatusBadRequest)
+	return
+	// queryParams := req.URL.Query()
+	// userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
+	// userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
+	// remoteRole := queryParams.Get(QUERY_PARAMETER_REMOTE_ROLE)
 
-	vars := gmux.Vars(req)
-	cluster := vars["clustermanager"]
-	memberId := vars["member"]
-	namespace := vars["namespace"]
+	// vars := gmux.Vars(req)
+	// cluster := vars["clustermanager"]
+	// memberId := vars["member"]
+	// namespace := vars["namespace"]
 
-	if err := util.StringParameterException(userGroups, userId, remoteRole, cluster, memberId, namespace); err != nil {
-		klog.V(1).Infoln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
-		return
-	}
+	// if err := util.StringParameterException(userGroups, userId, remoteRole, cluster, memberId, namespace); err != nil {
+	// 	klog.V(1).Infoln(err)
+	// 	util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
+	// 	return
+	// }
 
-	clusterMember := util.ClusterMemberInfo{}
-	clusterMember.Namespace = namespace
-	clusterMember.Cluster = cluster
-	clusterMember.Role = remoteRole
-	clusterMember.MemberId = memberId
-	clusterMember.Attribute = "group"
-	clusterMember.Status = "invited"
+	// clusterMember := util.ClusterMemberInfo{}
+	// clusterMember.Namespace = namespace
+	// clusterMember.Cluster = cluster
+	// clusterMember.Role = remoteRole
+	// clusterMember.MemberId = memberId
+	// clusterMember.Attribute = "group"
+	// clusterMember.Status = "invited"
 
-	// cluster ready 인지 확인
-	clm, err := caller.GetCluster(userId, userGroups, cluster, namespace)
-	if err != nil {
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		return
-	}
-	if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
-		msg := "Cannot invite member to cluster in deleting phase or not ready status"
-		klog.V(3).Infoln(msg)
-		util.SetResponse(res, msg, nil, http.StatusBadRequest)
-		return
-	}
+	// // cluster ready 인지 확인
+	// clm, err := caller.GetCluster(userId, userGroups, cluster, namespace)
+	// if err != nil {
+	// 	util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+	// 	return
+	// }
+	// if !clm.Status.Ready || clm.Status.Phase == "Deleting" {
+	// 	msg := "Cannot invite member to cluster in deleting phase or not ready status"
+	// 	klog.V(3).Infoln(msg)
+	// 	util.SetResponse(res, msg, nil, http.StatusBadRequest)
+	// 	return
+	// }
 
-	// 클러스터에 속한 group들과 소유자(owner)반환
-	clusterMemberList, err := clusterDataFactory.ListClusterOwnerAndGroupMember(clusterMember.Cluster, clusterMember.Namespace)
-	if err != nil {
-		klog.V(1).Infoln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		return
-	}
+	// // 클러스터에 속한 group들과 소유자(owner)반환
+	// clusterMemberList, err := clusterDataFactory.ListClusterOwnerAndGroupMember(clusterMember.Cluster, clusterMember.Namespace)
+	// if err != nil {
+	// 	klog.V(1).Infoln(err)
+	// 	util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+	// 	return
+	// }
 
-	// 초대할 권한이 있는지 확인
-	var clusterOwner string
-	var existGroup []string
-	for _, val := range clusterMemberList {
-		if val.Status == "owner" {
-			clusterOwner = val.MemberId
-			//existGroup = append(existGroup, val.MemberId)
-		} else {
-			existGroup = append(existGroup, val.MemberId)
-		}
-	}
+	// // 초대할 권한이 있는지 확인
+	// var clusterOwner string
+	// var existGroup []string
+	// for _, val := range clusterMemberList {
+	// 	if val.Status == "owner" {
+	// 		clusterOwner = val.MemberId
+	// 		//existGroup = append(existGroup, val.MemberId)
+	// 	} else {
+	// 		existGroup = append(existGroup, val.MemberId)
+	// 	}
+	// }
 
-	if userId != clusterOwner {
-		msg := "Request user [ " + userId + " ]is not a cluster owner [ " + clusterOwner + " ]"
-		klog.V(3).Infoln(msg)
-		util.SetResponse(res, msg, nil, http.StatusBadRequest)
-		return
-	}
+	// if userId != clusterOwner {
+	// 	msg := "Request user [ " + userId + " ]is not a cluster owner [ " + clusterOwner + " ]"
+	// 	klog.V(3).Infoln(msg)
+	// 	util.SetResponse(res, msg, nil, http.StatusBadRequest)
+	// 	return
+	// }
 
-	if util.Contains(existGroup, memberId) {
-		msg := "Group [ " + memberId + " ] is already invited in cluster [ " + cluster + " ] "
-		klog.V(3).Infoln(msg)
-		util.SetResponse(res, msg, nil, http.StatusBadRequest)
-		return
-	}
+	// if util.Contains(existGroup, memberId) {
+	// 	msg := "Group [ " + memberId + " ] is already invited in cluster [ " + cluster + " ] "
+	// 	klog.V(3).Infoln(msg)
+	// 	util.SetResponse(res, msg, nil, http.StatusBadRequest)
+	// 	return
+	// }
 
-	// insert db
-	if err := clusterDataFactory.Insert(clusterMember); err != nil {
-		klog.V(1).Infoln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		return
-	}
+	// // insert db
+	// if err := clusterDataFactory.Insert(clusterMember); err != nil {
+	// 	klog.V(1).Infoln(err)
+	// 	util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+	// 	return
+	// }
 
-	// create role
-	if err := caller.CreateNSGetRole(clm, clusterMember.MemberId, clusterMember.Attribute); err != nil {
-		klog.V(1).Infoln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		return
-	}
+	// // create role
+	// if err := caller.CreateNSGetRole(clm, clusterMember.MemberId, clusterMember.Attribute); err != nil {
+	// 	klog.V(1).Infoln(err)
+	// 	util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+	// 	return
+	// }
 
-	if err := caller.CreateCLMRole(clm, clusterMember.MemberId, clusterMember.Attribute); err != nil {
-		klog.V(1).Infoln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		return
-	}
+	// if err := caller.CreateCLMRole(clm, clusterMember.MemberId, clusterMember.Attribute); err != nil {
+	// 	klog.V(1).Infoln(err)
+	// 	util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+	// 	return
+	// }
 
-	// remote cluster에 service account 및 secret 미리 생성
-	if err := caller.CreateSASecretInRemote(clm, clusterMember.MemberId, remoteRole, clusterMember.Attribute); err != nil {
-		klog.V(1).Infoln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		return
-	}
+	// // remote cluster에 service account 및 secret 미리 생성
+	// if err := caller.CreateSASecretInRemote(clm, clusterMember.MemberId, remoteRole, clusterMember.Attribute); err != nil {
+	// 	klog.V(1).Infoln(err)
+	// 	util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+	// 	return
+	// }
 
-	// remote service account를 subject로 하는 cluster role binding 생성
-	if err := caller.CreateRoleInRemote(clm, clusterMember.MemberId, remoteRole, clusterMember.Attribute); err != nil {
-		klog.V(1).Infoln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		return
-	}
+	// // remote service account를 subject로 하는 cluster role binding 생성
+	// if err := caller.CreateRoleInRemote(clm, clusterMember.MemberId, remoteRole, clusterMember.Attribute); err != nil {
+	// 	klog.V(1).Infoln(err)
+	// 	util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+	// 	return
+	// }
 
-	// remote service account secret을 가져와 master cluster에 service account 및 secret 생성
-	if err := caller.CreateRemoteSecretInLocal(clm, clusterMember.MemberId, remoteRole, clusterMember.Attribute); err != nil {
-		klog.V(1).Infoln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		return
-	}
+	// // remote service account secret을 가져와 master cluster에 service account 및 secret 생성
+	// if err := caller.CreateRemoteSecretInLocal(clm, clusterMember.MemberId, remoteRole, clusterMember.Attribute); err != nil {
+	// 	klog.V(1).Infoln(err)
+	// 	util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+	// 	return
+	// }
 
-	msg := "Invite group to cluster successfully"
-	klog.V(3).Infoln(msg)
-	util.SetResponse(res, msg, nil, http.StatusOK)
+	// msg := "Invite group to cluster successfully"
+	// klog.V(3).Infoln(msg)
+	// util.SetResponse(res, msg, nil, http.StatusOK)
 }
 
 func AcceptInvitation(res http.ResponseWriter, req *http.Request) {
