@@ -103,12 +103,13 @@ func InsertCLM(res http.ResponseWriter, req *http.Request) {
 
 	//INSERT_QUERY, item.Namespace, item.Cluster, item.MemberId, item.MemberName, item.Attribute, item.Role, item.Status, time.Now(), time.Now())
 	clmInfo := util.ClusterMemberInfo{
-		Namespace: clm.Namespace,
-		Cluster:   clm.Name,
-		MemberId:  clm.Annotations["owner"],
-		Attribute: "user",
-		Role:      "admin",
-		Status:    "owner",
+		Namespace:  clm.Namespace,
+		Cluster:    clm.Name,
+		MemberId:   clm.Annotations["owner"],
+		Attribute:  "user",
+		Role:       "admin",
+		Status:     "owner",
+		MemberName: "default",
 	}
 
 	// // 있는지 먼저 확인...

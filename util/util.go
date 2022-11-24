@@ -408,3 +408,13 @@ func UpgradeWebsocket(res http.ResponseWriter, req *http.Request) (*gsocket.Conn
 	}
 	return c, err
 }
+
+// userid format을 jwt-docode-auth에서 읽을 수 있도록 변환
+func ChangeJwtDecodeFormat(userId string) (string, error) {
+	re, err := regexp.Compile("[" + regexp.QuoteMeta(`!#$%&'"*+-/=?^_{|}~().,:;<>[]\`) + "`\\s" + "]")
+	if err != nil {
+		return "", err
+	}
+	parsed := re.ReplaceAllString(strings.Replace(userId, "@", "-at-", -1), "-")
+	return parsed, nil
+}

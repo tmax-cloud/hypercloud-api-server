@@ -55,7 +55,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if !(cc.Status.Phase == "Awaiting" || cc.Status.Phase == "Rejected"){
+	if !(cc.Status.Phase == "Awaiting" || cc.Status.Phase == "Rejected") {
 		msg := "ClusterClaim is already admitted by admin"
 		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
@@ -95,7 +95,8 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	clusterMember.Cluster = cc.Spec.ClusterName
 	clusterMember.Role = "admin"
 	clusterMember.MemberId = cc.Annotations["creator"]
-	clusterMember.MemberName = memberName
+	// clusterMember.MemberName = memberName
+	clusterMember.MemberName = "default" // cho로 들어오던 memberName 변환
 	clusterMember.Attribute = "user"
 	clusterMember.Status = "owner"
 
