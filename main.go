@@ -22,6 +22,7 @@ import (
 	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
 	claim "github.com/tmax-cloud/hypercloud-api-server/clusterClaim"
 	event "github.com/tmax-cloud/hypercloud-api-server/event"
+	kubectl "github.com/tmax-cloud/hypercloud-api-server/kubectl"
 	metering "github.com/tmax-cloud/hypercloud-api-server/metering"
 	"github.com/tmax-cloud/hypercloud-api-server/namespace"
 	"github.com/tmax-cloud/hypercloud-api-server/namespaceClaim"
@@ -579,18 +580,12 @@ func serveKubectl(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch r.Method {
+	case http.MethodGet:
+		kubectl.Get(w, r)
 	case http.MethodPost:
-		if err := caller.DeployKubectlPod(userName); err != nil {
-			util.SetResponse(w, "", err, http.StatusBadRequest)
-		} else {
-			util.SetResponse(w, "Create Kubectl Pod Success", nil, http.StatusOK)
-		}
+		kubectl.Post(w, r)
 	case http.MethodDelete:
-		if err := caller.DeleteKubectlResourceByUserName(userName); err != nil {
-			util.SetResponse(w, "", err, http.StatusInternalServerError)
-		} else {
-			util.SetResponse(w, "Delete ["+userName+"] Kubectl Related Resource Success!", nil, http.StatusOK)
-		}
+		kubectl.Delete(w, r)
 	default:
 		klog.V(1).Infof("method not acceptable")
 	}
