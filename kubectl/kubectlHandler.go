@@ -2,15 +2,29 @@ package event
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/tmax-cloud/hypercloud-api-server/util"
 	"github.com/tmax-cloud/hypercloud-api-server/util/caller"
 	"k8s.io/klog"
 )
 
+type KubectlInfo struct {
+	Image   string `json:"image"`
+	Timeout string `json:"timeout"`
+}
+
 func Get(res http.ResponseWriter, req *http.Request) {
 	klog.V(3).Infoln("**** GET /kubectl")
-	// TODO
+	sleepTime := os.Getenv("KUBECTL_TIMEOUT")
+	if len(sleepTime) == 0 || sleepTime == "{KUBECTL_TIMEOUT}" {
+		sleepTime = "21600" // 6 hours
+	}
+	kl := KubectlInfo{
+		Image:   util.HYPERCLOUD_KUBECTL_IMAGE,
+		Timeout: sleepTime,
+	}
+	util.SetResponse(res, "", kl, http.StatusOK)
 }
 
 func Post(res http.ResponseWriter, req *http.Request) {

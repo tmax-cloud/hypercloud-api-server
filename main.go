@@ -581,7 +581,7 @@ func serveKubectl(w http.ResponseWriter, r *http.Request) {
 	}
 	switch r.Method {
 	case http.MethodGet:
-		//kubectl.Get(w, r)
+		kubectl.Get(w, r)
 	case http.MethodPost:
 		kubectl.Post(w, r)
 	case http.MethodDelete:
