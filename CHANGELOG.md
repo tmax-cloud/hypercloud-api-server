@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.38.0 start -------------------->
+
+## Hypercloud-api-server 5.0.38.0 (2022. 12. 01. (목) 12:24:24 KST)
+
+### Added
+  - [feat] GET ~/kubectl 추가하여 이미지,timeout 정보 제공 by Seungwon Lee
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] kubectl API 관련 패키지 생성 by Seungwon Lee
+
 <!-------------------- v5.0.37.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.37.0 (2022. 11. 24. (목) 15:37:55 KST)
