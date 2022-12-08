@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.38.1 start -------------------->
+
+## Hypercloud-api-server 5.0.38.1 (2022. 12. 08. (목) 14:23:05 KST)
+
+### Added
+
+### Changed
+  - [mod] GET ~/kubectl이 남은 시간을 반환하도록 수정 by Seungwon Lee
+  - [mod] kubectl 리소스 생성 시, 유저 이름에 포함된 _ 문자를 - 문자로 대체 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.38.0 start -------------------->
 
 ## Hypercloud-api-server 5.0.38.0 (2022. 12. 01. (목) 12:24:24 KST)
