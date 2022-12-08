@@ -1109,7 +1109,7 @@ func CreateCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject strin
 	return nil
 }
 
-// master cluster에 생성한 cluster manager role, rolebinding 삭제  
+// master cluster에 생성한 cluster manager role, rolebinding 삭제
 func DeleteCLMRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) error {
 
 	var roleName string
@@ -1231,7 +1231,7 @@ func CreateNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject str
 	return nil
 }
 
-// master cluster에 생성한 namespace rolebinding 삭제 
+// master cluster에 생성한 namespace rolebinding 삭제
 func DeleteNSGetRole(clusterManager *clusterv1alpha1.ClusterManager, subject string, attribute string) error {
 	var roleBindingName string
 	if attribute == "user" {
@@ -1572,7 +1572,8 @@ func DeployKubectlPod(userName string) error {
 }
 
 func ParseUserName(userName string) string {
-	return strings.Replace(userName, "@", ".", -1)
+	str := strings.Replace(userName, "_", "-", -1)
+	return strings.Replace(str, "@", ".", -1)
 }
 
 func CreateRBForKubectlSA(saName string, S ...struct {
