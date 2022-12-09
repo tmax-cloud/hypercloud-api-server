@@ -44,10 +44,13 @@ func Get(res http.ResponseWriter, req *http.Request) {
 				klog.V(1).Infoln(err)
 			} else {
 				remain = sleepTimeFloat - spentTime
+				// if pod.status == Completed, remain value can be unsigned.
+				if remain < 0 {
+					remain = sleepTimeFloat
+				}
 			}
-			klog.V(3).Infoln(remain)
 			remainTime := fmt.Sprintf("%f", remain)
-			klog.V(3).Infoln(remainTime)
+			klog.V(5).Infoln(remainTime)
 			kl := KubectlInfo{
 				Image:   p.Spec.Containers[0].Image,
 				Timeout: remainTime,
