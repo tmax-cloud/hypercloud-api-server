@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.0.38.2 start -------------------->
+
+## Hypercloud-api-server 5.0.38.2 (2022. 12. 09. (금) 17:43:20 KST)
+
+### Added
+
+### Changed
+  - [mod] kubectl pod가 Completed 상태인 경우에도 남은시간을 정상적으로 반환하도록 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.38.1 start -------------------->
 
 ## Hypercloud-api-server 5.0.38.1 (2022. 12. 08. (목) 14:23:05 KST)
