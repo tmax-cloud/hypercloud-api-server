@@ -29,7 +29,11 @@ func Get(res http.ResponseWriter, req *http.Request) {
 
 	pods, exist := caller.GetPodListByLabel(util.HYPERCLOUD_KUBECTL_LABEL_KEY+"="+util.HYPERCLOUD_KUBECTL_LABEL_VALUE, util.HYPERCLOUD_KUBECTL_NAMESPACE)
 	if !exist {
-		util.SetResponse(res, "No pods in hypercloud-kubectl namespace", nil, http.StatusOK)
+		kl := KubectlInfo{
+			Image:   util.HYPERCLOUD_KUBECTL_IMAGE,
+			Timeout: sleepTime,
+		}
+		util.SetResponse(res, "", kl, http.StatusOK)
 		return
 	}
 
