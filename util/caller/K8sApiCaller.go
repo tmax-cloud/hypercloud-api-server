@@ -1415,6 +1415,7 @@ func kubectlInit(userName string) error {
 					},
 					Resources: []string{
 						"pods/exec",
+						"pods",
 					},
 					ResourceNames: []string{
 						util.HYPERCLOUD_KUBECTL_PREFIX + ParseUserName(userName),
