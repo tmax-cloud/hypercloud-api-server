@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.0.0 start -------------------->
+
+## Hypercloud-api-server 5.1.0.0 (2022. 12. 15. (목) 16:56:54 KST)
+
+### Added
+
+### Changed
+  - [mod] kubectl GC cronjob을 leader election 로직 안으로 이동하여 하나의 pod만 수행하도록 수정 by Seungwon Lee
+  - [mod] kubectl pod 생성 요청 시, 해당 pod에 대한 GET 권한 추가 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.0.38.2 start -------------------->
 
 ## Hypercloud-api-server 5.0.38.2 (2022. 12. 09. (금) 17:43:20 KST)
