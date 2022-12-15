@@ -43,16 +43,17 @@ import (
 type admitFunc func(v1beta1.AdmissionReview) *v1beta1.AdmissionResponse
 
 var (
-	port             int
-	certFile         string
-	keyFile          string
-	hcMode           string
-	file             *os.File
-	kafka_enabled    string
-	mux              *gmux.Router
-	cronJob_Metering *cron.Cron
-	ctx              context.Context
-	cancel           context.CancelFunc
+	port               int
+	certFile           string
+	keyFile            string
+	hcMode             string
+	file               *os.File
+	kafka_enabled      string
+	mux                *gmux.Router
+	cronJob_Metering   *cron.Cron
+	cronJob_Kubectl_GC *cron.Cron
+	ctx                context.Context
+	cancel             context.CancelFunc
 )
 
 func init() {
@@ -276,9 +277,9 @@ func init_logging() {
 }
 
 func init_etc() {
-	cronJob_Kubectl_GC := cron.New()
+	cronJob_Kubectl_GC = cron.New()
 	cronJob_Kubectl_GC.AddFunc("@midnight", caller.DeleteKubectlAllResource)
-	cronJob_Kubectl_GC.Start()
+	// cronJob_Kubectl_GC.Start()
 }
 
 func init_db_connection() {
@@ -739,10 +740,14 @@ func runLeaderElection(lock *resourcelock.LeaseLock, ctx context.Context, id str
 				// k8s event logging
 				caller.WatchK8sEvent()
 				klog.V(3).Info("Start event service")
+				// kubectl garbage collect
+				cronJob_Kubectl_GC.Start()
+				klog.V(3).Info("Start kubectl garbage collect service")
 			},
 			OnStoppedLeading: func() {
 				klog.V(3).Info("no longer the leader, staying inactive and stop metering & event logging")
 				cronJob_Metering.Stop()
+				cronJob_Kubectl_GC.Stop()
 				close(caller.EventWatchChannel)
 			},
 			OnNewLeader: func(current_id string) {
