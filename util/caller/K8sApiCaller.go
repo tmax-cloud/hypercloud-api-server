@@ -1532,6 +1532,13 @@ func DeployKubectlPod(userName string) error {
 		return err
 	}
 
+	// Make configmap to change default namespace in kubectl container
+	var configmapName string
+	if configmapName, err = CreateConfigmapForKubectl(kubectlName, 1); err != nil {
+		klog.V(1).Infoln(err)
+		return err
+	}
+
 	// Deploy kubectl Pod using generated ServiceAccount
 	sleepTime := os.Getenv("KUBECTL_TIMEOUT")
 	if len(sleepTime) == 0 || sleepTime == "{KUBECTL_TIMEOUT}" {
@@ -1560,6 +1567,24 @@ func DeployKubectlPod(userName string) error {
 					Args: []string{
 						"sleep " + sleepTime,
 						//"tail -f /dev/null;",
+					},
+					VolumeMounts: []corev1.VolumeMount{
+						{
+							Name:      "default-namespace",
+							MountPath: "/var/run/secrets/kubernetes.io/serviceaccount",
+						},
+					},
+				},
+			},
+			Volumes: []corev1.Volume{
+				{
+					Name: "default-namespace",
+					VolumeSource: corev1.VolumeSource{
+						ConfigMap: &corev1.ConfigMapVolumeSource{
+							LocalObjectReference: corev1.LocalObjectReference{
+								Name: configmapName,
+							},
+						},
 					},
 				},
 			},
@@ -1690,6 +1715,56 @@ func CreateCRBForKubectlSA(saName string, S ...struct {
 	return nil
 }
 
+// CreateConfigmapForKubectl creates configmap for volume mounting at /var/run/secrets/kubernetes.io/serviceaccount
+// to change default namespace of kubectl container.
+func CreateConfigmapForKubectl(serviceAccountName string, retry int) (string, error) {
+	if retry >= 10 {
+		return "", errors.NewServiceUnavailable("Serviceaccount [" + serviceAccountName + "] is not created")
+	}
+
+	var sa *corev1.ServiceAccount
+	var err error
+	if sa, err = Clientset.CoreV1().ServiceAccounts(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), serviceAccountName, metav1.GetOptions{}); err != nil {
+		if errors.IsNotFound(err) {
+			klog.V(3).Infoln("Wait for Serviceaccount [" + serviceAccountName + "] to be created...")
+			time.Sleep(time.Second * 1)
+			return CreateConfigmapForKubectl(serviceAccountName, retry+1)
+		} else {
+			return "", errors.NewServiceUnavailable("Failed to get Serviceaccount [" + serviceAccountName + "]")
+		}
+	}
+
+	secretName := sa.Secrets[0].Name
+	configmapName := serviceAccountName + "-configmap"
+	if secret, err := Clientset.CoreV1().Secrets(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), secretName, metav1.GetOptions{}); err != nil {
+		return "", errors.NewServiceUnavailable("Failed to get Secret [" + secretName + "]")
+	} else {
+		caCrt := string(secret.Data["ca.crt"])
+		token := string(secret.Data["token"])
+		namespace := "default"
+		if _, err := Clientset.CoreV1().ConfigMaps(util.HYPERCLOUD_KUBECTL_NAMESPACE).Create(context.TODO(), &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: configmapName,
+				Labels: map[string]string{
+					util.HYPERCLOUD_KUBECTL_LABEL_KEY: util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+				},
+			},
+			Data: map[string]string{
+				"ca.crt":    caCrt,
+				"token":     token,
+				"namespace": namespace,
+			},
+		}, metav1.CreateOptions{}); err != nil {
+			klog.V(3).Infoln("Failed to create Configmap for Serviceaccount [" + serviceAccountName + "]")
+			return "", err
+		} else {
+			klog.V(3).Infoln("Create Configmap [" + configmapName + "]")
+		}
+	}
+
+	return configmapName, nil
+}
+
 // DeleteKubectlResource deletes all kubectl pod related resources for give userName,
 // which contains Pod, RoleBinding, ClusterRoleBinding and ServiceAccount
 func DeleteKubectlResourceByUserName(userName string) error {
@@ -1748,6 +1823,12 @@ func DeleteKubectlResourceByUserName(userName string) error {
 		klog.V(1).Infoln(err)
 	} else {
 		klog.V(3).Infoln("Delete Role [" + ParseUserName(userName) + "-exec" + "-role" + "] Success")
+	}
+
+	if err := Clientset.CoreV1().ConfigMaps(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), kubectlName+"-configmap", metav1.DeleteOptions{}); err != nil {
+		klog.V(1).Infoln(err)
+	} else {
+		klog.V(3).Infoln("Delete Pod [" + kubectlName + "] Success")
 	}
 
 	return nil
@@ -1854,6 +1935,25 @@ func DeleteKubectlAllResource() {
 			}
 		}
 	}
+
+	if cmList, err := Clientset.CoreV1().ConfigMaps(util.HYPERCLOUD_KUBECTL_NAMESPACE).List(context.TODO(), metav1.ListOptions{
+		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+	}); err != nil {
+		klog.V(1).Infoln(err)
+		return
+	} else {
+		for _, cm := range cmList.Items {
+			for _, userName := range DeletedUserName {
+				if strings.Contains(cm.Name, userName) {
+					if err := Clientset.CoreV1().ConfigMaps(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), cm.Name, metav1.DeleteOptions{}); err != nil {
+						klog.V(1).Infoln(err)
+					}
+					klog.V(3).Infoln("Delete Configmap [" + cm.Name + "] Success")
+				}
+			}
+		}
+	}
+
 	klog.V(4).Infoln("Complete Garbage Collect Kubectl Related Resources")
 }
 
