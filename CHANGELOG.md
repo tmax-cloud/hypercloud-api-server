@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.0.1 start -------------------->
+
+## Hypercloud-api-server 5.1.0.1 (2022. 12. 28. (수) 12:59:00 KST)
+
+### Added
+
+### Changed
+  - [mod] kubectl 컨테이너가 default namespace를 바라보도록 수정 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.1.0.0 start -------------------->
 
 ## Hypercloud-api-server 5.1.0.0 (2022. 12. 15. (목) 16:56:54 KST)
