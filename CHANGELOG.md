@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.0.2 start -------------------->
+
+## Hypercloud-api-server 5.1.0.2 (2023. 01. 03. (화) 15:09:42 KST)
+
+### Added
+
+### Changed
+  - [mod] kubectl pod에 필요한 configmap을 보안을 위해 pod 생성 후에 삭제 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.1.0.1 start -------------------->
 
 ## Hypercloud-api-server 5.1.0.1 (2022. 12. 28. (수) 12:59:00 KST)
