@@ -1483,7 +1483,7 @@ func DeployKubectlPod(userName string) error {
 	// Delete it if the status of pod is completed(Succeeded)
 	// Do nothing if the status of pod is not completed(Running)
 	if pod, err := Clientset.CoreV1().Pods(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), kubectlName, metav1.GetOptions{}); err == nil {
-		if pod.Status.Phase == "Succeeded" {
+		if pod.Status.Phase != "Running" {
 			if err := Clientset.CoreV1().Pods(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), kubectlName, metav1.DeleteOptions{}); err != nil {
 				return err
 			}
@@ -1592,6 +1592,34 @@ func DeployKubectlPod(userName string) error {
 	}
 	if _, err := Clientset.CoreV1().Pods(util.HYPERCLOUD_KUBECTL_NAMESPACE).Create(context.TODO(), &kubectlPod, metav1.CreateOptions{}); err != nil {
 		return err
+	}
+
+	// Delete configmap after pod runs for security
+	count := 0
+	for count < util.HYPERCLOUD_KUBECTL_CONFIGMAP_DELETE_WAIT_TIME {
+		if pod, err := Clientset.CoreV1().Pods(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), kubectlName, metav1.GetOptions{}); err == nil {
+			if pod.Status.Phase == "Running" {
+				configmapName := kubectlName + "-configmap"
+				if err := Clientset.CoreV1().ConfigMaps(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), configmapName, metav1.DeleteOptions{}); err != nil {
+					klog.V(1).Infoln(err)
+					count++
+					time.Sleep(time.Second * 1)
+				} else {
+					klog.V(3).Infoln("Delete Configmap [" + configmapName + "] Success")
+					break
+				}
+			} else {
+				count++
+				time.Sleep(time.Second * 1)
+			}
+		} else {
+			count++
+			time.Sleep(time.Second * 1)
+		}
+	}
+
+	if count == util.HYPERCLOUD_KUBECTL_CONFIGMAP_DELETE_WAIT_TIME {
+		klog.V(1).Infoln("Failed to delete Configmap [" + configmapName + "]. ca.crt is exposed by configmap, please delete it manually")
 	}
 
 	return nil
@@ -1742,6 +1770,13 @@ func CreateConfigmapForKubectl(serviceAccountName string, retry int) (string, er
 		caCrt := string(secret.Data["ca.crt"])
 		token := string(secret.Data["token"])
 		namespace := "default"
+
+		if _, err := Clientset.CoreV1().ConfigMaps(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), configmapName, metav1.GetOptions{}); err == nil {
+			if err := Clientset.CoreV1().ConfigMaps(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), configmapName, metav1.DeleteOptions{}); err != nil {
+				klog.V(1).Infoln(err)
+			}
+		}
+
 		if _, err := Clientset.CoreV1().ConfigMaps(util.HYPERCLOUD_KUBECTL_NAMESPACE).Create(context.TODO(), &corev1.ConfigMap{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: configmapName,
