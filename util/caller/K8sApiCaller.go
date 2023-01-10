@@ -1863,7 +1863,7 @@ func DeleteKubectlResourceByUserName(userName string) error {
 	if err := Clientset.CoreV1().ConfigMaps(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), kubectlName+"-configmap", metav1.DeleteOptions{}); err != nil {
 		klog.V(1).Infoln(err)
 	} else {
-		klog.V(3).Infoln("Delete Pod [" + kubectlName + "] Success")
+		klog.V(3).Infoln("Delete ConfigMap [" + kubectlName + "] Success")
 	}
 
 	return nil
@@ -1895,97 +1895,13 @@ func DeleteKubectlAllResource() {
 	}
 
 	if len(DeletedUserName) < 1 {
-		klog.V(4).Infoln("Complete Garbage Collect Kubectl Related Resources")
+		klog.V(4).Infoln("No garbage resources for kubectl")
 		return
 	}
 
-	if saList, err := Clientset.CoreV1().ServiceAccounts(util.HYPERCLOUD_KUBECTL_NAMESPACE).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
-	}); err != nil {
-		klog.V(1).Infoln(err)
-		return
-	} else {
-		for _, sa := range saList.Items {
-			for _, userName := range DeletedUserName {
-				if strings.Contains(sa.Name, userName) {
-					if err := Clientset.CoreV1().ServiceAccounts(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), sa.Name, metav1.DeleteOptions{}); err != nil {
-						klog.V(1).Infoln(err)
-					}
-					klog.V(3).Infoln("Delete ServiceAccount [" + sa.Name + "] Success")
-				}
-			}
-		}
-	}
-
-	if rolebindingList, err := Clientset.RbacV1().RoleBindings("").List(context.TODO(), metav1.ListOptions{
-		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
-	}); err != nil {
-		klog.V(1).Infoln(err)
-		return
-	} else {
-		for _, rolebinding := range rolebindingList.Items {
-			for _, userName := range DeletedUserName {
-				if strings.Contains(rolebinding.Name, userName) {
-					if err := Clientset.RbacV1().RoleBindings(rolebinding.Namespace).Delete(context.TODO(), rolebinding.Name, metav1.DeleteOptions{}); err != nil {
-						klog.V(1).Infoln(err)
-					}
-					klog.V(3).Infoln("Delete RoleBinding [" + rolebinding.Name + "] Success")
-				}
-			}
-		}
-	}
-
-	if clusterRolebindingList, err := Clientset.RbacV1().ClusterRoleBindings().List(context.TODO(), metav1.ListOptions{
-		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
-	}); err != nil {
-		klog.V(1).Infoln(err)
-		return
-	} else {
-		for _, clusterRolebinding := range clusterRolebindingList.Items {
-			for _, userName := range DeletedUserName {
-				if strings.Contains(clusterRolebinding.Name, userName) {
-					if err := Clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), clusterRolebinding.Name, metav1.DeleteOptions{}); err != nil {
-						klog.V(1).Infoln(err)
-					}
-					klog.V(3).Infoln("Delete ClusterRoleBinding [" + clusterRolebinding.Name + "] Success")
-				}
-			}
-		}
-	}
-
-	if roleList, err := Clientset.RbacV1().Roles("").List(context.TODO(), metav1.ListOptions{
-		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
-	}); err != nil {
-		klog.V(1).Infoln(err)
-		return
-	} else {
-		for _, role := range roleList.Items {
-			for _, userName := range DeletedUserName {
-				if strings.Contains(role.Name, userName) {
-					if err := Clientset.RbacV1().Roles(role.Namespace).Delete(context.TODO(), role.Name, metav1.DeleteOptions{}); err != nil {
-						klog.V(1).Infoln(err)
-					}
-					klog.V(3).Infoln("Delete Role [" + role.Name + "] Success")
-				}
-			}
-		}
-	}
-
-	if cmList, err := Clientset.CoreV1().ConfigMaps(util.HYPERCLOUD_KUBECTL_NAMESPACE).List(context.TODO(), metav1.ListOptions{
-		LabelSelector: util.HYPERCLOUD_KUBECTL_LABEL_KEY + "=" + util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
-	}); err != nil {
-		klog.V(1).Infoln(err)
-		return
-	} else {
-		for _, cm := range cmList.Items {
-			for _, userName := range DeletedUserName {
-				if strings.Contains(cm.Name, userName) {
-					if err := Clientset.CoreV1().ConfigMaps(util.HYPERCLOUD_KUBECTL_NAMESPACE).Delete(context.TODO(), cm.Name, metav1.DeleteOptions{}); err != nil {
-						klog.V(1).Infoln(err)
-					}
-					klog.V(3).Infoln("Delete Configmap [" + cm.Name + "] Success")
-				}
-			}
+	for _, userName := range DeletedUserName {
+		if err := DeleteKubectlResourceByUserName(userName); err != nil {
+			klog.V(1).Infoln(err)
 		}
 	}
 
