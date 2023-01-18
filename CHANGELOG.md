@@ -3,6 +3,21 @@ All notable changes to this project will be documented in this file.
 
 <!-------------------- v5.1.1.0 start -------------------->
 
+## Hypercloud-api-server 5.1.1.0 (2023. 01. 18. (수) 19:34:45 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] kubectl GC 리팩토링 by Seungwon Lee
+
+<!-------------------- v5.1.1.0 start -------------------->
+
 ## Hypercloud-api-server 5.1.1.0 (2023. 01. 18. (수) 18:39:35 KST)
 
 ### Added
