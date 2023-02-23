@@ -7,7 +7,6 @@ import (
 	gmux "github.com/gorilla/mux"
 	util "github.com/tmax-cloud/hypercloud-api-server/util"
 	caller "github.com/tmax-cloud/hypercloud-api-server/util/caller"
-	clusterDataFactory "github.com/tmax-cloud/hypercloud-api-server/util/dataFactory/cluster"
 	claimsv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/claim/v1alpha1"
 	"k8s.io/klog"
 )
@@ -26,16 +25,15 @@ const (
 func Put(res http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
-	memberName := queryParams.Get(QUERY_PARAMETER_MEMBER_NAME)
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 	reason := queryParams.Get(QUERY_PARAMETER_CLUSTER_CLAIM_ADMIT_REASON)
 	admit := queryParams.Get(QUERY_PARAMETER_CLUSTER_CLAIM_ADMIT)
 
 	vars := gmux.Vars(req)
-	clusterClaimName := vars["clusterclaim"]
-	clusterClaimNamespace := vars["namespace"]
+	cucName := vars["clusterupdateclaim"]
+	cucNamespace := vars["namespace"]
 
-	if err := util.StringParameterException(userGroups, userId, admit, memberName, clusterClaimName, clusterClaimNamespace); err != nil {
+	if err := util.StringParameterException(userGroups, userId, admit, cucName, cucNamespace); err != nil {
 		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
@@ -49,64 +47,41 @@ func Put(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var cc *claimsv1alpha1.ClusterClaim
-	if cc, err = caller.GetClusterClaim(userId, userGroups, clusterClaimName, clusterClaimNamespace); err != nil {
+	var cuc *claimsv1alpha1.ClusterUpdateClaim
+	if cuc, err = caller.GetClusterUpdateClaim(userId, userGroups, cucName, cucNamespace); err != nil {
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
 
-	if !(cc.Status.Phase == "Awaiting" || cc.Status.Phase == "Rejected") {
-		msg := "ClusterClaim is already admitted by admin"
+	if cuc.Status.Phase != "Awaiting" && cuc.Status.Phase != "Rejected" {
+		msg := "ClusterUpdateClaim is not awaiting or rejected phase"
 		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
-	// name duplicate
-	exist, err := caller.CheckClusterManagerDuplication(cc.Spec.ClusterName, clusterClaimNamespace)
-	if err != nil {
-		klog.V(1).Infoln(err.Error())
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
+	// awaiting과 Rejected 통과
+	
+	// cluster 주인 체크
+	if err := caller.CheckClusterOwner(userId, cuc.Spec.ClusterName, cuc.Namespace); err != nil {
+		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
 
-	if exist {
-		msg := "Cluster [" + cc.Spec.ClusterName + "] is already existed."
-		klog.V(3).Infoln(msg)
-		util.SetResponse(res, "Cluster ["+cc.Spec.ClusterName+"] is already existed.", nil, http.StatusBadRequest)
-		return
-	}
-
-	var updatedClusterClaim *claimsv1alpha1.ClusterClaim
-	if updatedClusterClaim, err = caller.AdmitClusterClaim(userId, userGroups, cc, admitBool, reason); err != nil {
+	if _, err = caller.AdmitClusterUpdateClaim(userId, userGroups, cuc, admitBool, reason); err != nil {
 		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 		return
 	}
-	if updatedClusterClaim.Status.Phase == "Rejected" {
-		msg := "ClusterClaim is rejected by admin"
+
+	if !admitBool {
+		msg := "ClusterUpdateClaim is rejected by admin"
 		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusOK)
 		return
 	}
 
-	clusterMember := util.ClusterMemberInfo{}
-	clusterMember.Namespace = cc.Namespace
-	clusterMember.Cluster = cc.Spec.ClusterName
-	clusterMember.Role = "admin"
-	clusterMember.MemberId = cc.Annotations["creator"]
-	// clusterMember.MemberName = memberName
-	clusterMember.MemberName = "default" // cho로 들어오던 memberName 변환
-	clusterMember.Attribute = "user"
-	clusterMember.Status = "owner"
-
-	if err := clusterDataFactory.Insert(clusterMember); err != nil {
-		klog.V(1).Infoln(err)
-		util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
-		return
-	}
-
-	util.SetResponse(res, "Success", updatedClusterClaim, http.StatusOK)
+	util.SetResponse(res, "ClusterUpdateClaim is approved by admin", cuc, http.StatusOK)
 }
 
 func List(res http.ResponseWriter, req *http.Request) {

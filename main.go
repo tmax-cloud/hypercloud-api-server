@@ -171,7 +171,7 @@ func register_multiplexer() {
 		// All clusterupdateclaim in a specific namespace: Get
 		mux.HandleFunc("/namespaces/{namespace}/clusterupdateclaims", serveClusterUpdateClaim)
 		// Admit clusterupdateclaim request: Put
-		mux.HandleFunc("/namespaces/{namespace}/clusterupdateclaims/{clusterclaim}", serveClusterUpdateClaim)
+		mux.HandleFunc("/namespaces/{namespace}/clusterupdateclaims/{clusterupdateclaim}", serveClusterUpdateClaim)
 	}
 }
 
