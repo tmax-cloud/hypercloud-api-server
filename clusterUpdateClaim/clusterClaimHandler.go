@@ -114,28 +114,28 @@ func List(res http.ResponseWriter, req *http.Request) {
 	userId := queryParams.Get(QUERY_PARAMETER_USER_ID)
 	userGroups := queryParams[util.QUERY_PARAMETER_USER_GROUP]
 	vars := gmux.Vars(req)
-	clusterClaimNamespace := vars["namespace"]
+	cucNamespace := vars["namespace"]
 
 	if err := util.StringParameterException(userGroups, userId); err != nil {
 		klog.V(1).Infoln(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
-	// var clusterClaimList *claimsv1alpha1.ClusterClaimList
-	if clusterClaimNamespace == "" {
-		if clusterClaimList, err := caller.ListAllClusterClaims(userId, userGroups); err != nil {
+
+	if cucNamespace == "" {
+		if clusterUpdateClaimList, err := caller.ListAllClusterUpdateClaims(userId, userGroups); err != nil {
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 			return
 		} else {
-			util.SetResponse(res, "Success", clusterClaimList, http.StatusOK)
+			util.SetResponse(res, "Success", clusterUpdateClaimList, http.StatusOK)
 			return
 		}
 	} else {
-		if clusterClaimList, err := caller.ListAccessibleClusterClaims(userId, userGroups, clusterClaimNamespace); err != nil {
+		if clusterUpdateClaimList, err := caller.ListClusterUpdateClaimsByNamespace(userId, userGroups, cucNamespace); err != nil {
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 			return
 		} else {
-			util.SetResponse(res, "Success", clusterClaimList, http.StatusOK)
+			util.SetResponse(res, "Success", clusterUpdateClaimList, http.StatusOK)
 			return
 		}
 	}

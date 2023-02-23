@@ -166,8 +166,12 @@ func register_multiplexer() {
 		// list invited member id
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member/{member}", serveClusterMember)
 
-		// cluster update claim 처리 
-		mux.HandleFunc("/clusterclaims", serveClusterUpdateClaim)
+		// All clusterupdateclaim: Get
+		mux.HandleFunc("/clusterupdateclaims", serveClusterUpdateClaim)
+		// All clusterupdateclaim in a specific namespace: Get
+		mux.HandleFunc("/namespaces/{namespace}/clusterupdateclaims", serveClusterUpdateClaim)
+		// Admit clusterupdateclaim request: Put
+		mux.HandleFunc("/namespaces/{namespace}/clusterupdateclaims/{clusterclaim}", serveClusterUpdateClaim)
 	}
 }
 
