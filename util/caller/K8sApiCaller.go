@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"reflect"
@@ -830,6 +831,27 @@ func ListAllClusterClaims(userId string, userGroups []string) (*claimsv1alpha1.C
 	}
 }
 
+func CheckClusterOwner(userId string, clusterName string, cucNamespace string) error {
+
+	clusterManager, err := customClientset.ClusterV1alpha1().ClusterManagers(cucNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
+	if err != nil {
+		klog.V(1).Info(err)
+		return err
+	}
+	clusterOwner, ok := clusterManager.Annotations["creator"]
+	if !ok {
+		errMsg := "cannot check cluster owner. missing cluster manager annotation[creator]."
+		klog.V(1).Info(errMsg)
+		return fmt.Errorf(errMsg)
+	}
+	if clusterOwner != userId {
+		errMsg := "not cluster owner."
+		klog.V(1).Info(errMsg)
+		return fmt.Errorf(errMsg)
+	}
+	return nil
+}
+
 func ListAccessibleClusterClaims(userId string, userGroups []string, namespace string) (*claimsv1alpha1.ClusterClaimList, error) {
 	var clusterClaimList = &claimsv1alpha1.ClusterClaimList{}
 
@@ -857,6 +879,103 @@ func ListAccessibleClusterClaims(userId string, userGroups []string, namespace s
 		return clusterClaimList, nil
 	}
 
+}
+
+func ListAllClusterUpdateClaims(userId string, userGroups []string) (*claimsv1alpha1.ClusterUpdateClaimList, error) {
+	return ListClusterUpdateClaimsByNamespace(userId, userGroups, "")
+}
+
+func ListClusterUpdateClaimsByNamespace(userId string, userGroups []string, namespace string) (*claimsv1alpha1.ClusterUpdateClaimList, error) {
+
+	clusterClaimListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", namespace, "", "list")
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return nil, err
+	}
+
+	if clusterClaimListRuleResult.Status.Allowed {
+		clusterUpdateClaimList, err := customClientset.ClaimsV1alpha1().ClusterUpdateClaims(namespace).List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			klog.V(1).Info(err)
+		}
+		if namespace == "" {
+			klog.V(3).Infoln("Success list clusterclaim")
+		} else {
+			klog.V(3).Infoln("Success list clusterclaim in namespace [ " + namespace + " ]")
+		}
+		if len(clusterUpdateClaimList.Items) == 0 {
+			klog.V(3).Infoln(" User [ " + userId + " ] has No ClusterUpdateClaim")
+		}
+		return clusterUpdateClaimList, nil
+	} else {
+		if namespace == "" {
+			klog.V(3).Infoln("User [ " + userId + " ] has No permission")
+		} else {
+			klog.V(3).Infoln("User [ " + userId + " ] has No permission in namespace  [ " + namespace + " ]")
+		}
+		return &claimsv1alpha1.ClusterUpdateClaimList{}, nil
+	}
+}
+
+func GetClusterUpdateClaim(userId string, userGroups []string, cucName string, cucNamespace string) (*claimsv1alpha1.ClusterUpdateClaim, error) {
+	clusterUpdateClaimGetRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterupdateclaims", cucNamespace, cucName, "get")
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return nil, err
+	}
+
+	var cuc *claimsv1alpha1.ClusterUpdateClaim
+	if clusterUpdateClaimGetRuleResult.Status.Allowed {
+		cuc, err = customClientset.ClaimsV1alpha1().ClusterUpdateClaims(cucNamespace).Get(context.TODO(), cucName, metav1.GetOptions{})
+		if err != nil {
+			klog.V(1).Infoln(err)
+			return nil, err
+		}
+	} else {
+		newErr := errors.NewBadRequest("User [" + userId + "] authorization is denied for clusterupdateclaims [" + cucName + "]")
+		klog.V(1).Infoln(newErr)
+		return nil, newErr
+	}
+	return cuc, nil
+}
+
+func AdmitClusterUpdateClaim(userId string, userGroups []string, cuc *claimsv1alpha1.ClusterUpdateClaim, admit bool, reason string) (*claimsv1alpha1.ClusterUpdateClaim, error) {
+	clusterUpdateClaimStatusRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterupdateclaims/status", cuc.Namespace, cuc.Name, "update")
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return nil, err
+	}
+
+	if clusterUpdateClaimStatusRuleResult.Status.Allowed {
+		klog.V(3).Infoln(" User [ " + userId + " ] has ClusterUpdateClaims/status Update Role, Can Update ClusterUpdateClaims")
+		if admit {
+			cuc.Status.Phase = claimsv1alpha1.ClusterUpdateClaimPhaseApproved
+		} else {
+			cuc.Status.Phase = claimsv1alpha1.ClusterUpdateClaimPhaseRejected
+			if reason == "" {
+				cuc.Status.Reason = claimsv1alpha1.ClusterUpdateClaimReason("Administrator rejected the claim")
+			} else {
+				cuc.Status.Reason = claimsv1alpha1.ClusterUpdateClaimReason(reason)
+			}
+		}
+
+		result, err := customClientset.
+			ClaimsV1alpha1().
+			ClusterUpdateClaims(cuc.Namespace).
+			UpdateStatus(context.TODO(), cuc, metav1.UpdateOptions{})
+		if err != nil {
+			klog.V(1).Infoln("Update ClusterUpdateClaim [ " + cuc.Name + " ] Failed")
+			return nil, err
+		} else {
+			msg := "Update ClusterUpdateClaim [ " + cuc.Name + " ] Success"
+			klog.V(3).Infoln(msg)
+			return result, nil
+		}
+	} else {
+		newErr := errors.NewBadRequest("User [ " + userId + " ] has No ClusterUpdateClaims/status Update Role, Check If user has ClusterUpdateClaims/status Update Role")
+		klog.V(1).Infoln(newErr)
+		return nil, newErr
+	}
 }
 
 func ListAllCluster(userId string, userGroups []string) (*clusterv1alpha1.ClusterManagerList, error) {

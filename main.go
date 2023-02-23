@@ -21,6 +21,7 @@ import (
 	grafana "github.com/tmax-cloud/hypercloud-api-server/cloudCredential/grafana"
 	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
 	claim "github.com/tmax-cloud/hypercloud-api-server/clusterClaim"
+	cuc "github.com/tmax-cloud/hypercloud-api-server/clusterUpdateClaim"
 	event "github.com/tmax-cloud/hypercloud-api-server/event"
 	kubectl "github.com/tmax-cloud/hypercloud-api-server/kubectl"
 	metering "github.com/tmax-cloud/hypercloud-api-server/metering"
@@ -164,6 +165,13 @@ func register_multiplexer() {
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/update_role/{attribute}/{member}", serveClusterMember)
 		// list invited member id
 		mux.HandleFunc("/namespaces/{namespace}/clustermanagers/{clustermanager}/member/{member}", serveClusterMember)
+
+		// All clusterupdateclaim: Get
+		mux.HandleFunc("/clusterupdateclaims", serveClusterUpdateClaim)
+		// All clusterupdateclaim in a specific namespace: Get
+		mux.HandleFunc("/namespaces/{namespace}/clusterupdateclaims", serveClusterUpdateClaim)
+		// Admit clusterupdateclaim request: Put
+		mux.HandleFunc("/namespaces/{namespace}/clusterupdateclaims/{clusterupdateclaim}", serveClusterUpdateClaim)
 	}
 }
 
@@ -451,6 +459,20 @@ func serveClusterInvitationAdmit(res http.ResponseWriter, req *http.Request) {
 		klog.V(1).Infof("method not acceptable")
 	}
 }
+
+
+func serveClusterUpdateClaim(res http.ResponseWriter, req *http.Request) {
+	klog.V(3).Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
+	switch req.Method {
+	case http.MethodGet:
+		cuc.List(res, req)
+	case http.MethodPut:
+		cuc.Put(res, req)
+	default:
+		klog.V(1).Infof("method not acceptable")
+	}
+}
+
 
 func serveMetadata(w http.ResponseWriter, r *http.Request) {
 	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)

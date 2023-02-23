@@ -10,6 +10,7 @@ import (
 type ClaimV1alpha1Interface interface {
 	RESTClient() rest.Interface
 	ClusterClaimGetter
+	ClusterUpdateClaimGetter
 }
 
 // ClaimV1alpha1Client is used to interact with features provided by the  group.
@@ -19,6 +20,10 @@ type ClaimV1alpha1Client struct {
 
 func (c *ClaimV1alpha1Client) ClusterClaims(namespace string) ClusterClaimInterface {
 	return newClusterClaims(c, namespace)
+}
+
+func (c *ClaimV1alpha1Client) ClusterUpdateClaims(namespace string) ClusterUpdateClaimInterface {
+	return newClusterUpdateClaims(c, namespace)
 }
 
 // NewForConfig creates a new ClaimV1alpha1Client for the given config.
