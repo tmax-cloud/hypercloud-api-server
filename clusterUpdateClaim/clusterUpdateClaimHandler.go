@@ -61,9 +61,7 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	}
 
 	// awaiting과 Rejected 통과
-	
-	// cluster 주인 체크
-	if err := caller.CheckClusterOwner(userId, cuc.Spec.ClusterName, cuc.Namespace); err != nil {
+	if err := caller.CheckClusterValid(userId, cuc.Spec.ClusterName, cuc.Namespace); err != nil {
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}

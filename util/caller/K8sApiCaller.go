@@ -831,13 +831,21 @@ func ListAllClusterClaims(userId string, userGroups []string) (*claimsv1alpha1.C
 	}
 }
 
-func CheckClusterOwner(userId string, clusterName string, cucNamespace string) error {
+// cluster type이 created인지 체크 및 cluster owner만 승인/거절 할 수 있도록 체크
+func CheckClusterValid(userId string, clusterName string, cucNamespace string) error {
 
 	clusterManager, err := customClientset.ClusterV1alpha1().ClusterManagers(cucNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
 	if err != nil {
 		klog.V(1).Info(err)
 		return err
 	}
+
+	if clusterManager.GetClusterType() != clusterv1alpha1.ClusterTypeCreated{
+		errMsg := "cluster type is not created"
+		klog.V(1).Info(errMsg)
+		return fmt.Errorf(errMsg)
+	}
+
 	clusterOwner, ok := clusterManager.Annotations["creator"]
 	if !ok {
 		errMsg := "cannot check cluster owner. missing cluster manager annotation[creator]."
