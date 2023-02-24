@@ -100,7 +100,7 @@ func List(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if cucNamespace == "" {
-		if clusterUpdateClaimList, err := caller.ListAllClusterUpdateClaims(userId, userGroups); err != nil {
+		if clusterUpdateClaimList, err := caller.ListClusterUpdateClaims(userId, userGroups); err != nil {
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 			return
 		} else {

@@ -895,37 +895,37 @@ func ListAccessibleClusterClaims(userId string, userGroups []string, namespace s
 
 }
 
-func ListAllClusterUpdateClaims(userId string, userGroups []string) (*claimsv1alpha1.ClusterUpdateClaimList, error) {
+func ListClusterUpdateClaims(userId string, userGroups []string) (*claimsv1alpha1.ClusterUpdateClaimList, error) {
 	return ListClusterUpdateClaimsByNamespace(userId, userGroups, "")
 }
 
 func ListClusterUpdateClaimsByNamespace(userId string, userGroups []string, namespace string) (*claimsv1alpha1.ClusterUpdateClaimList, error) {
 
-	clusterClaimListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", namespace, "", "list")
+	clusterUpdateClaimListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterupdateclaims", namespace, "", "list")
 	if err != nil {
 		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
-	if clusterClaimListRuleResult.Status.Allowed {
+	if clusterUpdateClaimListRuleResult.Status.Allowed {
 		clusterUpdateClaimList, err := customClientset.ClaimsV1alpha1().ClusterUpdateClaims(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			klog.V(1).Info(err)
 		}
 		if namespace == "" {
-			klog.V(3).Infoln("Success list clusterclaim")
+			klog.V(3).Infoln("Success list clusterupdateclaim")
 		} else {
-			klog.V(3).Infoln("Success list clusterclaim in namespace [ " + namespace + " ]")
+			klog.V(3).Infoln(fmt.Sprintf("Success list clusterupdateclaim in namespace [ %s ]", namespace))
 		}
 		if len(clusterUpdateClaimList.Items) == 0 {
-			klog.V(3).Infoln(" User [ " + userId + " ] has No ClusterUpdateClaim")
+			klog.V(3).Infoln(fmt.Sprintf("User [ %s ] has No ClusterUpdateClaim", userId))
 		}
 		return clusterUpdateClaimList, nil
 	} else {
 		if namespace == "" {
-			klog.V(3).Infoln("User [ " + userId + " ] has No permission")
+			klog.V(3).Infoln(fmt.Sprintf("User [ %s ] has No permission", userId))
 		} else {
-			klog.V(3).Infoln("User [ " + userId + " ] has No permission in namespace  [ " + namespace + " ]")
+			klog.V(3).Infoln(fmt.Sprintf("User [ %s ] has No permission in namespace  [ %s ]", userId, namespace))
 		}
 		return &claimsv1alpha1.ClusterUpdateClaimList{}, nil
 	}
