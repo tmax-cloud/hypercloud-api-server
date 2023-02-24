@@ -831,21 +831,35 @@ func ListAllClusterClaims(userId string, userGroups []string) (*claimsv1alpha1.C
 	}
 }
 
-func CheckClusterOwner(userId string, clusterName string, cucNamespace string) error {
-
+// cluster created type check, cluster owner만 승인/거절 할 수 있도록 check, ready 상태의 cluster만 허용하도록 check
+func CheckClusterValid(userId string, clusterName string, cucNamespace string) error {
 	clusterManager, err := customClientset.ClusterV1alpha1().ClusterManagers(cucNamespace).Get(context.TODO(), clusterName, metav1.GetOptions{})
 	if err != nil {
 		klog.V(1).Info(err)
 		return err
 	}
-	clusterOwner, ok := clusterManager.Annotations["creator"]
-	if !ok {
-		errMsg := "cannot check cluster owner. missing cluster manager annotation[creator]."
+
+	if clusterManager.GetClusterType() != clusterv1alpha1.ClusterTypeCreated {
+		errMsg := fmt.Sprintf("cluster[ %s ]'s cluster type is not created", clusterManager.Name)
 		klog.V(1).Info(errMsg)
 		return fmt.Errorf(errMsg)
 	}
+
+	clusterOwner, ok := clusterManager.Annotations["creator"]
+	if !ok {
+		errMsg := fmt.Sprintf("cannot check cluster[ %s ]'s owner. missing cluster manager annotation[creator].", clusterManager.Name)
+		klog.V(1).Info(errMsg)
+		return fmt.Errorf(errMsg)
+	}
+
+	if clusterManager.Status.Phase != clusterv1alpha1.ClusterManagerPhaseReady {
+		errMsg := fmt.Sprintf("cluster[ %s ] is not ready", clusterManager.Name)
+		klog.V(1).Info(errMsg)
+		return fmt.Errorf(errMsg)
+	}
+
 	if clusterOwner != userId {
-		errMsg := "not cluster owner."
+		errMsg := fmt.Sprintf("userId[ %s ] is not cluster owner.", userId)
 		klog.V(1).Info(errMsg)
 		return fmt.Errorf(errMsg)
 	}
@@ -881,37 +895,37 @@ func ListAccessibleClusterClaims(userId string, userGroups []string, namespace s
 
 }
 
-func ListAllClusterUpdateClaims(userId string, userGroups []string) (*claimsv1alpha1.ClusterUpdateClaimList, error) {
+func ListClusterUpdateClaims(userId string, userGroups []string) (*claimsv1alpha1.ClusterUpdateClaimList, error) {
 	return ListClusterUpdateClaimsByNamespace(userId, userGroups, "")
 }
 
 func ListClusterUpdateClaimsByNamespace(userId string, userGroups []string, namespace string) (*claimsv1alpha1.ClusterUpdateClaimList, error) {
 
-	clusterClaimListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterclaims", namespace, "", "list")
+	clusterUpdateClaimListRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLAIM_API_GROUP, "clusterupdateclaims", namespace, "", "list")
 	if err != nil {
 		klog.V(1).Infoln(err)
 		return nil, err
 	}
 
-	if clusterClaimListRuleResult.Status.Allowed {
+	if clusterUpdateClaimListRuleResult.Status.Allowed {
 		clusterUpdateClaimList, err := customClientset.ClaimsV1alpha1().ClusterUpdateClaims(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			klog.V(1).Info(err)
 		}
 		if namespace == "" {
-			klog.V(3).Infoln("Success list clusterclaim")
+			klog.V(3).Infoln("Success list clusterupdateclaim")
 		} else {
-			klog.V(3).Infoln("Success list clusterclaim in namespace [ " + namespace + " ]")
+			klog.V(3).Infoln(fmt.Sprintf("Success list clusterupdateclaim in namespace [ %s ]", namespace))
 		}
 		if len(clusterUpdateClaimList.Items) == 0 {
-			klog.V(3).Infoln(" User [ " + userId + " ] has No ClusterUpdateClaim")
+			klog.V(3).Infoln(fmt.Sprintf("User [ %s ] has No ClusterUpdateClaim", userId))
 		}
 		return clusterUpdateClaimList, nil
 	} else {
 		if namespace == "" {
-			klog.V(3).Infoln("User [ " + userId + " ] has No permission")
+			klog.V(3).Infoln(fmt.Sprintf("User [ %s ] has No permission", userId))
 		} else {
-			klog.V(3).Infoln("User [ " + userId + " ] has No permission in namespace  [ " + namespace + " ]")
+			klog.V(3).Infoln(fmt.Sprintf("User [ %s ] has No permission in namespace  [ %s ]", userId, namespace))
 		}
 		return &claimsv1alpha1.ClusterUpdateClaimList{}, nil
 	}
@@ -947,7 +961,8 @@ func AdmitClusterUpdateClaim(userId string, userGroups []string, cuc *claimsv1al
 	}
 
 	if clusterUpdateClaimStatusRuleResult.Status.Allowed {
-		klog.V(3).Infoln(" User [ " + userId + " ] has ClusterUpdateClaims/status Update Role, Can Update ClusterUpdateClaims")
+		msg := fmt.Sprintf(" User [ %s ] has ClusterUpdateClaims/status Update Role, Can Update ClusterUpdateClaims", userId)
+		klog.V(3).Infoln(msg)
 		if admit {
 			cuc.Status.Phase = claimsv1alpha1.ClusterUpdateClaimPhaseApproved
 		} else {
@@ -964,15 +979,17 @@ func AdmitClusterUpdateClaim(userId string, userGroups []string, cuc *claimsv1al
 			ClusterUpdateClaims(cuc.Namespace).
 			UpdateStatus(context.TODO(), cuc, metav1.UpdateOptions{})
 		if err != nil {
-			klog.V(1).Infoln("Update ClusterUpdateClaim [ " + cuc.Name + " ] Failed")
+			msg := fmt.Sprintf("Update ClusterUpdateClaim [ %s ] failed", cuc.Name)
+			klog.V(1).Infoln(msg)
 			return nil, err
 		} else {
-			msg := "Update ClusterUpdateClaim [ " + cuc.Name + " ] Success"
+			msg := fmt.Sprintf("Update ClusterUpdateClaim [ %s ] success", cuc.Name)
 			klog.V(3).Infoln(msg)
 			return result, nil
 		}
 	} else {
-		newErr := errors.NewBadRequest("User [ " + userId + " ] has No ClusterUpdateClaims/status Update Role, Check If user has ClusterUpdateClaims/status Update Role")
+		msg := fmt.Sprintf("User [ %s ] has No ClusterUpdateClaims/status Update Role, Check If user has ClusterUpdateClaims/status Update Role", userId)
+		newErr := errors.NewBadRequest(msg)
 		klog.V(1).Infoln(newErr)
 		return nil, newErr
 	}

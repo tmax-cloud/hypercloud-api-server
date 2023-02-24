@@ -1,6 +1,7 @@
 package clusterUpdateClaim
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -54,16 +55,15 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if cuc.Status.Phase != "Awaiting" && cuc.Status.Phase != "Rejected" {
-		msg := "ClusterUpdateClaim is not awaiting or rejected phase"
+		msg := fmt.Sprintf("ClusterUpdateClaim [ %s ] is not awaiting or rejected phase", cuc.Name)
 		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusBadRequest)
 		return
 	}
 
 	// awaiting과 Rejected 통과
-	
-	// cluster 주인 체크
-	if err := caller.CheckClusterOwner(userId, cuc.Spec.ClusterName, cuc.Namespace); err != nil {
+	if err := caller.CheckClusterValid(userId, cuc.Spec.ClusterName, cuc.Namespace); err != nil {
+		klog.V(3).Info(err)
 		util.SetResponse(res, err.Error(), nil, http.StatusBadRequest)
 		return
 	}
@@ -75,13 +75,15 @@ func Put(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if !admitBool {
-		msg := "ClusterUpdateClaim is rejected by admin"
+		msg := fmt.Sprintf("ClusterUpdateClaim [ %s ] is rejected by admin", cuc.Name)
 		klog.V(3).Infoln(msg)
 		util.SetResponse(res, msg, nil, http.StatusOK)
 		return
 	}
 
-	util.SetResponse(res, "ClusterUpdateClaim is approved by admin", cuc, http.StatusOK)
+	msg := fmt.Sprintf("ClusterUpdateClaim [ %s ] is approved by admin", cuc.Name)
+	klog.V(3).Infoln(msg)
+	util.SetResponse(res, msg, cuc, http.StatusOK)
 }
 
 func List(res http.ResponseWriter, req *http.Request) {
@@ -98,7 +100,7 @@ func List(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if cucNamespace == "" {
-		if clusterUpdateClaimList, err := caller.ListAllClusterUpdateClaims(userId, userGroups); err != nil {
+		if clusterUpdateClaimList, err := caller.ListClusterUpdateClaims(userId, userGroups); err != nil {
 			util.SetResponse(res, err.Error(), nil, http.StatusInternalServerError)
 			return
 		} else {
