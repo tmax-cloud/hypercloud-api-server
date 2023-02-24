@@ -1,6 +1,25 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.2.0 start -------------------->
+
+## Hypercloud-api-server 5.1.2.0 (2023. 02. 23. (목) 15:07:54 KST)
+
+### Added
+  - [feat] add cluster update 승인/거절 api by sjoh0704
+  - [feat] cluster update claim client 생성 및 list api 생성 by sjoh0704
+  - [feat] dependency upgrade by sjoh0704
+  - [feat] add cluster update claim router by sjoh0704
+
+### Changed
+  - [mod] Dockerfile go version update by sjoh0704
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.1.1.0 start -------------------->
 
 ## Hypercloud-api-server 5.1.1.0 (2023. 01. 18. (수) 19:34:45 KST)
