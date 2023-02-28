@@ -1,6 +1,23 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.2.1 start -------------------->
+
+## Hypercloud-api-server 5.1.2.1 (2023. 02. 28. (화) 13:00:56 KST)
+
+### Added
+  - [feat] clusterupdateclaim - cluster manager가 ready 일때만 승인되도록 예외 처리 추가 / log 개선 by sjoh0704
+  - [feat] clusterupdateclaim - cluster manager type이 created일 때만 허용하도록 추가 by sjoh0704
+
+### Changed
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+  - [etc] clusterupdateclaim bug fix by sjoh0704
+
 <!-------------------- v5.1.2.0 start -------------------->
 
 ## Hypercloud-api-server 5.1.2.0 (2023. 02. 23. (목) 15:07:54 KST)
