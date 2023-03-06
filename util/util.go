@@ -55,7 +55,7 @@ var (
 	LogLevel               string
 )
 
-//Jsonpatch를 담을 수 있는 구조체
+// Jsonpatch를 담을 수 있는 구조체
 type PatchOps struct {
 	Op    string      `json:"op"`
 	Path  string      `json:"path"`
