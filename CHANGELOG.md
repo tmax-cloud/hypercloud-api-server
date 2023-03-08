@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.2.2 start -------------------->
+
+## Hypercloud-api-server 5.1.2.2 (2023. 03. 08. (수) 10:45:51 KST)
+
+### Added
+
+### Changed
+  - [mod] kubectl 이미지가 private registry를 지원하도록 환경변수에 PRIVATE_REGISTRY 추가 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.1.2.1 start -------------------->
 
 ## Hypercloud-api-server 5.1.2.1 (2023. 02. 28. (화) 13:00:56 KST)
