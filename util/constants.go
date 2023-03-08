@@ -40,6 +40,7 @@ const (
 	HYPERCLOUD_KUBECTL_LABEL_KEY                  = "hypercloud"
 	HYPERCLOUD_KUBECTL_LABEL_VALUE                = "kubectl"
 	HYPERCLOUD_KUBECTL_CONFIGMAP_DELETE_WAIT_TIME = 120
+	HYPERCLOUD_KUBECTL_BASE_IMAGE                 = "tmaxcloudck/kubectl:1.19.16"
 
 	HYPERCLOUD4_NAMESPACE       = "hypercloud4-system"
 	HYPERCLOUD4_CLAIM_API_GROUP = "claim.tmax.io"
@@ -126,5 +127,5 @@ func init() {
 			privateRegistry += "/"
 		}
 	}
-	HYPERCLOUD_KUBECTL_IMAGE = privateRegistry + "bitnami/kubectl:1.19.16"
+	HYPERCLOUD_KUBECTL_IMAGE = privateRegistry + HYPERCLOUD_KUBECTL_BASE_IMAGE
 }

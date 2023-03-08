@@ -1695,8 +1695,9 @@ func DeployKubectlPod(userName string) error {
 			RestartPolicy:      "Never",
 			Containers: []corev1.Container{
 				{
-					Image: util.HYPERCLOUD_KUBECTL_IMAGE,
-					Name:  "kubectl",
+					Image:           util.HYPERCLOUD_KUBECTL_IMAGE,
+					ImagePullPolicy: corev1.PullAlways,
+					Name:            "kubectl",
 					Command: []string{
 						"/bin/sh", "-c",
 					},
