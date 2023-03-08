@@ -1,5 +1,7 @@
 package util
 
+import "os"
+
 const (
 	HEADER_PARAMETER_AUTHORIZATION = "authorization"
 	QUERY_PARAMETER_OFFSET         = "offset"
@@ -32,9 +34,9 @@ const (
 	HYPERAUTH_SERVICE_NAME_LOGIN_AS_ADMIN = "/auth/realms/master/protocol/openid-connect/token"
 	HYPERAUTH_SERVICE_NAME_USER_DETAIL    = "/auth/realms/tmax/user/"
 
-	HYPERCLOUD_KUBECTL_NAMESPACE                  = "hypercloud-kubectl"
-	HYPERCLOUD_KUBECTL_PREFIX                     = "hypercloud-kubectl-"
-	HYPERCLOUD_KUBECTL_IMAGE                      = "bitnami/kubectl:1.19.16"
+	HYPERCLOUD_KUBECTL_NAMESPACE = "hypercloud-kubectl"
+	HYPERCLOUD_KUBECTL_PREFIX    = "hypercloud-kubectl-"
+	// HYPERCLOUD_KUBECTL_IMAGE                      = "bitnami/kubectl:1.19.16" // moved to var
 	HYPERCLOUD_KUBECTL_LABEL_KEY                  = "hypercloud"
 	HYPERCLOUD_KUBECTL_LABEL_VALUE                = "kubectl"
 	HYPERCLOUD_KUBECTL_CONFIGMAP_DELETE_WAIT_TIME = 120
@@ -110,3 +112,19 @@ const (
 		"</body>\r\n" +
 		"</html>"
 )
+
+var (
+	HYPERCLOUD_KUBECTL_IMAGE string
+)
+
+func init() {
+	privateRegistry := os.Getenv("PRIVATE_REGISTRY")
+	if len(privateRegistry) == 0 || privateRegistry == "{PRIVATE_REGISTRY}" {
+		privateRegistry = ""
+	} else {
+		if privateRegistry[len(privateRegistry)-1] != '/' {
+			privateRegistry += "/"
+		}
+	}
+	HYPERCLOUD_KUBECTL_IMAGE = privateRegistry + "bitnami/kubectl:1.19.16"
+}
