@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.2.3 start -------------------->
+
+## Hypercloud-api-server 5.1.2.3 (2023. 03. 14. (화) 17:35:11 KST)
+
+### Added
+
+### Changed
+  - [mod] vim 사용이 가능한 tmaxcloudck kubectl 이미지를 사용하도록 변경 by Seungwon Lee
+
+### Fixed
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.1.2.2 start -------------------->
 
 ## Hypercloud-api-server 5.1.2.2 (2023. 03. 08. (수) 10:45:51 KST)
