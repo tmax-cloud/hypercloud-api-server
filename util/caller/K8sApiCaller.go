@@ -1687,6 +1687,7 @@ func DeployKubectlPod(userName string) error {
 			Namespace: util.HYPERCLOUD_KUBECTL_NAMESPACE,
 			Labels: map[string]string{
 				util.HYPERCLOUD_KUBECTL_LABEL_KEY: util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
+				"name":                            kubectlName,
 			},
 		},
 		Spec: corev1.PodSpec{
