@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.2.4 start -------------------->
+
+## Hypercloud-api-server 5.1.2.4 (2023. 03. 24. (금) 11:16:49 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][300246] kubectl 버전 1.25로 변경 및 label에 자기자신의 이름 추가 by Seungwon Lee
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.1.2.3 start -------------------->
 
 ## Hypercloud-api-server 5.1.2.3 (2023. 03. 14. (화) 17:35:11 KST)
