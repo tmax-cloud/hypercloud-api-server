@@ -84,9 +84,9 @@ func GetHyperAuthUserDetail(userId string) (map[string]interface{}, error) {
 
 	bytes, _ := ioutil.ReadAll(resp.Body)
 	str := string(bytes) // byte to string
-	// klog.V(3).Infoln("Result string  : ", str)
 	var resultJson map[string]interface{}
 	if err := json.Unmarshal([]byte(str), &resultJson); err != nil {
+		klog.V(1).Infoln("Result string  : ", str)
 		klog.V(1).Infoln(err)
 		return nil, err
 	}
