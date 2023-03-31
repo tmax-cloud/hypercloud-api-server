@@ -15,7 +15,7 @@ else
 	author=$2
 fi
 
-img=192.168.9.12:5000/hypercloud-api-server-test$author:v$version
+img=192.168.9.12:5000/hypercloud-api-server-test$author:$version
 echo "Image = $img"
 docker build -t $img  . 
 docker push $img

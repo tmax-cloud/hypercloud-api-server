@@ -10,7 +10,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	gmux "github.com/gorilla/mux"
@@ -33,7 +35,10 @@ import (
 	kafkaConsumer "github.com/tmax-cloud/hypercloud-api-server/util/consumer"
 	"github.com/tmax-cloud/hypercloud-api-server/util/dataFactory"
 	version "github.com/tmax-cloud/hypercloud-api-server/version"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/leaderelection"
 	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
@@ -55,6 +60,8 @@ var (
 	cronJob_Kubectl_GC *cron.Cron
 	ctx                context.Context
 	cancel             context.CancelFunc
+	HypercloudServer   *http.Server
+	RestartServer      bool = true
 )
 
 func init() {
@@ -73,28 +80,63 @@ func main() {
 	defer dataFactory.Dbpool.Close()
 	defer cancel()
 
+	// Req multiplexer
+	mux = gmux.NewRouter()
+	register_multiplexer()
+
+	// Hypercloud API Server Start
+	go StartServer()
+
+	// Handle SIGTERM signal to gracefully terminate API server
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	signal.Notify(stop, syscall.SIGTERM)
+	klog.V(3).Infoln("Wait SIGTERM signal to gracefully terminate API Server....")
+	<-stop
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	defer dataFactory.Dbpool.Close()
+
+	RestartServer = false
+	if err := HypercloudServer.Shutdown(ctx); err != nil {
+		klog.V(1).Infoln("error shutting down server %s", err)
+	} else {
+		klog.V(1).Infoln("Hypercloud API Server gracefully stopped")
+	}
+}
+
+func StartServer() {
+	defer func() {
+		if RestartServer {
+			klog.V(3).Infoln("Restart Hypercloud5-API server")
+			go StartServer()
+		}
+	}()
+
+	HypercloudServer = UpdateKeyPairForServer()
+
+	klog.V(3).Infoln("Starting Hypercloud5-API server...")
+	klog.Flush()
+
+	if err := HypercloudServer.ListenAndServeTLS("", ""); err != nil {
+		klog.V(1).Infof("Hypercloud5-API server Shutdown: %s", err)
+	}
+}
+
+func UpdateKeyPairForServer() *http.Server {
 	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		klog.V(1).Infof("Failed to load key pair: %s", err)
 	}
 
-	// Req multiplexer
-	mux = gmux.NewRouter()
-	register_multiplexer()
-
-	// HTTP Server Start
-	klog.V(3).Info("Starting Hypercloud5-API server...")
-	klog.Flush()
-
-	whsvr := &http.Server{
+	server := &http.Server{
 		Addr:      fmt.Sprintf(":%d", port),
 		Handler:   mux,
 		TLSConfig: &tls.Config{Certificates: []tls.Certificate{keyPair}},
 	}
 
-	if err := whsvr.ListenAndServeTLS("", ""); err != nil {
-		klog.V(1).Infof("Failed to listen and serve Hypercloud5-API server: %s", err)
-	}
+	return server
 }
 
 func register_multiplexer() {
@@ -288,6 +330,8 @@ func init_etc() {
 	cronJob_Kubectl_GC = cron.New()
 	cronJob_Kubectl_GC.AddFunc("@midnight", caller.DeleteKubectlAllResource)
 	// cronJob_Kubectl_GC.Start()
+
+	watchCert(certFile, keyFile)
 }
 
 func init_db_connection() {
@@ -460,7 +504,6 @@ func serveClusterInvitationAdmit(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-
 func serveClusterUpdateClaim(res http.ResponseWriter, req *http.Request) {
 	klog.V(3).Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
 	switch req.Method {
@@ -472,7 +515,6 @@ func serveClusterUpdateClaim(res http.ResponseWriter, req *http.Request) {
 		klog.V(1).Infof("method not acceptable")
 	}
 }
-
 
 func serveMetadata(w http.ResponseWriter, r *http.Request) {
 	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
@@ -781,4 +823,36 @@ func runLeaderElection(lock *resourcelock.LeaseLock, ctx context.Context, id str
 			},
 		},
 	})
+}
+
+// watchCert watches "hypercloud5-api-server-certs" secret to keep certicate up-to-date
+func watchCert(certFile, keyFile string) {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	watchlist := cache.NewListWatchFromClient(caller.Clientset.CoreV1().RESTClient(), "secrets", "hypercloud5-system",
+		fields.OneTermEqualSelector("metadata.name", "hypercloud5-api-server-certs"))
+
+	_, controller := cache.NewInformer(
+		watchlist,
+		&corev1.Secret{},
+		time.Second*0,
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				secret := obj.(*corev1.Secret)
+				if !util.IsCertUptoDate(certFile, keyFile, *secret) {
+					HypercloudServer.Shutdown(ctx)
+				}
+			},
+			UpdateFunc: func(oldsecret, newsecret interface{}) {
+				secret := newsecret.(*corev1.Secret)
+				if !util.IsCertUptoDate(certFile, keyFile, *secret) {
+					HypercloudServer.Shutdown(ctx)
+				}
+			},
+		},
+	)
+
+	stop := make(chan struct{})
+	go controller.Run(stop)
 }

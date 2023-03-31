@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ import (
 	clusterv1alpha1 "github.com/tmax-cloud/hypercloud-multi-operator/apis/cluster/v1alpha1"
 	gomail "gopkg.in/gomail.v2"
 	"k8s.io/api/admission/v1beta1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog"
@@ -417,4 +419,37 @@ func ChangeJwtDecodeFormat(userId string) (string, error) {
 	}
 	parsed := re.ReplaceAllString(strings.Replace(userId, "@", "-at-", -1), "-")
 	return parsed, nil
+}
+
+// Check if certificate is updated.
+// Return true if certificate secret is updated,
+// return false if not.
+func IsCertUptoDate(certFile, keyFile string, secret corev1.Secret) bool {
+	certBytes, err := os.ReadFile(certFile)
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return true
+	}
+	keyBytes, err := os.ReadFile(keyFile)
+	if err != nil {
+		klog.V(1).Infoln(err)
+		return true
+	}
+
+	cert := string(certBytes)
+	key := string(keyBytes)
+
+	secretCert := string(secret.Data["tls.crt"])
+	secretKey := string(secret.Data["tls.key"])
+
+	if cert != secretCert || key != secretKey {
+		klog.V(3).Infoln("Certificate is not up-to-date.")
+		// secret이 업데이트되면 kubelet이 자동으로 마운트된 값도 업데이트 해줌
+		// kubelet default 설정 상, watch 메커니즘으로 처리하기 때문에 바로 업데이트가 되지만
+		// 만약 폴링 방식을 사용하는 경우 default 폴링 주기가 5초이므로, 그 이상인 10초동안 대기시킴
+		time.Sleep(time.Second * 10)
+		return false
+	}
+	klog.V(3).Infoln("Certificate is up-to-date")
+	return true
 }
