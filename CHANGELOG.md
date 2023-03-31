@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.3.0 start -------------------->
+
+## Hypercloud-api-server 5.1.3.0 (2023. 03. 31. (금) 16:46:58 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][299887] 런타임 Cert 갱신 기능 추가 및 graceful 종료 로직 추가 by Seungwon Lee
+
+### CRD yaml
+
+### Etc
+  - [etc] HyperAuth Admin 로그인 실패 시, 에러 로그가 전체 출력되도록 수정 by GitHub
+
 <!-------------------- v5.1.2.4 start -------------------->
 
 ## Hypercloud-api-server 5.1.2.4 (2023. 03. 24. (금) 11:16:49 KST)
