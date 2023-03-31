@@ -1687,7 +1687,6 @@ func DeployKubectlPod(userName string) error {
 			Namespace: util.HYPERCLOUD_KUBECTL_NAMESPACE,
 			Labels: map[string]string{
 				util.HYPERCLOUD_KUBECTL_LABEL_KEY: util.HYPERCLOUD_KUBECTL_LABEL_VALUE,
-				"name":                            kubectlName,
 			},
 		},
 		Spec: corev1.PodSpec{
@@ -1696,9 +1695,8 @@ func DeployKubectlPod(userName string) error {
 			RestartPolicy:      "Never",
 			Containers: []corev1.Container{
 				{
-					Image:           util.HYPERCLOUD_KUBECTL_IMAGE,
-					ImagePullPolicy: corev1.PullAlways,
-					Name:            "kubectl",
+					Image: util.HYPERCLOUD_KUBECTL_IMAGE,
+					Name:  "kubectl",
 					Command: []string{
 						"/bin/sh", "-c",
 					},
@@ -2045,119 +2043,3 @@ func DeleteKubectlAllResource() {
 
 	klog.V(4).Infoln("Complete Garbage Collect Kubectl Related Resources")
 }
-
-// func UpdateAuditResourceList() {
-// 	AuditResourceList = make(map[string][]string)
-// 	apiGroupList := &metav1.APIGroupList{}
-// 	data, err := Clientset.RESTClient().Get().AbsPath("/apis/").DoRaw(context.TODO())
-// 	if err != nil {
-// 		klog.V(1).Infoln(err)
-// 		panic(err)
-// 	}
-// 	if err := json.Unmarshal(data, apiGroupList); err != nil {
-// 		klog.V(1).Infoln(err)
-// 		panic(err)
-// 	}
-
-// 	for _, apiGroup := range apiGroupList.Groups {
-// 		ListAPIResource(&apiGroup)
-// 	}
-
-// 	apiResourceList := &metav1.APIResourceList{}
-// 	data, err = Clientset.RESTClient().Get().AbsPath("/api/v1").DoRaw(context.TODO())
-// 	if err != nil {
-// 		klog.V(1).Infoln(err)
-// 		panic(err)
-// 	}
-// 	if err := json.Unmarshal(data, apiResourceList); err != nil {
-// 		klog.V(1).Infoln(err)
-// 		panic(err)
-// 	}
-// 	for _, apiResource := range apiResourceList.APIResources {
-// 		if !strings.Contains(apiResource.Name, "/") {
-// 			AuditResourceList["core/v1"] = append(AuditResourceList["core/v1"], apiResource.Name)
-// 		}
-// 	}
-
-// 	// msg := "ClusterManager is created"
-// 	// return clm, msg, http.StatusOK
-// }
-
-// func ListAPIResource(apiGroup *metav1.APIGroup) {
-// 	reverseMap := make(map[string]string)
-
-// 	// preference first
-// 	apiResourceList := &metav1.APIResourceList{}
-// 	preferredVersionPath := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", apiGroup.PreferredVersion.GroupVersion, -1)
-// 	data, err := Clientset.RESTClient().Get().AbsPath(preferredVersionPath).DoRaw(context.TODO())
-// 	if err != nil {
-// 		klog.V(1).Infoln(err)
-// 		panic(err)
-// 	}
-// 	if err := json.Unmarshal(data, apiResourceList); err != nil {
-// 		klog.V(1).Infoln(err)
-// 		panic(err)
-// 	}
-
-// 	for _, apiResource := range apiResourceList.APIResources {
-// 		if !strings.Contains(apiResource.Name, "/") {
-// 			reverseMap[apiResource.Name] = apiGroup.PreferredVersion.GroupVersion
-// 		}
-// 	}
-
-// 	// another version
-// 	for _, version := range apiGroup.Versions {
-// 		if version.GroupVersion == apiGroup.PreferredVersion.GroupVersion {
-// 			continue
-// 		}
-// 		apiResourceList := &metav1.APIResourceList{}
-// 		path := strings.Replace("/apis/{GROUPVERSION}", "{GROUPVERSION}", version.GroupVersion, -1)
-// 		data, err := Clientset.RESTClient().Get().AbsPath(path).DoRaw(context.TODO())
-// 		if err != nil {
-// 			klog.V(1).Infoln(err)
-// 			panic(err)
-// 		}
-// 		if err := json.Unmarshal(data, apiResourceList); err != nil {
-// 			klog.V(1).Infoln(err)
-// 			panic(err)
-// 		}
-
-// 		for _, apiResource := range apiResourceList.APIResources {
-// 			if !strings.Contains(apiResource.Name, "/") {
-// 				if _, ok := reverseMap[apiResource.Name]; !ok {
-// 					reverseMap[apiResource.Name] = version.GroupVersion
-// 				}
-// 			}
-// 		}
-// 	}
-
-// 	// reverse
-// 	for k, v := range reverseMap {
-// 		AuditResourceList[v] = append(AuditResourceList[v], k)
-// 	}
-
-// }
-
-// func UpdateClusterManager(userId string, userGroups []string, clm *clusterv1alpha1.ClusterManager) (*clusterv1alpha1.ClusterManager, error) {
-// 	clmUpdateRuleResult, err := CreateSubjectAccessReview(userId, userGroups, util.CLUSTER_API_GROUP, "clustermanagers", "", clm.Name, "update")
-// 	if err != nil {
-// 		klog.V(1).Infoln(err)
-// 		return nil, err
-// 	}
-
-// 	if clmUpdateRuleResult.Status.Allowed {
-// 		result, err := customClientset.ClusterV1alpha1().ClusterManagers(clm.Namespace).UpdateStatus(context.TODO(), clm, metav1.UpdateOptions{})
-// 		if err != nil {
-// 			klog.V(1).Infoln("Update member list in cluster [ " + clm.Name + " ] Failed")
-// 			return nil, err
-// 		} else {
-// 			msg := "Update member list in cluster [ " + clm.Name + " ] Success"
-// 			klog.V(3).Infoln(msg)
-// 			return result, nil
-// 		}
-// 	} else {
-// 		newErr := errors.NewBadRequest(" User [ " + userId + " ] is not a cluster admin, Cannot invite members")
-// 		klog.V(1).Infoln(newErr)
-// 		return nil, newErr
-// 	}
-// }
