@@ -1898,7 +1898,27 @@ func CreateConfigmapForKubectl(serviceAccountName string, retry int) (string, er
 		}
 	}
 
-	secretName := sa.Secrets[0].Name
+	var secretName string
+	if len(sa.Secrets) == 0 {
+		// k8s 1.24 or newer version does not automatically create secret for service account
+		secretName = serviceAccountName + "-secret"
+		newSecret := &corev1.Secret{
+			Type: "kubernetes.io/service-account-token",
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      secretName,
+				Namespace: util.HYPERCLOUD_KUBECTL_NAMESPACE,
+				Annotations: map[string]string{
+					"kubernetes.io/service-account.name": sa.Name,
+				},
+			},
+		}
+		if _, err := Clientset.CoreV1().Secrets(util.HYPERCLOUD_KUBECTL_NAMESPACE).Create(context.TODO(), newSecret, metav1.CreateOptions{}); err != nil {
+			return "", errors.NewServiceUnavailable("Failed to create Secret [" + secretName + "]")
+		}
+	} else {
+		secretName = sa.Secrets[0].Name
+	}
+
 	configmapName := serviceAccountName + "-configmap"
 	if secret, err := Clientset.CoreV1().Secrets(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), secretName, metav1.GetOptions{}); err != nil {
 		return "", errors.NewServiceUnavailable("Failed to get Secret [" + secretName + "]")
