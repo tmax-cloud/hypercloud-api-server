@@ -81,6 +81,7 @@ func Post(res http.ResponseWriter, req *http.Request) {
 	klog.V(3).Infoln("userName =", userName)
 	if err := caller.DeployKubectlPod(userName); err != nil {
 		util.SetResponse(res, "", err, http.StatusBadRequest)
+		caller.DeleteKubectlResourceByUserName(userName)
 	} else {
 		util.SetResponse(res, "Create Kubectl Pod Success", nil, http.StatusOK)
 	}
