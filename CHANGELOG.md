@@ -1,6 +1,22 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.3.1 start -------------------->
+
+## Hypercloud-api-server 5.1.3.1 (2023. 04. 10. (월) 15:23:22 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][300330] kubectl 리소스 생성 중, ServiceAccount를 위한 Secret 생성 로직 추가 by Seungwon Lee
+  - [ims][300246] POST ~/kubectl 실패 시, 도중에 만든 리소스 삭제하도록 수정 by Seungwon Lee
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.1.3.0 start -------------------->
 
 ## Hypercloud-api-server 5.1.3.0 (2023. 03. 31. (금) 16:46:58 KST)
