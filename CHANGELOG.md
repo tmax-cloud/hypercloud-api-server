@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.3.2 start -------------------->
+
+## Hypercloud-api-server 5.1.3.2 (2023. 04. 11. (화) 10:42:56 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][300330] ServiceAccount 스펙에 생성한 Secret 명시 by Seungwon Lee
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.1.3.1 start -------------------->
 
 ## Hypercloud-api-server 5.1.3.1 (2023. 04. 10. (월) 15:23:22 KST)
