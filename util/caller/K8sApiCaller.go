@@ -1915,6 +1915,22 @@ func CreateConfigmapForKubectl(serviceAccountName string, retry int) (string, er
 		if _, err := Clientset.CoreV1().Secrets(util.HYPERCLOUD_KUBECTL_NAMESPACE).Create(context.TODO(), newSecret, metav1.CreateOptions{}); err != nil {
 			return "", errors.NewServiceUnavailable("Failed to create Secret [" + secretName + "]")
 		}
+
+		if serviceAccount, err := Clientset.CoreV1().ServiceAccounts(util.HYPERCLOUD_KUBECTL_NAMESPACE).Get(context.TODO(), serviceAccountName, metav1.GetOptions{}); err != nil {
+			klog.V(1).Infoln(err)
+			return "", err
+		} else {
+			serviceAccount.Secrets = append(serviceAccount.Secrets, corev1.ObjectReference{
+				Kind:      "Secret",
+				Namespace: util.HYPERCLOUD_KUBECTL_NAMESPACE,
+				Name:      secretName,
+			})
+
+			if _, err := Clientset.CoreV1().ServiceAccounts(util.HYPERCLOUD_KUBECTL_NAMESPACE).Update(context.TODO(), serviceAccount, metav1.UpdateOptions{}); err != nil {
+				klog.V(1).Infoln(err)
+				return "", err
+			}
+		}
 	} else {
 		secretName = sa.Secrets[0].Name
 	}
