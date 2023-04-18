@@ -445,9 +445,8 @@ func IsCertUptoDate(certFile, keyFile string, secret corev1.Secret) bool {
 	if cert != secretCert || key != secretKey {
 		klog.V(3).Infoln("Certificate is not up-to-date.")
 		// secret이 업데이트되면 kubelet이 자동으로 마운트된 값도 업데이트 해줌
-		// kubelet default 설정 상, watch 메커니즘으로 처리하기 때문에 바로 업데이트가 되지만
-		// 만약 폴링 방식을 사용하는 경우 default 폴링 주기가 5초이므로, 그 이상인 10초동안 대기시킴
-		time.Sleep(time.Second * 10)
+		// 대략 1분 안에 업데이트가 되므로, 1분 30초 sleep
+		time.Sleep(time.Second * 90)
 		return false
 	}
 	klog.V(3).Infoln("Certificate is up-to-date")
