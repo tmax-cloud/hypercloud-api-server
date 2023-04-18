@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.3.3 start -------------------->
+
+## Hypercloud-api-server 5.1.3.3 (2023. 04. 18. (화) 16:44:39 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][299887] Cert 갱신 시 5초->90초 대기하도록 변경 by Seungwon Lee
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.1.3.2 start -------------------->
 
 ## Hypercloud-api-server 5.1.3.2 (2023. 04. 11. (화) 10:42:56 KST)
