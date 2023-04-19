@@ -444,9 +444,25 @@ func IsCertUptoDate(certFile, keyFile string, secret corev1.Secret) bool {
 
 	if cert != secretCert || key != secretKey {
 		klog.V(3).Infoln("Certificate is not up-to-date.")
-		// secret이 업데이트되면 kubelet이 자동으로 마운트된 값도 업데이트 해줌
-		// 대략 1분 안에 업데이트가 되므로, 1분 30초 sleep
-		time.Sleep(time.Second * 90)
+		for {
+			cb, err := os.ReadFile(certFile)
+			if err != nil {
+				klog.V(1).Infoln(err)
+				return true
+			}
+			kb, err := os.ReadFile(keyFile)
+			if err != nil {
+				klog.V(1).Infoln(err)
+				return true
+			}
+
+			c := string(cb)
+			k := string(kb)
+			if c == secretCert && k == secretKey {
+				break
+			}
+			time.Sleep(time.Second * 1)
+		}
 		return false
 	}
 	klog.V(3).Infoln("Certificate is up-to-date")
