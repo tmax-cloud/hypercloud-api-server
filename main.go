@@ -19,8 +19,6 @@ import (
 	"github.com/robfig/cron"
 	admission "github.com/tmax-cloud/hypercloud-api-server/admission"
 	audit "github.com/tmax-cloud/hypercloud-api-server/audit"
-	cloudCredential "github.com/tmax-cloud/hypercloud-api-server/cloudCredential"
-	grafana "github.com/tmax-cloud/hypercloud-api-server/cloudCredential/grafana"
 	cluster "github.com/tmax-cloud/hypercloud-api-server/cluster"
 	claim "github.com/tmax-cloud/hypercloud-api-server/clusterClaim"
 	cuc "github.com/tmax-cloud/hypercloud-api-server/clusterUpdateClaim"
@@ -147,9 +145,6 @@ func register_multiplexer() {
 
 	mux.HandleFunc("/namespaceClaim", serveNamespaceClaim)
 	mux.HandleFunc("/version", serveVersion)
-	mux.HandleFunc("/cloudCredential", serveCloudCredential)
-	mux.HandleFunc("/grafana/{path}", serveGrafana)
-	mux.HandleFunc("/grafana/", serveGrafana)
 
 	mux.HandleFunc("/metadata", serveMetadata)
 	mux.HandleFunc("/audit/member_suggestions", serveAuditMemberSuggestions)
@@ -160,14 +155,6 @@ func register_multiplexer() {
 	//mux.HandleFunc("/audit/websocket", serveAuditWss)
 	mux.HandleFunc("/audit/json", serveAuditJson)
 	mux.HandleFunc("/event", serveEvent)
-	mux.HandleFunc("/inject/pod", serveSidecarInjectionForPod)
-	mux.HandleFunc("/inject/deployment", serveSidecarInjectionForDeploy)
-	mux.HandleFunc("/inject/replicaset", serveSidecarInjectionForRs)
-	mux.HandleFunc("/inject/statefulset", serveSidecarInjectionForSts)
-	mux.HandleFunc("/inject/daemonset", serveSidecarInjectionForDs)
-	mux.HandleFunc("/inject/cronjob", serveSidecarInjectionForCj)
-	mux.HandleFunc("/inject/job", serveSidecarInjectionForJob)
-	mux.HandleFunc("/inject/test", serveSidecarInjectionForTest)
 	mux.HandleFunc("/websocket/{api}", serveWebsocket)
 	mux.HandleFunc("/kubectl", serveKubectl)
 	mux.HandleFunc("/test", serveTest)
@@ -222,7 +209,6 @@ func init_variable() {
 	flag.IntVar(&port, "port", 443, "hypercloud5-api-server port")
 	flag.StringVar(&certFile, "certFile", "/run/secrets/tls/tls.crt", "hypercloud5-api-server cert")
 	flag.StringVar(&keyFile, "keyFile", "/run/secrets/tls/tls.key", "hypercloud5-api-server key")
-	flag.StringVar(&admission.SidecarContainerImage, "sidecarImage", "fluent/fluent-bit:1.5-debug", "Fluent-bit image name.")
 	flag.StringVar(&util.SMTPHost, "smtpHost", "mail.tmax.co.kr", "SMTP Server Host Address")
 	flag.IntVar(&util.SMTPPort, "smtpPort", 25, "SMTP Server Port")
 	flag.StringVar(&util.SMTPUsernamePath, "smtpUsername", "/run/secrets/smtp/username", "SMTP Server Username")
@@ -520,38 +506,7 @@ func serveMetadata(w http.ResponseWriter, r *http.Request) {
 	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	serve(w, r, admission.AddResourceMeta)
 }
-func serveSidecarInjectionForPod(w http.ResponseWriter, r *http.Request) {
-	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
-	serve(w, r, admission.InjectionForPod)
-}
-func serveSidecarInjectionForDeploy(w http.ResponseWriter, r *http.Request) {
-	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
-	serve(w, r, admission.InjectionForDeploy)
-}
-func serveSidecarInjectionForRs(w http.ResponseWriter, r *http.Request) {
-	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
-	serve(w, r, admission.InjectionForRs)
-}
-func serveSidecarInjectionForSts(w http.ResponseWriter, r *http.Request) {
-	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
-	serve(w, r, admission.InjectionForSts)
-}
-func serveSidecarInjectionForDs(w http.ResponseWriter, r *http.Request) {
-	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
-	serve(w, r, admission.InjectionForDs)
-}
-func serveSidecarInjectionForCj(w http.ResponseWriter, r *http.Request) {
-	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
-	serve(w, r, admission.InjectionForCj)
-}
-func serveSidecarInjectionForJob(w http.ResponseWriter, r *http.Request) {
-	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
-	serve(w, r, admission.InjectionForJob)
-}
-func serveSidecarInjectionForTest(w http.ResponseWriter, r *http.Request) {
-	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
-	serve(w, r, admission.InjectionForTest)
-}
+
 func serveTest(w http.ResponseWriter, r *http.Request) {
 	klog.V(3).Infof("Http request: method=%s, uri=%s", r.Method, r.URL.Path)
 	var body []byte
@@ -694,41 +649,6 @@ func serve(w http.ResponseWriter, r *http.Request, admit admitFunc) {
 	if _, err := w.Write(respBytes); err != nil {
 		klog.V(1).Info(err)
 		responseAdmissionReview.Response = admission.ToAdmissionResponse(err)
-	}
-}
-
-func serveCloudCredential(res http.ResponseWriter, req *http.Request) {
-	switch req.Method {
-	case http.MethodGet:
-		cloudCredential.Get(res, req)
-	case http.MethodPut:
-	case http.MethodOptions:
-	default:
-		klog.V(1).Infof("method not acceptable")
-	}
-}
-
-func serveGrafana(res http.ResponseWriter, req *http.Request) {
-	klog.V(3).Infof("Http request: method=%s, uri=%s", req.Method, req.URL.Path)
-	vars := gmux.Vars(req)
-	switch req.Method {
-	case http.MethodGet:
-		grafana.Get(res, req)
-	case http.MethodPost:
-		postPath := vars["path"]
-
-		if postPath == "search" {
-			grafana.Search(res, req)
-		} else if postPath == "query" {
-			grafana.Query(res, req)
-		} else if postPath == "annotations" {
-			grafana.Annotations(res, req)
-		} else {
-			klog.V(1).Infof("Http request error: some url params not found")
-		}
-	case http.MethodOptions:
-	default:
-		klog.V(1).Infof("method not acceptable")
 	}
 }
 
