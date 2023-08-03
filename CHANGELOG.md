@@ -1,6 +1,23 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.3.4 start -------------------->
+
+## Hypercloud-api-server 5.1.3.4 (2023. 08. 03. (목) 15:35:28 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][308792] kubectl 이미지 폐쇄망 고려 로직 에러 수정 by SISILIA
+  - [ims][299887] 마운트된 cert 파일이 갱신될 때 서버 재기동 하도록 변경 by Seungwon Lee
+
+### CRD yaml
+
+### Etc
+  - [etc] 사용하지 않는 sidecar injection, cloudCredential 서비스 삭제 by Seungwon Lee
+
 <!-------------------- v5.1.3.3 start -------------------->
 
 ## Hypercloud-api-server 5.1.3.3 (2023. 04. 19. (수) 11:07:00 KST)
