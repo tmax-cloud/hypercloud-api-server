@@ -43,18 +43,19 @@ func init() {
 	configSize = len(conf.Modules)
 	result = make([]versionModel.Module, configSize)
 
-	for _, mod := range conf.Modules {
-		if mod.Name == "HyperAuth" {
-			idx := strings.Index(mod.ReadinessProbe.HTTPGet.Path, "/auth/realms")
-			if idx < 0 {
-				klog.V(1).Infoln("Failed to get HyperAuth URL. Please check Configmap [version-config].")
-				break
-			}
-			k8sApiCaller.HYPERAUTH_URL = mod.ReadinessProbe.HTTPGet.Path[:idx]
-			k8sApiCaller.HYPERAUTH_REALM_PREFIX = mod.ReadinessProbe.HTTPGet.Path[idx:]
-			break
-		}
-	}
+	// In HyperAuth v2, this isn't used
+	// for _, mod := range conf.Modules {
+	// 	if mod.Name == "HyperAuth" {
+	// 		idx := strings.Index(mod.ReadinessProbe.HTTPGet.Path, "/auth/realms")
+	// 		if idx < 0 {
+	// 			klog.V(1).Infoln("Failed to get HyperAuth URL. Please check Configmap [version-config].")
+	// 			break
+	// 		}
+	// 		k8sApiCaller.HYPERAUTH_URL = mod.ReadinessProbe.HTTPGet.Path[:idx]
+	// 		k8sApiCaller.HYPERAUTH_REALM_PREFIX = mod.ReadinessProbe.HTTPGet.Path[idx:]
+	// 		break
+	// 	}
+	// }
 }
 
 // Get handles ~/version get method
@@ -71,12 +72,13 @@ func Get(res http.ResponseWriter, req *http.Request) {
 
 			// If the moudle is HyperAuth,
 			// Ask to hyperauth using given URL
-			if mod.Name == "HyperAuth" {
-				hyperauth_status, hyperauth_version := AskToHyperAuth(mod)
-				result[idx].Status = hyperauth_status
-				result[idx].Version = hyperauth_version
-				return
-			}
+			// In HyperAuth v2, this isn't used
+			// if mod.Name == "HyperAuth" {
+			// 	hyperauth_status, hyperauth_version := AskToHyperAuth(mod)
+			//	result[idx].Status = hyperauth_status
+			//	result[idx].Version = hyperauth_version
+			//	return
+			// }
 
 			// 2. GET STATUS
 			var labels string
