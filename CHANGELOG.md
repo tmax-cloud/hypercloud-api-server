@@ -1,6 +1,21 @@
 # Hypercloud-api-server changelog!!
 All notable changes to this project will be documented in this file.
 
+<!-------------------- v5.1.3.5 start -------------------->
+
+## Hypercloud-api-server 5.1.3.3 (2023. 04. 19. (수) 11:07:00 KST)
+
+### Added
+
+### Changed
+
+### Fixed
+  - [ims][323589] 일부 감사로그가 적재되지 않는 현상 수정 by Soohwan Kim
+
+### CRD yaml
+
+### Etc
+
 <!-------------------- v5.1.3.4 start -------------------->
 
 ## Hypercloud-api-server 5.1.3.4 (2023. 08. 03. (목) 15:35:28 KST)
