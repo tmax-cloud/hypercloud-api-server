@@ -3,6 +3,7 @@ package audit
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	//hypercloudAudit "github.com/tmax-cloud/hypercloud-api-server/audit"
 
@@ -63,6 +64,10 @@ func Insert(items []audit.Event) {
 	// }
 
 	for _, event := range items {
+		if event.ObjectRef == nil || event.ResponseStatus == nil {
+			klog.V(3).Info("ObjectRef of ResponseStatus is nil, Audit ID : " + strings.Replace(string(event.AuditID), "/", "", 1))
+			continue
+		}
 		_, err := db.Dbpool.Exec(context.TODO(), AUDIT_INSERT_QUERY,
 			event.AuditID,
 			event.User.Username,
