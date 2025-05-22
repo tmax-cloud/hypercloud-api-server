@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 <!-------------------- v5.1.3.5 start -------------------->
 
-## Hypercloud-api-server 5.1.3.3 (2023. 04. 19. (수) 11:07:00 KST)
+## Hypercloud-api-server 5.1.3.5 (2024. 04. 19. (수) 11:07:00 KST)
 
 ### Added
 
